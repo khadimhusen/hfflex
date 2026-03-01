@@ -1,3 +1,4 @@
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
@@ -17,13 +18,17 @@ from reportlab.pdfbase.ttfonts import TTFont
 import reportlab.rl_config
 from reportlab.platypus import Table, TableStyle, Frame, Paragraph, KeepTogether, Image, SimpleDocTemplate,PageBreak,Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from django.conf import settings
+
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
 pdfmetrics.registerFont(TTFont('times', "times.ttf"))
 pdfmetrics.registerFont(TTFont('arial', "Arial.ttf"))
 pdfmetrics.registerFont(TTFont('timesbd', "timesbd.ttf"))
-font_path= "/usr/local/share/fonts/myfonts/Lohit-Devanagari.ttf"
+
+
+font_path = os.path.join(settings.BASE_DIR, "static/fonts/Lohit-Devanagari.ttf")
 
 pdfmetrics.registerFont(TTFont('LohitDevanagari', font_path))
 
