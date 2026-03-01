@@ -1,1 +1,0 @@
-[{"model": "production.dispatchdetail", "pk": 73, "fields": {"dispatch": 10, "dispatchstock": null}}, {"model": "production.dispatchdetail", "pk": 74, "fields": {"dispatch": 10, "dispatchstock": null}}, {"model": "production.dispatchdetail", "pk": 75, "fields": {"dispatch": 10, "dispatchstock": null}}]

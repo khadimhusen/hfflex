@@ -7,6 +7,8 @@ pepeoijlsdkf/
 
 myproject/settings.py
 
+backup_folder/
+
 migrations/
 __pycache__/
 
