@@ -1,0 +1,59 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<h4 class="text-center text-danger">Preorder</h4>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.customer|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.contact_number|as_crispy_field }}</h6>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.address|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.schedule|as_crispy_field }}</h6>
+            <h6>{{ preorder_form.gst|as_crispy_field }}</h6>
+
+            <button class="btn-priamry" type="submit">save</button>
+        </div>
+    </div>
+
+</form>
+    <datalist id="customerlist">
+        {% for customer in customerlist %}
+        <option value="{{customer}}">{{customer}}</option>
+        {% endfor %}
+    </datalist>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_schedule" ).datetimepicker({
+    format: 'd/m/Y',
+
+    value:new Date(new Date().getTime() + (20*24*60*60*1000))
+    });
+    });
+
+
+</script>
+{% endblock javascripts%}

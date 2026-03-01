@@ -1,0 +1,74 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="POST">
+
+        <div class="card-body">
+            <h2 class="card-title">New Task</h2>
+
+        </div>
+        {% csrf_token %}
+
+
+        <div class="form-row">
+
+            <div class="form-group col-md-12 mb-0">
+                <div class="form-row ">
+                    <div class="form-group col-md-12 mb-0">
+                        {{ task_form.taskname|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row ">
+                    <div class="form-group col-md-12 mb-0">
+                        {{ task_form.description|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row ">
+                    <div class="form-group col-md-3 mb-0">
+                        {{ task_form.target_date|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-3 mb-0">
+                        {{ task_form.priority|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        {{ task_form.task_alloted_to|as_crispy_field }}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <button type="submit " class="btn btn-primary">Save Order</button>
+    </form>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+      $( "#id_target_date" ).datetimepicker({
+    format: 'd/m/Y',
+    value: new Date(Date.now()),
+
+});
+    });
+
+
+
+</script>
+{% endblock javascripts%}

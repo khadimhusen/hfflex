@@ -1,0 +1,65 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}<a href="{% url 'order:orderlist' %}">Back to Order List</a>
+<h3 class="text-center">{{ order.customer }} | <a href="{% url 'order:orderdetailedit' order.id %} ">
+    (Ord Id:-{{order.id }} )</a></h3>
+<div class="container">
+    <div class="row">
+        <div class="card col-md-6">
+            <div class="card-body">
+                <h5 class="card-subtitle mb-2 ">Po:- {{ order.po|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Po Date:- {{ order.podate|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Delivery Date:- {{ order.deliverydate|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Payment Terms:- {{ order.paymentterms|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Tax1:- {{ order.tax1|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Tax2:- {{ order.tax2|default:""}}</h5>
+            </div>
+        </div>
+        <div class="card col-md-6">
+            <div class="card-body">
+                <h5 class="card-subtitle mb-2 ">Transport:-{{ order.transport|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Remark:- {{ order.remark|default:""}}</h5>
+                <h5 class="card-subtitle mb-2 ">Status:- {{ order.status|default:""}}</h5>
+                <p class="card-text">Address:- {{ order.delivery_at.addname|default:"-" }},
+                    {{ order.delivery_at.add1|default:"-" }},
+                    {{ order.delivery_at.add2|default:"-" }}<br>
+                    Pincode:- {{ order.delivery_at.pincode|default:"-" }}<br>
+                    Phone:- {{ order.delivery_at.phone|default:"-" }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-center">Job detail</h3>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ITEM MASTER</th>
+            <th>QUANTITY</th>
+            <th>RATE</th>
+            <th>WASTE</th>
+            <th>JOB STATUS</th>
+            <th>JOB REMARK</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for form in order.job.all %}
+
+        <tr>
+            <td><a href="{% url 'order:jobdetail' form.id %}">{{form.itemmaster}}</a></td>
+            <td>{{form.quantity}} {{form.unit}}</td>
+            <td>{{form.rate|floatformat:2 }}</td>
+            <td>{{form.waste}}</td>
+            <td>{{form.jobstatus}}</td>
+            <td>{{form.jobremark}}</td>
+        </tr>
+
+        {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

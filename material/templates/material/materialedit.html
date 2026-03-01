@@ -1,0 +1,15 @@
+{% extends 'home.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+
+<h3> Material detail form</h3>
+<br>
+<form method="POST">
+    {% csrf_token %}
+{{ material_form|crispy}}
+
+    <button type="submit" class="btn btn-warning float-right">Update Material</button>
+</form>
+{% endblock content %}

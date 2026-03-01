@@ -1,0 +1,188 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/datatables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/fullcalendar.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootadmin.min.css' %}">
+
+    <title>H F FLEX</title>
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand navbar-dark bg-primary">
+    <a class="sidebar-toggle mr-3" href="#"><i class="fa fa-bars"></i></a>
+    <a class="navbar-brand" href="#">Home</a>
+
+    <div class="navbar-collapse collapse">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-envelope"></i> 5</a></li>
+            <li class="nav-item"><a href="#" class="nav-link"><i class="fa fa-bell"></i> 3</a></li>
+            <li class="nav-item dropdown">
+                <a href="#" id="dd_user" class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   style="color:lightgreen">
+                    <i class="fa fa-user"></i> {{request.user}}</a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dd_user">
+                    <a href="#" class="dropdown-item">Profile</a>
+                    <a href="{% url 'logout' %}" class="dropdown-item">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div>
+
+    {% for message in messages %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>{{message}}</strong>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+<div class="d-flex">
+    <div class="sidebar sidebar-dark bg-dark">
+        <ul class="list-unstyled">
+            <li><a href="#"><i class="fa fa-fw fa-tachometer-alt"></i> Dashboard</a></li>
+
+            <!-- order nav-->
+            <li>
+                <a href="#Order" data-toggle="collapse"><strong style="color:red">O</strong>rder</a>
+                <ul id="Order" class="list-unstyled collapse">
+                    <li><a href="{% url 'order:orderlist' %}?q=Pending">Pending</a></li>
+                    <li><a href="{% url 'order:orderlist' %}?q=Close">Close</a></li>
+                    <li><a href="{% url 'order:orderlist' %}"> All </a></li>
+                </ul>
+            </li>
+            <!-- Jobs nav-->
+            <li>
+                <a href="#Job" data-toggle="collapse"><strong style="color:red">J</strong>ob</a>
+                <ul id="Job" class="list-unstyled collapse">
+                    <li><a href="{% url 'order:joblist' %}?q=Pending">Pending</a></li>
+                    <li><a href="{% url 'order:joblist' %}?q=Unplanned">Unplanned</a></li>
+                    <li><a href="{% url 'order:joblist' %}?q=Completed">Completed</a></li>
+                    <li><a href="{% url 'order:joblist' %}?q=Close">Close</a></li>
+                    <li><a href="{% url 'order:joblist' %}?q=Hold">Hold</a></li>
+                    <li><a href="{% url 'order:joblist' %}"> All </a></li>
+                    <hr>
+                    <li><a href="{% url 'order:orderadd' %}">+ Add New order </a></li>
+                </ul>
+            </li>
+
+            <!-- Process nav-->
+            <li>
+                <a href="#Process" data-toggle="collapse"><strong style="color:red">P</strong>rocess</a>
+                <ul id="Process" class="list-unstyled collapse">
+                    <li><a href="{% url 'order:processlist' 'Printing' %}">Printing</a></li>
+                    <li><a href="{% url 'order:processlist' 'Doctoring' %}">Doctoring</a></li>
+                    <li><a href="{% url 'order:processlist' 'Lamination' %}">Lamination</a></li>
+                    <li><a href="{% url 'order:processlist' 'Slitting' %}">Slitting</a></li>
+                    <li><a href="{% url 'order:processlist' 'Pouching' %}">Pouching</a></li>
+                    <li><a href="{% url 'order:processlist' 'Packing' %}">Packing</a></li>
+                    <li><a href="{% url 'order:processlist' 'Dispatch' %}">Dispatch</a></li>
+                    <li><a href="{% url 'order:processlist' 'All' %}">All</a></li>
+                </ul>
+            </li>
+
+            <!-- JobMateril-->
+            <li><a href="{% url 'order:jobmateriallist'%}"><strong style="color:red">J</strong>ob<strong
+                    style="color:red">M</strong>aterial</a></li>
+
+
+            <!-- Production report-->
+            <li>
+                <a href="#Report" data-toggle="collapse"><strong style="color:red">R</strong>eport</a>
+                <ul id="Report" class="list-unstyled collapse">
+                    <li><a href="{% url 'production:prodreportlist' 'Printing' %}">Printing</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Doctoring' %}">Doctoring</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Lamination' %}">Lamination</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Slitting' %}">Slitting</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Pouching' %}">Pouching</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Packing' %}">Packing</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'Dispatch' %}">Dispatch</a></li>
+                    <li><a href="{% url 'production:prodreportlist' 'All' %}">All</a></li>
+                </ul>
+            </li>
+
+            <!-- Production report-->
+            <li>
+                <a href="#Stock" data-toggle="collapse"><strong style="color:red">S</strong>tock</a>
+                <ul id="Stock" class="list-unstyled collapse">
+                    <li><a href="{% url 'production:inwardlist' %}">Inward</a></li>
+                    <li><a href="{% url 'production:stocklist' %}">Stock</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="#sm_examples" data-toggle="collapse">
+                    <i class="fa fa-object-ungroup" aria-hidden="true"></i>Examples
+                </a>
+                <ul id="sm_examples" class="list-unstyled collapse">
+                    <li><a href="https://bootadmin.net/demo/examples/blank">Blank/Starter</a></li>
+                    <li><a href="https://bootadmin.net/demo/examples/pricing">Pricing</a></li>
+                    <li><a href="https://bootadmin.net/demo/examples/invoice">Invoice</a></li>
+                    <li><a href="https://bootadmin.net/demo/examples/faq">FAQ</a></li>
+                    <li><a href="https://bootadmin.net/demo/examples/login">Login</a></li>
+                </ul>
+            </li>
+            <li class="active"><a href="https://bootadmin.net/demo/docs"><i class="fa fa-fw fa-book"></i> Documentation</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="content p-4">
+
+
+        <h2 class="mb-4">Documentation</h2>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">
+                Installation
+            </div>
+            <div class="card-body">
+
+            </div>
+        </div>
+
+
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">
+                Usage
+            </div>
+            <div class="card-body">
+
+            </div>
+        </div>
+
+        <div class="card mb-4">
+
+        </div>
+
+        <div class="card mb-4">
+
+        </div>
+
+
+    </div>
+</div>
+
+<script src="{% static 'bootadmin.net/js/jquery.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/datatables.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/moment.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/fullcalendar.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/bootadmin.min.js' %}"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-118868344-1"></script>
+
+
+
+</body>
+</html>

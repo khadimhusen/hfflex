@@ -1,0 +1,48 @@
+<li class="nav-item dropdown">
+    <a herf="#" id="po_list" class="nav-link dropdown_toggle" data-toggle="dropdown"
+       style="color:lightgreen">
+        <strong>po = {{pocount}}</strong>
+    </a>
+
+    <div class="dropdown-menu " aria-labelledby="po_list" style="width:1000px">
+        <ul>
+
+            <table class="table dropdown-item">
+                {% for item in polist %}
+                <tr>
+                    <td><a href="{% url 'purchase:purchasedetail'  item.id %}">{{item.id}} - {{item.party}}</a> </td>
+                    <td> {{item.date}} </td>
+                    <td> {{item.createdby}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+        </ul>
+
+    </div>
+
+</li>
+<li class="nav-item dropdown">
+    <a herf="#" id="pendingpo_list" class="nav-link dropdown_toggle" data-toggle="dropdown"
+       style="color:lightgreen">
+        <strong>pending = {{pendingpocount}}</strong>
+    </a>
+
+    <div class="dropdown-menu " aria-labelledby="pendingpo_list" style="width:1000px">
+        <ul>
+
+            <table class="table dropdown-item">
+                {% for item in pendingpolist %}
+                <tr>
+                    <td><a href="{% url 'purchase:purchasedetail'  item.id %}">{{item.id}} - {{item.party}}</a> </td>
+                    <td>{{item.date}} </td>
+                    <td> {{item.createdby}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+        </ul>
+
+    </div>
+
+</li>

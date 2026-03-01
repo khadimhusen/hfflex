@@ -1,0 +1,36 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+<h3> Material detail form</h3>
+
+<div class="form-row">
+    <div class="form-group col-md-12 mb-0">
+        <h3>{{ material}}</h3>
+    </div>
+</div>
+
+<h3>Job material</h3>
+    <ol> {% for mat in material.prodinput.all %}
+    <li>{{mat.prodreport}}:- {{mat.material}} = {{mat.inputqty}} Kg.</li>
+        {% endfor %}
+    </ol>
+<form method="POST">
+    {% csrf_token %}
+    {{ matforms.management_form }}
+    {% for form in matforms %}
+    <p> {{form}} </p>
+
+    <hr>
+    {% endfor %}
+
+    <div class="form-group col-md-3 mb-0">
+        <div>
+            <button type="submit" class="btn btn-warning float-right ml-1">save material detail</button>
+        </div>
+    </div>
+</form>
+    </div>
+{% endblock content %}

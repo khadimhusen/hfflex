@@ -1,0 +1,58 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block customcss%}
+<link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.css' %}">
+{% endblock customcss %}
+{% block content %}
+
+
+<!--table start from here-->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center"><strong>Material Grade List</strong></h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered zero-configuration">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>MATERIAL GRADE</th>
+
+                                <th class="text-center"> <a class="btn btn-primary" href=" {% url 'material:gradeadd' %}">
+                                    <strong>+</strong> Add New Grade</a></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for type in gradelist %}
+                            <tr>
+
+                                <td>{{type.id}}</td>
+                                <td >{{type.grade|upper}}</td>
+
+                                <td class="text-center">
+                                    <a class="btn btn-warning" href=" {% url 'material:gradeedit' type.id %}">Edit</a>
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- table end here-->
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.20/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jq-3.3.1/dt-1.10.20/datatables.min.js"></script>
+ <script > $(document).ready(function() { $('.table').DataTable(); });</script>
+{% endblock javascripts %}

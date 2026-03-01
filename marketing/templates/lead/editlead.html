@@ -1,0 +1,66 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST" >
+
+    <div class="card-body">
+        <h2 class="card-title">Edit Lead Form</h2>
+
+    </div>
+    {% csrf_token %}
+
+    {{ leadform.management_form }}
+    <div class="form-row">
+
+        <div class="form-group col-md-8 mb-0">
+            {{ leadform.customername|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ leadform.cityname|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+
+        <div class="form-group col-md-4 mb-0">
+            {{ leadform.locationlink|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ leadform.contact_number|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ leadform.websitelink|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ leadform.industry|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ leadform.lead_active|as_crispy_field }}
+        </div>
+
+    </div>
+    <div class="form-row">
+
+    </div>
+
+
+    <button type="submit " class="btn btn-primary">Save Lead</button>
+</form>
+
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+{% endblock javascripts%}

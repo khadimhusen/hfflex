@@ -1,0 +1,93 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="POST">
+
+        <div class="card-body">
+            <h2 class="card-title">New Purchase Order Form</h2>
+
+        </div>
+        {% csrf_token %}
+        {{ po_form.management_form }}
+        {{ po_form.non_field_errors }}
+        {{ po_form.errors }}
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ po_form.supplier|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                <a class="btn btn-primary" href="{% url 'customer:customerdetailadd' %}?next={{request.path}}">
+                    <strong>+</strong></a>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0">
+                {{ po_form.delivery_date|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ po_form.payment_terms|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ po_form.tax1|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ po_form.tax2|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-3 mb-0">
+                {{ po_form.transport|as_crispy_field }}
+            </div>
+
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-11 mb-0">
+                {{ po_form.remark|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ po_form.delivery_at|as_crispy_field }}
+            </div>
+
+        </div>
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ po_form.poterm|as_crispy_field }}
+            </div>
+
+        </div>
+        <button type="submit " class="btn btn-primary">Save Order</button>
+    </form>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+      $( "#id_delivery_date" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(Date.now() + 864e5 * 7),
+
+});
+    });
+
+
+
+</script>
+{% endblock javascripts%}

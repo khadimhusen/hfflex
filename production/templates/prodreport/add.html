@@ -1,0 +1,55 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+{% endblock customcss %}
+
+
+{% block content %}
+<div>
+    <h3> {{instance}}</h3>
+    <h4 > Process Qty:- {{instance.qty}}-{{instance.unit}}</h4>
+</div>
+<form method="POST" autocomplete="off">
+
+    {% csrf_token %}
+
+    <div class="form-row">
+
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4 mb-0">
+            {{ main_form.processdate|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ main_form.qty|as_crispy_field }}
+        </div><div class="form-group col-md-2 mb-0">
+            {{ main_form.unit|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-4 mb-0">
+            {{ main_form.totalkg|as_crispy_field }}
+        </div>
+    </div>
+<button type="submit " class="btn btn-primary">Add New Report</button>
+
+
+</form>
+
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+  $(function () {$( "#id_processdate" ).datetimepicker({format: 'd/m/Y H:i',});
+                 $("#id_processdate").attr("autocomplete", "off");
+
+});
+</script>
+{% endblock javascripts %}
+

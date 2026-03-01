@@ -1,0 +1,40 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+
+<form method="POST">
+
+    {% csrf_token %}
+
+
+    {% crispy mainform %}
+    <datalist id="partylist">
+        {% for party in partylist %}
+        <option value="{{party}}">{{party}}</option>
+        {% endfor %}
+    </datalist>
+    <a class="btn- btn-danger" href="{%url 'bank:chequelist' %}">Cancel</a>
+</form>
+
+{% endblock content %}
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+        $( "#id_cheque_date" ).datetimepicker({
+        format: 'd/m/Y',
+        });
+        $( "#id_expected_date" ).datetimepicker({
+        format: 'd/m/Y',
+        });
+        $( "#id_bill_date" ).datetimepicker({
+        format: 'd/m/Y',
+        });
+    });
+
+</script>
+
+{% endblock %}

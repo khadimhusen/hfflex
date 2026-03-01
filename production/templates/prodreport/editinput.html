@@ -1,0 +1,35 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="POST"> {% csrf_token %}
+
+        {{inputform|crispy}}
+        <button type="submit">ok</button>
+        <button><a href="{% url 'production:prodreportdetail' prodreport %}">cancel</a></button>
+
+    </form>
+</div>
+{% endblock content %}
+{% block javascripts %}
+<script>
+    $( "#id_grossinput" ).change(function() {
+    var inpu=$( "#id_grossinput" ).val()- $( "#id_returned" ).val()
+       $( "#id_inputqty" ).val(inpu.toFixed(3))
+                                            });
+
+    $( "#id_returned" ).change(function() {
+        var inp=$( "#id_grossinput" ).val()- $( "#id_returned" ).val()
+    $( "#id_inputqty" ).val(inp.toFixed(3));
+                                            });
+
+</script>
+
+{% endblock javascripts %}

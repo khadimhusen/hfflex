@@ -1,0 +1,346 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+<br>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <br>
+    <h3 class="text-center">{{itemmaster}} <span style="color: brown;">:- ({{itemmaster.isnew}})</span></h3>
+    <button type="submit" class="btn btn-warning float-right">save itemamster</button>
+    <div class="container">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#home">ITEM MASTER DETAIL</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu5">OTHER DETAIL</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu1">ITEM IMAGE</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu2">ITEM RAW MATERIAL DETAIL</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu3">ITEM PROCESS</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu4">ITEM COLORS</a>
+            </li>
+
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div id="home" class="container tab-pane active"><br>
+
+                <div class="form-row">
+                    <div> {{ item_form.non_form_errors }}</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-11 mb-0">
+                        {{ item_form.itemname|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ item_form.active|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0">
+                        {{ item_form.itemcode|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-6 mb-0" hidden>
+                        {{ item_form.itemcustomer|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.printing|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.barcode|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-4 mb-0">
+                        {{ item_form.commodity|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.shade_accuracy|as_crispy_field }}
+                    </div>
+
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.packsize|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.replength|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.openwidth|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-1 mb-0">
+                        {{ item_form.no_of_repeat|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1  mb-0">
+                        {{ item_form.no_of_ups|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-4 mb-0">
+                        {{ item_form.cylinder_status|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.cyl_length|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.cyl_circum|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.slit_size|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.total_gsm|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.pouch_weight|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.pouch_per_kg|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.pouch_type|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.supply_form |as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.film_size|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.unwind_direction|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ item_form.lami_rubber |as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        {{ item_form.remark|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="menu1" class="container tab-pane fade"><br>
+                <h5> Images</h5>
+                <table>
+                    {{ image_forms|crispy }}
+                </table>
+            </div>
+            <div id="menu2" class="container tab-pane fade"><br>
+                <div class="form-row">
+
+                    <div class="form-group col-md-2 mb-0">Material</div>
+                    <div class="form-group col-md-3 mb-0">Type</div>
+                    <div class="form-group col-md-4 mb-0">Grade</div>
+                    <div class="form-group col-md-1 mb-0">Size</div>
+                    <div class="form-group col-md-1 mb-0">Micron</div>
+                    <div class="form-group col-md-1 mb-0">delete</div>
+
+                </div>
+                {{ rawmaterial_forms.management_form }}
+                {{ rawmaterial_forms.non_form_errors}}
+
+
+
+                {% for form in rawmaterial_forms %}
+
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                <div class="form-row">
+
+                    <div class="form-group col-md-2 mb-0">{{ form.materialname|as_crispy_field }}</div>
+                    <div class="form-group col-md-3 mb-0">{{ form.item_mat_type|as_crispy_field }}</div>
+                    <div class="form-group col-md-4 mb-0">{{ form.item_grade|as_crispy_field }}</div>
+                    <div class="form-group col-md-1 mb-0">{{ form.size|as_crispy_field }}</div>
+                    <div class="form-group col-md-1 mb-0">{{ form.micron|as_crispy_field }}</div>
+                    <div class="form-group col-md-1 mb-0">{{ form.DELETE|as_crispy_field }}</div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+            <div id="menu5" class="container tab-pane fade"><br>
+                {{ attribute_forms.management_form }}
+                {{ attribute_forms.non_form_errors}}
+
+
+                {% for form in attribute_forms %}
+
+                {% for hidden in form.hidden_fields %}
+
+                {{ hidden }}
+                {% endfor %}
+                <div class="form-row">
+                    <div class="form-group col-md-3 mb-0">{{ form.item_attirbuate|as_crispy_field }}</div>
+                    <div class="form-group col-md-5 mb-0">{{ form.attri_value|as_crispy_field }}</div>
+                    <div class="form-group col-md-1 mb-0">{{ form.DELETE|as_crispy_field }}</div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+            <div id="menu3" class="container tab-pane fade"><br>
+                <h5> ITEMPROCESS list</h5>
+                {{ process_forms.management_form }}
+                {{ process_forms.non_form_errors}}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        Process
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        Unit
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        Machine
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        TO DELETE
+                    </div>
+                </div>
+                {% for form in process_forms %}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        {{ form.process|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ form.unit|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ form.machine|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ form.DELETE|as_crispy_field }}
+                    </div>
+                </div>
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% endfor %}
+
+            </div>
+            <div id="menu4" class="container tab-pane fade"><br>
+                <h5> ITEMCOLOR list</h5>
+                {{ color_forms.management_form }}
+                {{ color_forms.non_form_errors}}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        Color
+                    </div>
+                    <div class="form-group col-md-5 mb-0">
+                        Remark
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        To Delete
+                    </div>
+                </div>
+                {% for form in color_forms %}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        {{ form.color|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-5 mb-0">
+                        {{ form.remark|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ form.DELETE|as_crispy_field }}
+                    </div>
+                </div>
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% endfor %}
+
+            </div>
+
+        </div>
+    </div>
+    <button type="submit" class="btn btn-warning float-right">save itemamster</button>
+</form>
+<script>
+$("h3").hover( function() { $(this).css('color', 'red');},
+function() { $(this).css('color', 'blue');});
+
+
+     $( "#id_replength" ).change(function() {
+      let rep_length = Number($("#id_replength").val());
+      let no_up = Number($("#id_no_of_repeat").val());
+    $("#id_cyl_circum").val(rep_length*no_up);});
+
+    $( "#id_no_of_repeat" ).change(function() {
+     let rep_length = Number($("#id_replength").val());
+     let no_up = Number($("#id_no_of_repeat").val());
+    $("#id_cyl_circum").val(rep_length*no_up);
+                                                });
+
+    $( "#id_openwidth").change(function() {
+     let openwidth = Number($("#id_openwidth").val());
+     let no_of_ups = Number($("#id_no_of_ups").val());
+    $("#id_cyl_length").val((openwidth * no_of_ups)+60);
+    $("#id_slit_size").val( openwidth);
+    $("#id_film_size").val((openwidth * no_of_ups)+15);
+
+                                            });
+
+    $( "#id_no_of_ups").change(function() {
+     let openwidth = Number($("#id_openwidth").val());
+     let no_of_ups = Number($("#id_no_of_ups").val());
+    $("#id_cyl_length").val((openwidth * no_of_ups)+60);
+    $("#id_film_size").val((openwidth * no_of_ups)+15);
+    $("#id_slit_size").val($( "#id_openwidth").val());
+
+                                            });
+
+
+    $("#id_rawmaterialformset-0-materialname").change(function() {
+    $("#id_rawmaterialformset-0-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-1-materialname").change(function() {
+    $("#id_rawmaterialformset-1-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-2-materialname").change(function() {
+    $("#id_rawmaterialformset-2-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-3-materialname").change(function() {
+    $("#id_rawmaterialformset-3-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-4-materialname").change(function() {
+    $("#id_rawmaterialformset-4-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-5-materialname").change(function() {
+    $("#id_rawmaterialformset-5-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-6-materialname").change(function() {
+    $("#id_rawmaterialformset-6-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-7-materialname").change(function() {
+    $("#id_rawmaterialformset-7-size").val($("#id_film_size").val());
+                                });
+    $("#id_rawmaterialformset-8-materialname").change(function() {
+    $("#id_rawmaterialformset-8-size").val($("#id_film_size").val());
+                                });
+
+
+
+
+
+</script>
+
+{% endblock content %}

@@ -1,0 +1,46 @@
+<li class="nav-item dropdown">
+    <a herf="#" id="task_list" class="nav-link dropdown_toggle" data-toggle="dropdown"
+       style="color:lightgreen">
+        <strong>Task({{taskteome}}/{{taskbyme}}/{{tasktobeclose}})</strong>
+    </a>
+
+    <div class="dropdown-menu " aria-labelledby="task">
+        <ul>
+
+            <table class="table dropdown-item">
+
+                <tr>
+                    <td>
+                        <a href="{% url 'task:tasklist' %}?task_alloted_to={{userid}}&is_closed=false"
+                           class="nav-link" style="color:blue; font-size:20px">To Me ({{taskteome}})</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&is_closed=false"
+                           class="nav-link"
+                           style="color:blue; font-size:20px">By Me ({{taskbyme}})</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&request_to_close=true&is_closed=false"
+                           class="nav-link"
+                           style="color:blue; font-size:20px">To Be Close ({{tasktobeclose}})</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&request_to_close=true&is_closed=true"
+                           class="nav-link"
+                           style="color:blue; font-size:20px">Closed</a>
+                    </td>
+                </tr>
+
+            </table>
+
+        </ul>
+
+    </div>
+
+</li>

@@ -1,0 +1,81 @@
+{% load crispy_forms_tags %}
+<br>
+<div class="container" style="background-color: #ddddff " hx-target="#menu1">
+    <div >
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show p-0" role="alert">
+            <strong>{{message}}</strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    <h2>Input Material detail</h2>
+    <form>
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group col-md-7 mb-0">Material</div>
+            <div class="form-group col-md-1 mb-0">Grossinput</div>
+            <div class="form-group col-md-1 mb-0">Balance</div>
+            <div class="form-group col-md-1 mb-0">Inputqty</div>
+
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-7 mb-0">{{inputform.material |as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{inputform.grossinput |as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{inputform.returned |as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{inputform.inputqty |as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">
+                <button class="btn btn-primary" type="submit"
+                        hx-post="{% url 'production:addinputhtmx' instance.id %}">Add New Input
+                </button>
+            </div>
+        </div>
+    </form>
+    <table class="table table-sm table-striped table-bordered">
+        <thead>
+        <tr>
+            <th> Sr No.</th>
+            <th>Material</th>
+            <th>Gross Input</th>
+            <th>Balance</th>
+            <th>Input</th>
+            <th>Weight Gain</th>
+            <th>Actions</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for input in inputs %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td id="input_material_{{ forloop.counter }}">{{input.material}}</td>
+            <td class="grossinput">{{input.grossinput}}</td>
+            <td id="returned_{{forloop.counter}}" class="returned">{{input.returned}}</td>
+            <td class="inputqty">{{input.inputqty}}</td>
+            <td class="wtgain">{{input.wtgain}}</td>
+            <td>
+                <a href="  {% url 'production:prodreporteditinput' input.id %} ">
+                    <i class="fa fa-edit m-2 "></i>
+                </a>
+                <button class="btn btn-primary btn-sm" onclick="printInput({{forloop.counter}})"><i
+                        class="fa fa-print m-2"></i>
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+
+        <tr>
+            <th id="total_grossinput"></th>
+            <th>Total</th>
+            <th>{{instance.grossinput}}</th>
+            <th>{{instance.totalbalance}}</th>
+            <th>{{instance.totalinput}}</th>
+            <th>{{instance.totalwtgain}}</th>
+            <th></th>
+        </tr>
+        </tbody>
+    </table>
+</div>

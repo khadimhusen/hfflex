@@ -1,0 +1,91 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+<h3> Customer detail form</h3>
+<br>
+<form method="POST">
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-warning float-right">save customer detail</button>
+    <div class="container">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#home">CUSTOMER DETAIL</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu1">CUSTOMER ADDRESS</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu2">CUSTOMER PERSON</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div id="home" class="container tab-pane active"><br>
+                <h5> Customer address detail list</h5>
+
+                {{cust_form|crispy}}
+
+            </div>
+            <div id="menu1" class="container tab-pane fade"><br>
+                <fieldset>
+                    <legend>Address detail</legend>
+                    {{ address_forms.management_form }}
+                    {{ address_forms.non_form_errors }}
+
+                    {% for form in address_forms %}
+
+                    {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                    {% endfor %}
+
+                    <div class="form-row">
+                        <div class="form-group col-md-2 my-0">{{ form.addname|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 my-0">{{ form.add1|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 my-0">{{ form.add2|as_crispy_field }}</div>
+                        <div class="form-group col-md-2 my-0">{{ form.pincode|as_crispy_field }}</div>
+                        <div class="form-group col-md-2 my-0">{{ form.phone|as_crispy_field }}</div>
+                    </div>
+                    {% endfor %}
+                </fieldset>
+
+            </div>
+            <div id="menu2" class="container tab-pane fade"><br>
+                <fieldset>
+                    <legend>Person detail</legend>
+
+                    {{ person_forms.management_form }}
+                    {{ person_forms.non_form_errors }}
+
+                    {% for form in person_forms %}
+
+                    {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                    {% endfor %}
+
+                    <div class="form-row">
+                        <div class="form-group col-md-3 my-0">{{ form.name|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 my-0">{{ form.designation|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 my-0">{{ form.mobile|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 my-0">{{ form.email|as_crispy_field }}</div>
+                    </div>
+                    {% endfor %}
+
+                </fieldset>
+
+            </div>
+        </div>
+    </div>
+
+
+    <br>
+    <button type="submit" class="btn btn-warning float-right">add customer</button>
+</form>
+{% endblock content %}

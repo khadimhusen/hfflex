@@ -1,0 +1,222 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/purchase.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row ">
+        {% if  quote.approvedby %}
+
+        <button class="btn btn-primary btn-sm m-2 p-2" onclick="downloadimage()">Download Qoute Image</button>
+        <a class="btn btn-warning btn-sm m-2 p-2" href="{% url 'quotation:quotepdf' quote.id %}">Download Quote Pdf</a>
+            {% else %}
+        <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'quotation:editquote' quote.id %}">Edit Quote</a>
+         {% endif %}
+
+
+        {% if request.user.username in 'khadimhusen,firoj,admin' and not quote.approvedby %}
+        <form action="{% url 'quotation:quoteapproval' quote.id %}" method="post">
+            {% csrf_token %}
+            <div hidden>{{quoteapprovalform}}</div>
+            <button class="btn btn-warning btn-sm m-2 p-2" type="submit">Quote approval
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div id="home" class="container "><br>
+            <div class="container col-12 border bg-light" id="download">
+                <div class="row text-center">
+                    <div class="col-12"><h5 class="text-center"><u>Quotation/Estimate</u></h5></div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-2 text-center">
+                        <div id="logo">
+                            <img src="/static/images/hflogo.png" width="90" height="100">
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <h1 class="name font-weight-bold">H F FLEX PVT. LTD.</h1>
+                        <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7447456686
+                            <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+                        </p>
+                    </div>
+                    <div class="col-4">
+                        <h3>Quote # {{quote.id}}</h3>
+                        <div>Quotation Date:- {{quote.quotedate|date:"d/m/Y"}}</div>
+                    </div>
+                </div>
+                <hr>
+                <main>
+                    <div class="row">
+                        <div class="col-7 side-border" id="client">
+
+                            <h4 class="name">Name:- {{quote.partyname|upper }}</h4>
+                            <h5 >Address:- {{quote.add}}</h5>
+                            <h5 >Contact:- {{quote.contact}}</h5>
+                        </div>
+
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class=" table-responsive">
+                            <table class="table table-sm table-striped " border="0" cellspacing="0" cellpadding="0">
+                                <thead>
+                                <tr>
+                                    <th class="col-4">Description</th>
+                                    <th class="col-1 text-center">Cylinder rate</th>
+                                    <th class="col-1 text-center">Cylinder Cost</th>
+                                    <th class="col-1 text-center">Material rate</th>
+                                    <th class="col-1">Pouch/ kg</th>
+                                    <th class="col-1">Pouch Cost</th>
+                                    <th class="col-1">MOQ</th>
+                                    <th class="col-1">Material Cost</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for item in quote.quotationitems.all %}
+                                <tr>
+
+                                    <td>
+                                        ({{forloop.counter}}) Name:- <span class="text-right font-weight-bold small-9">{{item.jobname}}</span><br>
+                                        Size :- <span
+                                            class="text-center font-weight-bold  small-9">{{item.dimension}}</span> <br>
+                                        structure:- <span class="text-center font-weight-bold small-9">{{item.structure}}</span>
+                                        <br>
+                                        supply:- <span
+                                            class="text-center font-weight-bold small-9">{{item.supply}}</span>
+                                    </td>
+                                    <td class="text-center small-9">Rs. {{item.cyl_rate|floatformat }} X
+                                        {{item.no_of_cyl}}
+                                    </td>
+                                    <td class="text-right font-weight-bold small-9">Rs.
+                                        {{item.item_cylinder_cost|floatformat }}
+                                    </td>
+                                    <td class="text-center small-9">{{item.material_rate|floatformat }}Rs/Kg</td>
+                                    <td class="small-9">{{item.pouch_per_kg|floatformat }}</td>
+                                    <td class="small-9"> {{item.per_pouch_cost|floatformat:2}}</td>
+                                    <td class="small-9"> {{item.moq|floatformat }} {{item.unit}}</td>
+                                    <td class="text-right px-4 small-9"> {{item.itemtotalcost|floatformat }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td class="text-right" colspan="2">Cylinder Total</td>
+                                    <td class="text-center">Rs. {{quote.totalcylindercost|floatformat }}</td>
+                                    <td class="text-center"></td>
+                                    <td class="text-right" colspan="2">Material Total</td>
+                                    <td class="text-right px-4" colspan="2">
+                                        Rs. {{quote.totalmaterialcost|floatformat }}</b></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" colspan="2">Cylinder Gst {{quote.cylinder_gst|floatformat}} %</td>
+                                    <td class="text-center">Rs. {{quote.cylindergst|floatformat }}</td>
+                                    <td class="text-center"></td>
+                                    <td class="text-right" colspan="2">Material Gst {{quote.material_gst|floatformat}} %</td>
+                                    <td class="text-right px-4" colspan="2">
+                                        Rs. {{quote.materialgst|floatformat }}</b></td>
+                                </tr>
+                                   <tr>
+                                    <td class="text-right" colspan="2">Gross Cylinder Cost</td>
+                                    <td class="text-center">Rs. {{quote.grosscylindercost|floatformat }}</td>
+                                    <td class="text-center"></td>
+                                    <td class="text-right" colspan="2">Gross Material Cost</td>
+                                    <td class="text-right px-4" colspan="2">
+                                        Rs. {{quote.grossmaterialcost|floatformat }}</b></td>
+                                </tr>
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <th>Summary</th>
+                                </tr>
+                                <tr>
+                                    <th>Gross Cylinder Cost :- Rs. {{quote.grosscylindercost|floatformat }}</th>
+                                </tr>
+                                <tr>
+                                    <th>Gross Material Cost:- Rs. {{quote.grossmaterialcost|floatformat }}</th>
+                                </tr>
+                                 <tr>
+                                    <th>Design Development Cost:- Rs. {{quote.designcost|floatformat }}</th>
+                                </tr>
+                                 <tr>
+                                    <th colspan="8">Total Quotation Cost:- Rs. {{quote.totalquotationcost|floatformat }}
+                                        ( {{quote.amountinword}} )</th>
+                                </tr>
+
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row border">
+                        <div class="col-12">
+                            <h6><span style="color:red">Remark:-</span> <span> <p><em>{{quote.remark|default_if_none:"---"}}</em></p></span>
+                            </h6>
+                        </div>
+
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5>Created By</h5>
+                            {% if quote.createdby %}
+                            <h6 class="name"><em>{{quote.createdby.get_full_name|upper}}</em></h6>
+                            <div>Date:- {{quote.created|date:"d/m/Y"}}</div>
+
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <h5>Approved By</h5>
+                            {% if quote.approvedby %}
+                            <h6 class="name"><em>{{quote.approvedby.get_full_name|upper}}</em></h6>
+                            <div>Date:- {{quote.approved|date:"d/m/Y"}}</div>
+
+                            {% else %}
+                            <h4 class="name text-danger"><em>Pending For Approval </em></h4>
+                            {% endif %}
+                        </div>
+                    </div>
+                </main>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.1/html2canvas.min.js"></script>
+<script type="text/javascript">
+
+        function downloadimage() {
+            var container = document.getElementById("download");
+            html2canvas(container, { allowTaint: true,scale: 1.5 }).then(function (canvas) {
+
+                var link = document.createElement("a");
+                document.body.appendChild(link);
+                link.download = '{{po.id}}-{{po.supplier}}.png';
+                link.href = canvas.toDataURL();
+                link.target = '_blank';
+                link.click();
+            });
+        }
+
+
+
+</script>
+
+
+{% endblock javascripts %}

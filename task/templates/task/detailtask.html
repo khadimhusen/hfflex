@@ -1,0 +1,155 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-2">
+            <a href="{% url 'task:tasklist' %}" class="btn btn-primary">Tasklist</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title"> {{task.taskname|title }}</h5>
+            {% if tocloseform %}
+            <form action="{% url 'task:toclosetask' task.id %}" method="post">
+                <div hidden="hidden">{{tocloseform}}</div>
+                {% csrf_token %}
+                <button type="submit"> to close</button>
+            </form>
+            {% endif %}
+            {% if requesttocloseform %}
+            <form action="{% url 'task:requesttoclosetask' task.id %}" method="post">
+                <dir hidden="hidden">{{requesttocloseform}}</dir>
+                {% csrf_token %}
+                <button type="submit">request to close</button>
+            </form>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{task.description}}</p>
+        </div>
+        <hr>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-3">
+                    <h7 class="card-text">Taks created by:- {{task.createdby}} on {{task.created}}</h7>
+                </div>
+                <div class="col-3">
+                    <h7 class="card-text text-right">Taks Alloted to:- {{task.task_alloted_to}}</h7>
+                </div>
+                <div class="col-3">
+                    <h7 class="card-text text-right">Target Date:- {{task.target_date}}</h7>
+                </div>
+                <div class="col-3">
+                    {% if task.is_closed %}
+                    <h7 class="card-text text-right text-success font-weight-bold">
+                        Task:- Closed on {{task.close_date}}
+                    </h7>
+                    {% elif task.request_to_close %}
+                    <h7 class="card-text text-right text-primary font-weight-bold">
+                        Task- Requested to Close on {{task.request_date}}
+                    </h7>
+                    {% else %}
+                    <h7 class="card-text text-right text-danger font-weight-bold">
+                        Task- Pending to Close
+                    </h7>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            {% if taskmsgform %}
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModal">
+                Reply Msg
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Task reply Form</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form action="" method="post" enctype="multipart/form-data">
+                            <div class="modal-body">
+
+                                <div hidden="hidden">
+                                    {{taskmsgform.task}}
+                                </div>
+                                <div class="form-group col-md-12 mb-0 ">
+                                    {{taskmsgform.msg_text|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-12 mb-0 ">
+                                    {{taskmsgform.msg_image|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-12 mb-0 ">
+                                    {{taskmsgform.msg_file|as_crispy_field}}
+                                </div>
+                                {% csrf_token %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body" style="height: 300px; overflow-y: scroll;">
+            <div class="row">
+                {% for msg in task.taskmsg.all %}
+                <div class="col-2 border border-primary">
+                    <p>[{{ forloop.counter }}]:- {{msg.createdby}} {{msg.created}}</p>
+                    {% if msg.msg_image %}
+                    <a href="{{msg.msg_image.url}}" target="_blank">
+                        {% if msg.thumbnail %}
+                        <img src="{{msg.thumbnail.url}}" class="img-thumbnail">
+
+                        {% endif %} </a>
+                    {% endif %}
+                    <hr>
+                    {% if msg.msg_file %}
+                    <a href="{{msg.msg_file.url}}" target="_blank">file:- {{msg.msg_file.name|truncatechars:7 }}</a>
+                    {% endif %}
+                </div>
+                <div class="col-10 border border-primary">
+                    <p class="card-text">
+                        {{msg.msg_text}}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+
+</script>
+{% endblock javascripts%}

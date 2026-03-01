@@ -1,0 +1,53 @@
+{% extends 'home.html' %}
+
+{% load crispy_forms_tags %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{ order_form.management_form }}
+    <div class="form-row">
+        <div class="form-group col-md-12 mb-0">
+            {{ order_form.customer|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.po|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.podate|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.deliverydate|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.paymentterms|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.tax1|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.tax2|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ order_form.transport|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.remark|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ order_form.delivery_at|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ order_form.status|as_crispy_field }}
+        </div>
+    </div>
+
+    <button type="submit " class="btn btn-primary">Save Changes</button>
+</form>
+
+{% endblock content %}

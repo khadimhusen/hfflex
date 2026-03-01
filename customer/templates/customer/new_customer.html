@@ -1,0 +1,67 @@
+{% extends 'home.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<br>
+<form method="POST">
+    {% csrf_token %}
+    <h5> --Company Detail Form--</h5>
+
+    {{cust_form|crispy}}
+
+    <hr>
+
+    <h5> --Company Address Detail Form--</h5>
+
+    {{ address_forms.management_form }}
+    {{ address_forms.non_form_errors }}
+
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">addname</div>
+        <div class="form-group col-md-2 mb-0">add1</div>
+        <div class="form-group col-md-2 mb-0">add2</div>
+        <div class="form-group col-md-2 mb-0">pincode</div>
+        <div class="form-group col-md-2 mb-0">phone</div>
+        <div class="form-group col-md-2 mb-0">remark</div>
+    </div>
+
+    {% for form in address_forms %}
+
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">{{ form.addname|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.add1|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.add2|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.pincode|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.phone|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.remark|as_crispy_field }}</div>
+    </div>
+
+    {% endfor %}
+    <hr>
+
+    <h5> --Company Contact Person Detail Form--</h5>
+
+    {{ person_forms.management_form }}
+    {{ person_forms.non_form_errors }}
+    <div class="form-row">
+        <div class="form-group col-md-3 mb-0">name</div>
+        <div class="form-group col-md-2 mb-0">designation</div>
+        <div class="form-group col-md-2 mb-0">mobile</div>
+        <div class="form-group col-md-3 mb-0">email</div>
+        <div class="form-group col-md-2 mb-0">remark</div>
+    </div>
+    {% for form in person_forms %}
+
+    <div class="form-row">
+        <div class="form-group col-md-3 mb-0">{{ form.name|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.designation|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.mobile|as_crispy_field }}</div>
+        <div class="form-group col-md-3 mb-0">{{ form.email|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ form.remark|as_crispy_field }}</div>
+    </div>
+    {% endfor %}
+    <hr>
+
+    <br>
+    <button type="submit" class="btn btn-warning float-right">add customer</button>
+</form>
+{% endblock content %}

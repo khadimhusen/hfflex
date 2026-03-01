@@ -1,0 +1,65 @@
+{% extends 'home.html' %}
+
+{% load crispy_forms_tags %}
+{% block content %}
+<div>
+    <h3>{{user.username|upper}}
+    </h3>
+</div>
+
+<form method="POST">
+
+    {% csrf_token %}
+
+
+    <fieldset>
+        <legend>Address detail</legend>
+        {{ access.management_form }}
+        {{ access.non_form_errors }}
+        {{ access.non_field_error }}
+
+        {% for form in access %}
+
+        {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+        {% endfor %}
+
+        {% if forloop.first %}
+         <div class="form-row">
+             <div class="form-group col-md-4 mb-0">
+                Name
+            </div>
+             <div class="form-group col-md-4 mb-0">
+                Name
+            </div>
+             <div class="form-group col-md-4 mb-0">
+                Name
+            </div>
+         </div>
+        <div class="form-row">
+
+            {% endif %}
+
+            <div class="form-group col-md-4 mb-0">
+                {{form.viewname|as_crispy_field}}
+                {{form.viewname.errors}}
+
+            </div>
+
+            {% if forloop.counter|divisibleby:3 and not forloop.last %}
+        </div>
+
+        <div class="form-row">
+            {% endif %}
+            {% if forloop.last %}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </fieldset>
+
+
+    <button class="btn btn-primary" type="submit ">save</button>
+    <a href="{%url 'customer:customerlist' %}">Cancel</a>
+</form>
+
+{% endblock content %}

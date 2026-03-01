@@ -1,0 +1,156 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+
+<h2> New Itemmaster Form</h2>
+<form method="POST">
+    <div style="background-color:yellow"> {{ item_form.non_field_errors }}</div>
+    {% csrf_token %}
+    <div class="form-row">
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.itemcode|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-6 mb-0">
+            {{ item_form.itemcustomer|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <div>New customer</div>
+            <a class="btn btn-primary" href="{% url 'customer:customerdetailadd' %}?next={{request.path}}">
+                <strong>+</strong></a>
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.packsize|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.printing|as_crispy_field }}
+        </div>
+
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-8 mb-0">
+            {{ item_form.itemname|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.shade_accuracy|as_crispy_field }}
+        </div>
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.replength|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.openwidth|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.slit_size|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.no_of_repeat|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.no_of_ups|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ item_form.cylinder_status|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-3 mb-0">
+            {{ item_form.commodity|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            {{ item_form.active|as_crispy_field }}
+        </div>
+
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.cyl_length|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.cyl_circum|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-4 mb-0">
+            {{ item_form.barcode|as_crispy_field }}
+        </div>
+
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.total_gsm|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.pouch_weight|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.pouch_per_kg|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.pouch_type|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.supply_form |as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.film_size|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.unwind_direction|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ item_form.lami_rubber|as_crispy_field }}
+        </div>
+
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-8 mb-0">
+            {{ item_form.remark|as_crispy_field }}
+        </div>
+    </div>
+
+
+    <button type="submit " class="btn btn-primary">Save New ItemMaster</button>
+</form>
+<script src="{% static 'js/jquery.js' %}"></script>
+
+<script>
+	$(document).ready(function(){
+	$('[id^=id_orderform]').each(function() {$(this).attr({'disabled': 'disabled' })});
+});
+
+
+     $( "#id_replength" ).change(function() {
+      let rep_length = Number($("#id_replength").val());
+      let no_up = Number($("#id_no_of_repeat").val());
+    $("#id_cyl_circum").val(rep_length*no_up);});
+
+    $( "#id_no_of_repeat" ).change(function() {
+     let rep_length = Number($("#id_replength").val());
+     let no_up = Number($("#id_no_of_repeat").val());
+    $("#id_cyl_circum").val(rep_length*no_up);
+                                                });
+
+    $( "#id_openwidth").change(function() {
+     let openwidth = Number($("#id_openwidth").val());
+     let no_of_ups = Number($("#id_no_of_ups").val());
+    $("#id_cyl_length").val(Math.max((openwidth * no_of_ups)+100,420));
+    $("#id_slit_size").val( openwidth);
+    $("#id_film_size").val((openwidth * no_of_ups)+15);
+
+                                            });
+
+    $( "#id_no_of_ups").change(function() {
+     let openwidth = Number($("#id_openwidth").val());
+     let no_of_ups = Number($("#id_no_of_ups").val());
+    $("#id_cyl_length").val(Math.max((openwidth * no_of_ups)+100,420));
+    $("#id_film_size").val((openwidth * no_of_ups)+15);
+    $("#id_slit_size").val($( "#id_openwidth").val());
+
+                                            });
+
+
+
+</script>
+{% endblock content %}

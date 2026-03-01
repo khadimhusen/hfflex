@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% for msg in messages %}
+
+<h3>{{ msg }}
+</h3>
+
+
+{% endfor %}
+<h4> you have been logout successfully</h4>
+
+
+<a class="btn btn-primary" href="{% url 'home' %}"> login</a>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style>
+.row{color: darkblue;}
+
+
+</style>
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+
+<a href="{% url 'order:jobitemmasterlist' %}">
+    <button class="btn btn-primary">back to list</button>
+</a>
+
+<div class="container">
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#home">JOB DETAIL</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu1">JOB MATERIAL DETAIL</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu2">IMAGES</a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div id="home" class="container tab-pane active"><br>
+            <div class="row">
+                <div class="card col-md-4 my-1">
+                    <h3><strong>Joborder Id:-</strong> {{job.id}}</h3>
+                </div>
+                <div class="card col-md-6 my-1">
+                    <h3><strong>Name:-</strong> {{job.itemname}}</h3>
+                </div>
+                <div class="card col-md-2 my-1">
+                    <a href="{% url 'order:jobitemmasterdetailedit' job.id %}"><strong>edit</strong> </a>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="card col-md-6 my-1">
+                    <h6><strong>Customer Name:-</strong> {{job.job.joborder.customer}}</h6>
+                </div>
+                <div class="card col-md-1 my-1">
+                    <h6><strong>JOB ID:-</strong> {{job.job.id}}</h6>
+                </div>
+                <div class="card col-md-2 my-1">
+                    <h6><strong>Quantity:-</strong> {{job.job.quantity|floatformat:"-3"}} {{job.job.unit}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Pouch Qty:-</strong> {{job.job.totalpouch|floatformat:"-3"}} Nos.</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card col-md-4 my-1">
+                    <h6><strong>Po By:-</strong> {{job.job.joborder.po}}</h6>
+                </div>
+                <div class="card col-md-4 my-1">
+                    <h6><strong>Po Date:-</strong> {{job.job.joborder.podate|date:"SHORT_DATE_FORMAT"}}</h6>
+                </div>
+                <div class="card col-md-4 my-1">
+                    <h6><strong>Order Date:-</strong> {{job.job.joborder.orderdate}}</h6>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Barcode:-</strong> {{job.barcode}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Pack Size:-</strong> {{job.packsize}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Repeate Length:-</strong> {{job.replength}}</h6>
+                </div>
+
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Open Width:-</strong> {{job.openwidth}}</h6>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Slitting Size</strong> {{job.slit_size}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>No. of Repeat</strong> {{job.no_of_repeat}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>No. of Ups</strong> {{job.no_of_ups}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Cylinder Length</strong> {{job.cyl_length}}</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Cylinder Circum</strong> {{job.cyl_circum}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Printing:-</strong> {{job.printing}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Total Gsm:-</strong> {{job.total_gsm}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Pouch Weight</strong> {{job.pouch_weight}}</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card col-md-2 my-1">
+                    <h6><strong>Pouch/Kg.</strong> {{job.pouch_per_kg}}</h6>
+                </div>
+                <div class="card col-md-4 my-1">
+                    <h6><strong>Pouch Type</strong> {{job.pouch_type}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Supply Form:-</strong> {{job.supply_form}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Film Size</strong> {{job.film_size}}</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Unwinding Direction</strong> {{job.unwind_direction}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>Lamination Rubber</strong> {{job.lami_rubber}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>created-by</strong> {{job.createdby}}</h6>
+                </div>
+                <div class="card col-md-3 my-1">
+                    <h6><strong>changed-by</strong> {{job.editedby}}</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card col-md-12 my-1">
+                    <h6><strong>Remark.</strong> {{job.remark}}</h6>
+                </div>
+
+            </div>
+        </div>
+        <div id="menu1" class="container tab-pane fade"><br>
+            <table class="table table-striped bordered">
+                <thead>
+                <tr>
+                    <th>Film</th>
+                    <th> Type</th>
+                    <th> Grade</th>
+                    <th> Size</th>
+                    <th> Micron</th>
+                    <th> Gsm</th>
+                    <th> Required</th>
+                    <th> Meter</th>
+
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for j in job.jobmaterial.all %}
+                <tr>
+
+                    <th> {{j.materialname}}</th>
+                    <th> {{j.item_grade}}</th>
+                    <th> {{j.item_mat_type}}</th>
+                    <th> {{j.size}}mm</th>
+                    <th> {{j.micron}}</th>
+                    <th> {{j.gsm|floatformat:"-1"}}</th>
+                    <th> {{j.req|floatformat:"-1"}}</th>
+                    <th> {{j.length|floatformat:"0"}} m.</th>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th> Total</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+
+                </tbody>
+
+            </table>
+        </div>
+        <div id="menu2" class="container tab-pane fade"><br>
+            <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+
+                    <div class="carousel-item">
+                        <img src="{% static 'media/itemmaster/MILK-6_aQaxmWf.jpg' %}" >
+                        <h5> image {{img.id}}</h5>
+                    </div>
+
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock content %}

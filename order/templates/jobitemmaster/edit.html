@@ -1,0 +1,152 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+        <div class="form-group col-md-12 mb-0" hidden="hidden">
+            {{ mainform.job|as_crispy_field }}
+        </div>
+    </div><div class="form-row">
+        <div class="form-group col-md-12 mb-0">
+            {{ mainform.itemname|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.itemcode|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.barcode|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.packsize|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.replength|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.openwidth|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.slit_size|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.no_of_repeat|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.no_of_ups|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.cyl_length|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.cyl_circum|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.no_of_ply|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.printing|as_crispy_field }}
+        </div>
+
+    </div>
+    <div class="form-row">
+
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.total_gsm|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.pouch_weight|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.pouch_per_kg|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.jobitemstatus|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.pouch_type|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.supply_form |as_crispy_field }}
+        </div>
+
+    </div>
+
+    <div class="form-row">
+        <div class="form-group col-md-12 mb-0">
+            {{ mainform.remark |as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.unwind_direction |as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.lami_rubber|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.totalpouch|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.totalmeter|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ mainform.film_size|as_crispy_field }}
+        </div>
+    </div>
+
+    <fieldset>
+        <legend>row material form</legend>
+        {{ subforms1.management_form }}
+        {{ subforms1.non_form_errors }}
+
+        {% for subform1 in subforms1 %}
+
+        {% for hidden in subforms1.hidden_fields %}
+        {{ hidden }}
+        {% endfor %}
+
+
+        <div class="form-row">
+            <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                {{ subform1.id|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ subform1.materialname|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ subform1.item_mat_type|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ subform1.item_grade|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                {{ subform1.size|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                {{ subform1.micron|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                {{ subform1.gsm|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                {{ subform1.req|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ subform1.length|as_crispy_field }}
+            </div>
+        </div>
+        {% endfor %}
+    </fieldset>
+    <button type="submit " class="btn btn-primary">Save Changes</button>
+</form>
+{% endblock content %}

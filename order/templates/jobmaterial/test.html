@@ -1,0 +1,109 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<style>
+    .table{
+  font-size: 14px;}
+
+</style>
+{% endblock customcss %}
+{% block content %}
+<!--table start from here-->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center">Job material list</h2>
+                    <h4>No. of material {{total}}</h4>
+
+                    <a class="btn btn-primary" href="#" onclick="HTMLtoPDF()">PDF</a>
+                    <div class="table-responsive" id="HTMLtoPDF">
+                        <table class="table table-striped table-bordered zero-configuration">
+                            <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Type</th>
+                                <th>Grade</th>
+                                <th>size</th>
+                                <th>Micron</th>
+                                <th>Req</th>
+                                <th>Avail</th>
+                                <th>To order</th>
+                                <th class="text-center" >Action</th>
+                                <th class="text-center" >Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for mat in jobmaterials %}
+                            <tr>
+                                <td>{{mat.materialname}}</td>
+                                <td>{{mat.item_mat_type}}</td>
+                                <td>{{mat.item_grade}}</td>
+                                <td>{{mat.size}}</td>
+                                <td>{{mat.micron}}</td>
+                                <td>{{mat.req}}</td>
+                                <td>{{mat.avail}}</td>
+                                <td>{{mat.to_order}}</td>
+
+                                <td class="text-center" >
+                                    <a class="btn btn-primary btn-sm"
+                                       href="#">Details</a>
+                                </td>
+                                <td class="text-center" ><a class="btn btn-warning btn-sm"
+                                                                         href="{% url 'production:jobmaterialstatusedit' mat.id %}">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <nav aria-label="Page navigation example">
+                        {% if jobmaterials.has_other_pages %}
+                        <ul class="pagination">
+                            {% if jobmaterials.has_previous %}
+                            <li><a class="btn btn-primary"
+                                   href="?page={{ jobmaterials.previous_page_number }}">Previous</a>
+                            </li>
+                            {% else %}
+                            <li class="btn btn-primary disabled"><span>Previous</span></li>
+                            {% endif %}
+
+                            {% for i in jobmaterials.paginator.page_range %}
+                            {% if jobmaterials.number == i %}
+                            <li><a class="btn btnp primary active"><span>{{ i }} <span class="sr-only">(current)</span></span></a>
+                            </li>
+                            {% else %}
+                            <li><a class="btn btn-primary" href="?page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if jobmaterials.has_next %}
+                            <li><a class="btn btn-primary" href="?page={{ jobmaterials.next_page_number }}">Next</a>
+                            </li>
+                            {% else %}
+                            <li class="btn btn-primary disabled"><span>Next</span></li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+                    </nav>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- table end here-->
+
+{% endblock content %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>$(function () {$( "#id_created__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_created__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+
+{% endblock javascripts %}

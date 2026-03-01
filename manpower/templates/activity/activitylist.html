@@ -1,0 +1,136 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style> .table{  font-size: 12px;}</style>
+{% endblock customcss %}
+
+{% block topscript %}
+
+{% endblock topscript %}
+
+
+{% block content %}
+
+<!--table start from here-->
+<div class="content p-4">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex">
+                        <h2 class="card-title text-center">{{request.user.first_name}} {{request.user.last_name}}</h2>
+                    </div>
+                    <div class="card-body">
+                        <h4></h4>
+                        <form method="GET">
+                            <div class="form-row">
+                                <div class="form-group col-md-2 mb-0 ">
+                                    {{myFilter.form.activity|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.reason|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.downtime|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-2 mb-0 ">
+                                    {{myFilter.form.date__gt|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-2 mb-0 ">
+                                    {{myFilter.form.date__lt|as_crispy_field}}
+                                </div>
+
+                                <div class="form-group col-md-1 mb-0">
+                                    <label for="filter">Page No.</label>
+                                    <select class="form-control" id="filter" name="page">
+                                        {% for i in downtime.paginator.page_range %}
+                                        {% if downtime.number == i %}
+                                        <option value="{{i}}" selected>{{ i }}</option>
+                                        {% else %}
+                                        <option value="{{i}}">{{ i }}</option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class=" col-md-1 mb-0 ">
+                                    <button class="btn btn-primary btn-sm" type="submit">search</button>
+                                    <button class="btn btn-warning btn-sm" type="submit"
+                                            formaction="{% url 'order:jobexcel' %}?q={{q}}">Download to excel
+                                    </button>
+                                </div>
+                            </div>
+
+
+                            <div class="table-responsive " id="table">
+                                <table class="table table-striped table-bordered zero-configuration table-sm">
+                                    <thead>
+                                    <tr>
+                                        <th>production_date</th>
+                                        <th>shift</th>
+                                        <th>Machine</th>
+                                        <th>actualtime</th>
+                                        <th>efficiency</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    {% for item in downtime %}
+                                    <tr>
+                                        <td>{{item.actvity}}</td>
+                                        <td>{{item.reason}}</td>
+                                        <td>{{item.downtime}}</td>
+                                        <td>{{shift.actualtime}}</td>
+                                        <td class="effi">{{shift.efficiency}}</td>
+                                        <td>
+                                            <a href="{% url 'manpower:shiftdetail' shift.id %}">EDIT</a>
+
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <TFOOT>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td id="avg_eff"></td>
+                                        <td></td>
+                                    </tr>
+                                    </TFOOT>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>$(function () {$( "#id_date__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_date__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>
+    var sum = 0;
+    var totalcount=0;
+
+        $('.effi').each(function () {
+            sum += parseFloat($(this).text() || 0);
+            totalcount += 1 ;
+        });
+
+        $("#avg_eff").text((sum/totalcount).toFixed(0) + ' %');
+
+</script>
+
+{% endblock javascripts %}

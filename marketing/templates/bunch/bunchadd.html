@@ -1,0 +1,44 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST" >
+
+    <div class="card-body">
+        <h2 class="card-title">New Bunch Form</h2>
+
+    </div>
+    {% csrf_token %}
+
+    <div class="form-row">
+
+        <div class="form-group col-md-2 mb-0">
+            {{ bunchform.leaduser|as_crispy_field }}
+        </div>
+
+        <div class="form-group col-md-2 mb-0">
+            {{ bunchform.lead|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ bunchform.completed|as_crispy_field }}
+        </div>
+    </div>
+
+    <button type="submit " class="btn btn-primary">Save Bunch</button>
+</form>
+
+{% endblock content %}
+
+
+{% block javascripts %}
+
+{% endblock javascripts%}

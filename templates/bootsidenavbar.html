@@ -1,0 +1,239 @@
+{% load extra_tag %}
+<div class="sidebar sidebar-dark bg-dark">
+    <ul class="list-unstyled">
+        <!-- Customer nav-->
+        {% if user|user_in_department:"sidecustomer" %}
+
+        <li>
+            <a href="#Customer" data-toggle="collapse"><strong style="color:lightgreen">C</strong>ustomer</a>
+            <ul id="Customer" class="list-unstyled collapse">
+                <li><a href="{% url 'customer:customerlist' %}"> All </a></li>
+                <li><a href="{% url 'customer:customerlist' %}?q=True">Active</a></li>
+                <li><a href="{% url 'customer:customerlist' %}?q=False">Not Active</a></li>
+                <li><a href="{% url 'customer:customeradd' %}"> Add New Customer </a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#Marketing" data-toggle="collapse"><strong style="color:lightgreen">M</strong>arketing</a>
+            <ul id="Marketing" class="list-unstyled collapse">
+                <li><a href="{% url 'marketing:leadlist' %}"> Lead </a></li>
+                <li><a href="{% url 'marketing:bunchlist' %}"> Bunch </a></li>
+                <li><a href="{% url 'marketing:routelist' %}"> Route </a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sidequotation" %}
+        <li>
+            <a href="#Quotation" data-toggle="collapse"><strong style="color:lightgreen">Q</strong>uotation</a>
+            <ul id="Quotation" class="list-unstyled collapse">
+                <li><a href="{% url 'quotation:quotationlist' %}?createdby={{request.user.id}}">Quotation list</a></li>
+                <li><a href="{% url 'quotation:quotationlist' %}?approvedby=None">Pending for Approval</a></li>
+                <li><a href="{% url 'quotation:costing' %}">Costing </a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sideitemmaster" %}
+        <!-- Itemmaster nav-->
+        <li>
+            <a href="#Itemmaster" data-toggle="collapse"><strong style="color:lightgreen">I</strong>temmaster</a>
+            <ul id="Itemmaster" class="list-unstyled collapse">
+                <li><a href="{% url 'itemmaster:itemlist' %}"> All </a></li>
+                <li><a href="{% url 'itemmaster:itemlist' %}?q=True">Active</a></li>
+                <li><a href="{% url 'itemmaster:itemlist' %}?q=False">Not Active</a></li>
+                <li><a href="{% url 'itemmaster:itemadd' %}"> Add New Itemmaster </a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+
+        {% if user|user_in_department:"sidepreorder" %}
+        <!-- preorder nav-->
+        <li>
+            <a href="#Preorder" data-toggle="collapse"><strong style="color:lightgreen">P</strong>reorder</a>
+            <ul id="Preorder" class="list-unstyled collapse">
+                <li><a href="{% url 'preorder:preorderlist' %}"> All </a></li>
+                <li><a href="{% url 'preorder:addpreorder' %}">Add New Preorder</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sideorder" %}
+        <!-- order nav-->
+        <li>
+            <a href="#Order" data-toggle="collapse"><strong style="color:lightgreen">O</strong>rder</a>
+            <ul id="Order" class="list-unstyled collapse">
+                <li><a href="{% url 'order:orderlist' %}"> All </a></li>
+                <li><a href="{% url 'order:orderlist' %}?q=Pending">Pending</a></li>
+                <li><a href="{% url 'order:orderlist' %}?q=Close">Close</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sidejob" %}
+        <!-- Jobs nav-->
+        <li>
+            <a href="#Job" data-toggle="collapse"><strong style="color:lightgreen">J</strong>ob</a>
+            <ul id="Job" class="list-unstyled collapse">
+                <li><a href="{% url 'order:joblist' %}"> All </a></li>
+                <li><a href="{% url 'order:joblist' %}?jobstatus=Pending">Pending</a></li>
+                <li><a href="{% url 'order:joblist' %}?jobstatus=Unplanned">Unplanned</a></li>
+                <li><a href="{% url 'order:joblist' %}?jobstatus=Completed">Completed</a></li>
+                <li><a href="{% url 'order:joblist' %}?jobstatus=Close">Close</a></li>
+                <li><a href="{% url 'order:joblist' %}?jobstatus=Hold">Hold</a></li>
+                <hr>
+                <li><a href="{% url 'order:orderadd' %}">+ Add New order </a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sideplanning" %}
+
+        <!-- Process nav-->
+        <li>
+            <a href="#Planning" data-toggle="collapse"><strong style="color:lightgreen">P</strong>laninng</a>
+            <ul id="Planning" class="list-unstyled collapse">
+                <li><a href="{% url 'order:planninglist' 'All' %}">All</a></li>
+                <li><a href="{% url 'order:planninglist' 'PRINT-1' %}">PRINT-1</a></li>
+                <li><a href="{% url 'order:planninglist' 'LAMI-1' %}">LAMI-1</a></li>
+                <li><a href="{% url 'order:planninglist' 'SLIT-1' %}">SLIT-1</a></li>
+                <li><a href="{% url 'order:planninglist' 'POUCH-1' %}">POUCH-1</a></li>
+                <li><a href="{% url 'order:planninglist' 'POUCH-2' %}">POUCH-2</a></li>
+
+            </ul>
+        </li>
+        {% endif %}
+
+        {% if user|user_in_department:"sideprocess" %}
+
+        <!-- Process nav-->
+        <li>
+            <a href="#Process" data-toggle="collapse"><strong style="color:lightgreen">P</strong>rocess</a>
+            <ul id="Process" class="list-unstyled collapse">
+                <li><a href="{% url 'order:processlist' 'All' %}">All</a></li>
+                <li><a href="{% url 'order:processlist' 'Printing' %}">Printing</a></li>
+                <li><a href="{% url 'order:processlist' 'Doctoring' %}">Doctoring</a></li>
+                <li><a href="{% url 'order:processlist' 'Lamination' %}">Lamination</a></li>
+                <li><a href="{% url 'order:processlist' 'Slitting' %}">Slitting</a></li>
+                <li><a href="{% url 'order:processlist' 'Pouching' %}">Pouching</a></li>
+
+            </ul>
+        </li>
+        {% endif %}
+
+
+        {% if user|user_in_department:"sidematerial" %}
+
+        <!-- JobMateril-->
+        <li><a href="{% url 'order:jobmateriallist'%}">
+            <strong style="color:lightgreen">J</strong>ob<strong style="color:lightgreen">M</strong>aterial</a></li>
+        {% endif %}
+
+        {% if user|user_in_department:"sidereport" %}
+
+        <!-- Production report-->
+        <li>
+            <a href="#Report" data-toggle="collapse"><strong style="color:lightgreen">R</strong>eport</a>
+            <ul id="Report" class="list-unstyled collapse">
+                <li><a href="{% url 'production:prodreportlist' 'All' %}">All</a></li>
+                <li><a href="{% url 'production:prodreportlist' 'Printing' %}">Printing</a></li>
+                <li><a href="{% url 'production:prodreportlist' 'Doctoring' %}">Doctoring</a></li>
+                <li><a href="{% url 'production:prodreportlist' 'Lamination' %}">Lamination</a></li>
+                <li><a href="{% url 'production:prodreportlist' 'Slitting' %}">Slitting</a></li>
+                <li><a href="{% url 'production:prodreportlist' 'Pouching' %}">Pouching</a></li>
+            </ul>
+        </li>
+
+        {% endif %}
+
+
+
+        {% if user|user_in_department:"sidepurchase" %}
+        <!-- packing report-->
+        <li>
+            <a href="#Purchase" data-toggle="collapse"><strong style="color:lightgreen">P</strong>urchase</a>
+            <ul id="Purchase" class="list-unstyled collapse">
+                <li><a href="{% url 'purchase:purchaselist' %}">Purchase List</a></li>
+                <li><a href="{% url 'purchase:purchaselist' %}?approval_pending=true">Purchase Pending For Approval</a>
+                </li>
+                <li><a href="{% url 'purchase:purchaselist' %}?status=Pending">Status Pending List</a></li>
+
+                {% if user|user_in_department:"sidepurchaseitem" %}
+                <li><a href="{% url 'purchase:poitemlist' %}">Po Item List</a></li>
+                {% endif %}
+
+            </ul>
+        </li>
+        {% endif %}
+
+
+        {% if user|user_in_department:"sidedispatch" %}
+        <!-- Dispatch report-->
+        <li>
+            <a href="#Dispatch" data-toggle="collapse"><strong style="color:lightgreen">D</strong>ispatch</a>
+            <ul id="Dispatch" class="list-unstyled collapse">
+                <li><a href="{% url 'production:dispatchapprovalpending' %}">Dispatch Pending For Approval</a></li>
+                <li><a href="{% url 'production:dispatchpending' %}">Pending For Dispatch</a></li>
+                <li><a href="{% url 'production:dispatchlist' %}">Dispatched List</a></li>
+                <li><a href="{% url 'production:dispatchadd' %}">Craete New Delivery Challan</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+
+        {% if user|user_in_department:"sidestock" %}
+        <!-- Production report-->
+        <li>
+            <a href="#Stock" data-toggle="collapse"><strong style="color:lightgreen">S</strong>tock</a>
+            <ul id="Stock" class="list-unstyled collapse">
+                <li><a href="{% url 'production:inwardlist' %}">Inward</a></li>
+                <li><a href="{% url 'production:stocklist' %}?qc_status=Ok">Stock Ok</a></li>
+                <li><a href="{% url 'production:stocklist' %}">Stock All</a></li>
+                <li><a href="{% url 'production:stocklist' %}?qc_status=Hold">Stock Hold</a></li>
+                <li><a href="{% url 'production:stocklist' %}?qc_status=Rejected">Stock Rejected</a></li>
+                <li><a href="{% url 'production:stocklist' %}?qc_status=Nil">Stock Nil</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+
+        {% if user|user_in_department:"sidebank" %}
+        <li>
+            <a href="#Bank" data-toggle="collapse"><strong style="color:lightgreen">B</strong>ank</a>
+            <ul id="Bank" class="list-unstyled collapse">
+                <li><a href="{% url 'bank:chequelist' %}">All</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Issued">Issued</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Unissued">Unissued</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Cleared">Cleared</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Hold">Hold</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Stop Payment">Stop Payment</a></li>
+                <li><a href="{% url 'bank:chequelist' %}?q=Cancel">Cancel</a></li>
+                <li><a href="{% url 'bank:chequeadd' %}">Add New Cheque series</a></li>
+            </ul>
+        </li>
+        {% endif %}
+        <!-- Manpower nav-->
+
+
+        {% if user|user_in_department:"sidemanpower" %}
+
+        <li>
+            <a href="#ManPower" data-toggle="collapse"><strong style="color:lightgreen">M</strong>anPower</a>
+            <ul id="ManPower" class="list-unstyled collapse">
+                <li><a href="{% url 'manpower:shiftlist' %}">All</a></li>
+                <li><a href="{% url 'manpower:shiftlist' %}?machine=1">PRINT-1</a></li>
+                <li><a href="{% url 'manpower:shiftlist' %}?machine=2">LAMI-1</a></li>
+                <li><a href="{% url 'manpower:shiftlist' %}?machine=3">SLIT-1</a></li>
+                <li><a href="{% url 'manpower:shiftlist' %}?machine=4">POUCH-1</a></li>
+                <li><a href="{% url 'manpower:shiftlist' %}?machine=5">POUCH-2</a></li>
+                <li><a href="{% url 'manpower:downtimelist' %}">Downtime List</a></li>
+
+            </ul>
+        </li>
+
+        {% endif %}
+
+
+    </ul>
+</div>

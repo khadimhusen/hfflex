@@ -1,0 +1,35 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+{% endblock customcss %}
+{% block content %}
+
+<form method="POST">
+    <div class="card-body">
+        <h2 class="card-title">New Packing Form</h2>
+
+    </div>
+    {% csrf_token %}
+    {{ packing_form|crispy }}
+    <button type="submit" class="btn btn-primary">Save Packing</button>
+</form>
+
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_packingdate" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(),
+
+});
+    });
+
+</script>
+
+{% endblock javascripts%}

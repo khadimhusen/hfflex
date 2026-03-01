@@ -1,0 +1,14 @@
+{% extends 'home.html' %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{mainform}}
+    <button class="btn btn-warning btn-sm" type="submit">save</button>
+</form>
+
+<H1>Mater</H1>
+<p>{{obj}}</p>
+
+
+
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#home">JOB DETAIL</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu4">Item Attrubutes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu1">Raw Material</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu2">JOB PROCESS</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu3">JOB IMAGES</a>
+        </li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div id="home" class="container tab-pane active"><br>
+
+            <div class="form-row">
+                <div class="form-group col-md-12 mb-0">
+                    <h3>{{ mainform.instance.itemmaster }}</h3>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 mb-0">
+                    {{ mainform.itemname|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.quantity|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.unit|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.jobstatus|as_crispy_field }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.invoice|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.barcode|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.packsize|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.replength|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.openwidth|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.slit_size|as_crispy_field }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.no_of_repeat|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.no_of_ups|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.cyl_length|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.cyl_circum|as_crispy_field }}
+                </div>
+
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.printing|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.job_repeat_status|as_crispy_field }}
+                </div>
+            </div>
+            <div class="form-row">
+
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.total_gsm|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.pouch_weight|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.pouch_per_kg|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.kgqty|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.pouch_type|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.supply_form |as_crispy_field }}
+                </div>
+
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.unwind_direction |as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.lami_rubber|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.totalpouch|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.totalmeter|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.film_size|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ mainform.rate|as_crispy_field }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-12 mb-0">
+                    {{ mainform.jobremark |as_crispy_field }}
+                </div>
+                <div class="form-group col-md-12 mb-0">
+                    {{ mainform.remark |as_crispy_field }}
+                </div>
+            </div>
+        </div>
+
+        <div id="menu1" class="container tab-pane"><br>
+            <fieldset>
+                <legend>row material form</legend>
+                {{ subforms1.management_form }}
+                {{ subforms1.non_form_errors }}
+                <div class="form-row">
+
+                    <div class="form-group col-md-2 mb-0">
+                        materialname
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        item_mat_type
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        item_grade
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        size
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        micron
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        req
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        available
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        to_order
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                       X
+                    </div>
+                </div>
+
+
+                {% for hidden in subforms1.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% for subform1 in subforms1 %}
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                        {{ subform1.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform1.materialname|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform1.item_mat_type|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform1.item_grade|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.size|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.micron|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.req|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.available|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.to_order|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform1.DELETE }}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div id="menu4" class="container tab-pane"><br>
+            <fieldset>
+                <legend>Attrubutes</legend>
+                {{ subforms4.management_form }}
+                {{ subforms4.non_form_errors }}
+
+
+                {% for hidden in subforms4.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% for subform4 in subforms4 %}
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                        {{ subform4.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform4.item_attirbuate|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform4.attri_value|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-1 mb-0">
+                        {{ subform4.DELETE}}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+
+        <div id="menu2" class="container tab-pane">
+            <fieldset>
+                <legend>Job process form</legend>
+                {{ subforms2.management_form }}
+                {{ subforms2.non_form_errors }}
+
+                {% for subform2 in subforms2 %}
+
+                {% for hidden in subforms2.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                        {{ subform2.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform2.process|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform2.qty|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform2.unit|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform2.status|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform2.DELETE }}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+
+        <div id="menu3" class="container tab-pane">
+
+            <fieldset>
+
+                <legend> Job Images </legend>
+
+                {{ subforms3|crispy }}
+
+            </fieldset>
+        </div>
+
+        <button type="submit " class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+
+<script>
+
+    $("#id_replength").change(function () {
+        let rep_length = Number($("#id_replength").val());
+        let no_up = Number($("#id_no_of_repeat").val());
+        $("#id_cyl_circum").val(rep_length * no_up);
+    });
+
+    $("#id_no_of_repeat").change(function () {
+        let rep_length = Number($("#id_replength").val());
+        let no_up = Number($("#id_no_of_repeat").val());
+        $("#id_cyl_circum").val(rep_length * no_up);
+    });
+
+    $("#id_openwidth").change(function () {
+        let openwidth = Number($("#id_openwidth").val());
+        let no_of_ups = Number($("#id_no_of_ups").val());
+        $("#id_cyl_length").val((openwidth * no_of_ups) + 60);
+        $("#id_slit_size").val(openwidth);
+        $("#id_film_size").val((openwidth * no_of_ups) + 15);
+
+    });
+
+    $("#id_no_of_ups").change(function () {
+        let openwidth = Number($("#id_openwidth").val());
+        let no_of_ups = Number($("#id_no_of_ups").val());
+        $("#id_cyl_length").val((openwidth * no_of_ups) + 60);
+        $("#id_film_size").val((openwidth * no_of_ups) + 15);
+        $("#id_slit_size").val($("#id_openwidth").val());
+
+    });
+
+</script>
+{% endblock content %}

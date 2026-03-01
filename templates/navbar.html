@@ -1,0 +1,174 @@
+<!--navbar start here-->
+
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark" style="margin-: 10px; margin-right: 10px;">
+
+
+    <!--navbar hamburger button-->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+
+    <!--      -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <!--       -->
+        <ul class="navbar-nav mr-auto">
+
+            <!-- Employee-->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="{% url 'employee:employeelist' %}" id="navbarDropdown"
+                   role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Employee</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item " href="{% url 'employee:employeelist' %}?q=True">Active</a>
+                    <a class="dropdown-item" href="{% url 'employee:employeelist' %}?q=False">Not Active</a>
+                    <a class="dropdown-item" href="{% url 'employee:employeelist' %}"> All </a>
+                </div>
+            </li>
+
+            <!-- master -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="{% url 'material:materiallist' %}" id="navbarDropdown"
+                   role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">MaterialMaster</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item " href="{% url 'material:materiallist' %}">Material</a>
+                    <a class="dropdown-item" href="{% url 'material:mattypelist' %}">Material Type</a>
+                    <a class="dropdown-item" href="{% url 'material:gradelist' %}">Grade</a>
+                </div>
+            </li>
+
+            <!-- customer -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" href="{% url 'customer:customerlist' %}" area-expanded="false">Customer</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'customer:customerlist' %}?q=True">Active</a>
+                    <a class="dropdown-item" href="{% url 'customer:customerlist' %}?q=False">Not Active</a>
+                    <a class="dropdown-item" href="{% url 'customer:customerlist' %}"> All </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'customer:customeradd' %}"> Add New Customer </a>
+                </div>
+            </li>
+
+            <!-- itemmaster -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="{% url 'itemmaster:itemlist' %}" id="navbarDropdown"
+                   role="button" data-toggle="dropdown" aria-haspopup="true" area-expanded="false"> Item-Master</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'itemmaster:itemlist' %}?q=True">Active</a>
+                    <a class="dropdown-item" href="{% url 'itemmaster:itemlist' %}?q=False">Not Active</a>
+                    <a class="dropdown-item" href="{% url 'itemmaster:itemlist' %}"> All </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'itemmaster:itemadd' %}"> Add New Itemmaster </a>
+                </div>
+            </li>
+
+            <!-- Order -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false" href="{% url 'order:orderlist' %}">Order</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'order:orderlist' %}?q=Pending">Pending</a>
+                    <a class="dropdown-item" href="{% url 'order:orderlist' %}?q=Close">Close</a>
+                    <a class="dropdown-item" href="{% url 'order:orderlist' %}"> All </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'order:orderadd' %}"> Add New order </a>
+                </div>
+            </li>
+
+            <!-- job -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false" href="{% url 'order:joblist' %}">Jobs</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}?q=Pending">Pending</a>
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}?q=Unplanned">Unplanned</a>
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}?q=Completed">Completed</a>
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}?q=Close">Close</a>
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}?q=Hold">Hold</a>
+                    <a class="dropdown-item" href="{% url 'order:joblist' %}"> All </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'order:orderadd' %}"> Add New order </a>
+                </div>
+            </li>
+
+            <!-- Process -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false">Process</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Printing' %}">Printing</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Doctoring' %}">Doctoring</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Lamination' %}">Lamination</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Slitting' %}">Slitting</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Pouching' %}">Pouching</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Packing' %}">Packing</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'Dispatch' %}">Dispatch</a>
+                    <a class="dropdown-item" href="{% url 'order:processlist' 'All' %}">All</a>
+
+                </div>
+            </li>
+
+
+            <!-- jobmaterial-->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false">Jobmaterial</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'order:jobmateriallist'%}">All material requirment list</a>
+
+                </div>
+            </li>
+
+
+            <!-- Production -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false">Production</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Printing' %}">Printing</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Doctoring' %}">Doctoring</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Lamination' %}">Lamination</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Slitting' %}">Slitting</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Pouching' %}">Pouching</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Packing' %}">Packing</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'Dispatch' %}">Dispatch</a>
+                    <a class="dropdown-item" href="{% url 'production:prodreportlist' 'All'%}">All</a>
+                </div>
+            </li>
+
+
+            <!-- Stock -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" area-expanded="false" href="{% url 'order:joblist' %}">Stock</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'production:inwardlist' %}">Inward</a>
+                    <a class="dropdown-item" href="{% url 'production:stocklist' %}">Stock</a>
+
+                </div>
+            </li>
+
+        </ul>
+
+        <p style="color:lightgreen; margin:5px;"> Welcome {{request.user}}</p>
+        <a href="{% url 'logout' %}">
+            <button class="btn btn-danger btn-sm mr-1"> logout</button>
+        </a>
+        <a href="/admin/">
+            <button class="btn btn-danger btn-sm"> Admin</button>
+        </a>
+    </div>
+
+</nav>
+<!--navbar end here-->
+
+{% for message in messages %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong>{{message}}</strong>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endfor %}

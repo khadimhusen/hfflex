@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Example 2</title>
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/purchase.css' %}">
+</head>
+<body>
+<div class="container col-8 border" id="download">
+    <div class="row text-center">
+        <div class="col-12"><h5 class="text-center"><u>Purchase Order</u></h5></div>
+    </div>
+    <div class="row mt-4">
+
+        <div class="col-2 text-center">
+            <div id="logo">
+                <img src="/static/images/hflogo.png" width="90" height="100">
+            </div>
+        </div>
+        <div class="col-6 text-center">
+            <h1 class="name font-weight-bold">H F FLEX PVT. LTD.</h1>
+            <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7447456686
+                <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+            </p>
+
+        </div>
+        <div class="col-4">
+            <h3>Po # {{po.id}}</h3>
+            <div>Po Date:- {{po.created|date:"d/m/Y"}}</div>
+            <div>Delivery Expected At :- {{po.delivery_date|date:"d/m/Y"}}</div>
+            <div>Transport By:- {{po.transport}}</div>
+            <div>Payment Term:- {{po.payment_terms}}</div>
+
+        </div>
+    </div>
+    <hr>
+    <main>
+        <div class="row">
+            <div class="col-6 side-border" id="client">
+                <div class="to">Purchase Order TO:</div>
+                <h4 class="name">{{po.supplier}}</h4>
+
+                {% for add in po.supplier.addresses.all %}
+                <div class="address">{{add.addname}}, {{add.add1}}</div>
+                <div class="address">{{add.add2}} Pincode- {{add.pincode}}</div>
+                {% endfor %}
+                <div class="email"><a href="mailto:{{po.supplier.name|cut:' ' }}@gmail.com">
+                    {{po.supplier.name|cut:' '}}@gmail.com</a></div>
+            </div>
+            <div class="col-2"></div>
+
+            <div id="delivery" class="col-4 side-border ">
+                <div class="to">Delivery To:</div>
+                <h4 class="name">H F FLEX PVT LTD.</h4>
+                <div class="address">{{po.delivery_at.addname}}, {{po.delivery_at.add1}}</div>
+                <div class="address">{{add.add2}} Pincode- {{add.pincode}}</div>
+                <div class="email"><a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a></div>
+            </div>
+
+        </div>
+        <hr>
+        <table class="table table-striped" border="0" cellspacing="0" cellpadding="0">
+            <thead>
+            <tr>
+                <th class="no">#</th>
+                <th class="desc">DESCRIPTION</th>
+                <th class="qty">QUANTITY</th>
+                <th class="unit">UNIT PRICE</th>
+                <th class="total">TOTAL</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in po.poitem.all %}
+            <tr>
+                <td class="p-0">{{forloop.counter}}</td>
+                <td class="p-0">{{item.description|linebreaks }}</td>
+                <td class="p-0">{{item.qty|floatformat }} {{item.unit}}</td>
+                <td class="p-0">{{item.rate|floatformat }} Rs./{{item.unit}}</td>
+                <td class="p-0"> Rs. {{item.total|floatformat }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr >
+                <td colspan="3" rowspan="3" >Terms & Condition:-
+                    <ul class="text-sm m-0 p-1">
+                        {% for term in po.poterm.all %}
+                        <li>{{term|linebreaks }}</li>
+                        {% endfor %}
+                    </ul>
+
+                </td>
+                <td class="p-0">SUBTOTAL</td>
+                <td class="p-0">Rs. {{po.pototal|floatformat }}</td>
+            </tr>
+            <tr>
+
+                <td class="p-0">cgst {{po.tax1|floatformat }} %</td>
+                <td class="p-0">Rs. {{po.cgst|floatformat }}</td>
+            </tr>
+            <tr>
+
+                <td class="p-0">sgst {{po.tax2|floatformat }} %</td>
+                <td class="p-0">Rs. {{po.sgst|floatformat }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><h5>{{po.inword}} Rupees</h5></td>
+                <td colspan="1">GRAND TOTAL</td>
+                <td class="p-0">Rs. {{po.grosstotal|floatformat }}</td>
+            </tr>
+            </tfoot>
+        </table>
+        <div class="row border">
+            <div class="col-12">
+                <h6><span style="color:red">Remark:-</span> <span> <p><em>{{po.remark}}</em></p></span></h6>
+
+            </div>
+
+        </div>
+        <div class="row text-center">
+            <div class="col-6">
+                <h5>Created By</h5>
+                <h6 class="name"><em>Mohsin Shikalgar</em></h6>
+             </div>
+            <div class="col-6">
+                <h5>Approved By</h5>
+                <h6 class="name"><em> Khadimhusen Ansari</em></h6>
+            </div>
+        </div>
+    </main>
+
+</div>
+<center>
+    <button id="download-pngx2" class="download-btn">Download</button>
+</center>
+<script src="{% static 'bootadmin.net/js/jquery.min.js' %}"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script>
+    $('#download-pngx2').click(function(){
+         $('#download').addClass('x2');
+            html2canvas($('#download'),
+                {
+                onrendered: function (canvas) {
+                var a = document.createElement('a');
+                    a.href = canvas.toDataURL("image/png");
+                    a.download = '{{po.id}}-{{po.supplier}}.png';
+                    a.click();}
+                });
+});
+
+
+
+</script>
+</body>
+</html>

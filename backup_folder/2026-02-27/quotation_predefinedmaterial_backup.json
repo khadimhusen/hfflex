@@ -1,0 +1,1 @@
+[{"model": "quotation.predefinedmaterial", "pk": 1, "fields": {"structure": "2ply"}}, {"model": "quotation.predefinedmaterial", "pk": 2, "fields": {"structure": "3ply"}}, {"model": "quotation.predefinedmaterial", "pk": 3, "fields": {"structure": "4ply"}}]

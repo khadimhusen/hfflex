@@ -1,0 +1,116 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+{% endblock customcss %}
+{% block content %}
+<form method="post">
+    <div class="card">
+        <div class="card-header">
+            <h5>Date:-{{pack_reg.packingdate}}</h5>
+            <h3> Job:-{{pack_reg.jobprocess}}</h3>
+            <h5> Customer :-{{pack_reg.jobprocess.job.joborder.customer}}</h5>
+
+            <div class="form-row">
+                <div id="div_id_jobprocess" class="form-group" hidden>
+                    <div class="">
+                        <select name="jobprocess" class="select form-control" required id="id_jobprocess">
+                            <option value="{{pack_reg.jobprocess.id}}" selected></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group col-md-2 mb-0">
+                    {{ main_form.packingdate|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ main_form.qty|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ main_form.unit|as_crispy_field }}
+                </div>
+
+                <div class="form-group col-md-2 mb-0">
+                    {{ main_form.totalkg|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                    {{ statusform.status|as_crispy_field }}
+                </div>
+
+            </div>
+
+        </div>
+        <div class="card-body">
+
+            {% csrf_token %}
+            <div>
+
+                <fieldset>
+                    <legend>Job process form</legend>
+                    {{ matforms.management_form }}
+                    {{ matforms.non_form_errors }}
+                    <div class="form-row">
+                        <div class="form-group col-md-1 mb-0"> # </div>
+                        <div class="form-group col-md-2 mb-0"> Gross Wt </div>
+                        <div class="form-group col-md-1 mb-0"> Tare Wt </div>
+                        <div class="form-group col-md-2 mb-0"> Net Wt </div>
+                        <div class="form-group col-md-2 mb-0"> Nos. </div>
+                        <div class="form-group col-md-3 mb-0"> Remark </div>
+                    </div>
+                    {% for matform in matforms %}
+
+                    {% for hidden in matform.hidden_fields %}
+                    {{ hidden }}
+                    {% endfor %}
+                    <div class="form-row">
+                        <div class="form-group col-md-1 mb-0">{{ forloop.counter }}</div>
+                        <div class="form-group col-md-2 mb-0">{{ matform.gross_wt|as_crispy_field }}</div>
+                        <div class="form-group col-md-1 mb-0">{{ matform.tare_wt|as_crispy_field }}</div>
+                        <div class="form-group col-md-2 mb-0">{{ matform.net_wt|as_crispy_field }}</div>
+                        <div class="form-group col-md-2 mb-0">{{ matform.nos|as_crispy_field }}</div>
+                        <div class="form-group col-md-3 mb-0">{{ matform.remark|as_crispy_field }}</div>
+                    </div>
+                    {% endfor %}
+                    <div class="form-row">
+                        <div class="form-group col-md-1 mb-0" style="color:red"></div>
+                        <div class="form-group col-md-2 mb-0" id="total_gross" style="color:red"></div>
+                        <div class="form-group col-md-1 mb-0" id="total_tare" style="color:red"></div>
+                        <div class="form-group col-md-2 mb-0" id="total_net" style="color:red"></div>
+                        <div class="form-group col-md-2 mb-0" id="total_nos" style="color:red"></div>
+                        <div class="form-group col-md-3 mb-0"></div>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+
+      function calculate () {
+            let grosssum = 0;
+            $('[id^="id_materialform-"][id$="-gross_wt"]').each(function(e){ grosssum +=parseFloat($(this).val()||0);});
+            $("#total_gross").text("Gross Total: "+ grosssum.toFixed(2) + " kg.");
+
+            let taresum = 0;
+            $('[id^="id_materialform-"][id$="-tare_wt"]').each(function(e){ taresum +=parseFloat($(this).val()||0);});
+            $("#total_tare").text("Tare Total: "+ taresum.toFixed(2)+ " kg.");
+
+            let netsum = 0;
+            $('[id^="id_materialform-"][id$="-net_wt"]').each(function(e){ netsum +=parseFloat($(this).val()||0);});
+            $("#total_net").text("Net Total: "+ netsum.toFixed(2)+ " kg.");
+
+            let nossum = 0;
+            $('[id^="id_materialform-"][id$="-nos"]').each(function(e){ nossum +=parseFloat($(this).val()||0);});
+            $("#total_nos").text("Total: "+ nossum.toFixed(0)+ " Nos.");
+            };
+
+$( document ).ready(calculate);
+$( ".form-control").change(calculate) ;
+
+
+
+
+</script>
+{% endblock content %}

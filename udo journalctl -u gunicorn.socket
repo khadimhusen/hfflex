@@ -1,0 +1,8 @@
+Failed to dump process list, ignoring: No such file or directory
+[0;1;32m●[0m gunicorn.socket - gunicorn socket
+   Loaded: loaded (/etc/systemd/system/gunicorn.socket; enabled; vendor preset: enabled)
+   Active: [0;1;32mactive (running)[0m since Sat 2020-02-08 06:00:41 UTC; 1 months 27 days ago
+   Listen: /run/gunicorn.sock (Stream)
+   CGroup: /system.slice/gunicorn.socket
+
+Feb 08 06:00:41 hf systemd[1]: Listening on gunicorn socket.

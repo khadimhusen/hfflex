@@ -1,0 +1,94 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+
+<form method="post">
+    {% csrf_token %}
+    <datalist id="itemlist">
+        {% for item in itemlist %}
+        <option value="{{item}}">{{item}}</option>
+        {% endfor %}
+    </datalist>
+
+    <div class="container">
+        <div class="form-row">
+            <div class="form-group col-md-6 mb-0"> {{ mainform.supplier|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ mainform.delivery_date|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ mainform.payment_terms|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ mainform.transport|as_crispy_field }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0"> {{ mainform.tax1|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ mainform.tax2|as_crispy_field }}</div>
+            <div class="form-group col-md-3 mb-0"> {{ mainform.ship_to|as_crispy_field }}</div>
+            <div class="form-group col-md-3 mb-0"> {{ mainform.delivery_at|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ mainform.status|as_crispy_field }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-12 mb-0"> {{ mainform.remark|as_crispy_field }}</div>
+        </div>
+        <div class="container">{{ poitemform.management_form}}
+
+
+            <div class="form-row">
+
+                <div class="form-group col-md-1 mb-0 ">#</div>
+                <div class="form-group col-md-4 mb-0 ">Description</div>
+                <div class="form-group col-md-2 mb-0 ">Type</div>
+                <div class="form-group col-md-1 mb-0 ">Qty</div>
+                <div class="form-group col-md-1 mb-0 ">Unit</div>
+              {% if can_add_price %}
+                <div class="form-group col-md-1 mb-0 ">Rate</div>
+              {% endif %}
+                <div class="form-group col-md-1 mb-0 ">Received</div>
+                <div class="form-group col-md-1 mb-0 ">Delete</div>
+            </div>
+
+
+            {% for formpoitem in poitemform %}
+            <div class="form-row">
+                <span hidden>{{ formpoitem.id}}</span>
+                <div class="form-group col-md-1 mb-0">{{forloop.counter}}</div>
+                <div class="form-group col-md-4 mb-0">{{ formpoitem.description|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ formpoitem.category|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ formpoitem.qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ formpoitem.unit|as_crispy_field }}</div>
+                {% if can_add_price %}
+                <div class="form-group col-md-1 mb-0">{{ formpoitem.rate|as_crispy_field }}</div>
+                {% endif %}
+                <div class="form-group col-md-1 mb-0">{{ formpoitem.rec_qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ formpoitem.DELETE|as_crispy_field }}</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0" >Remark</div>
+                <div class="form-group col-md-10 mb-0">{{ formpoitem.remark|as_crispy_field }}</div>
+            </div>
+            
+            {% endfor %}
+
+            </tbody>
+            </table>
+
+
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-12 mb-0"> {{ mainform.poterm|as_crispy_field }}</div>
+        </div>
+    </div>
+
+
+    <button type="submit " class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function(){$( "#id_delivery_date").datetimepicker({format: 'd/m/Y h:i'})});
+</script>
+
+{% endblock content %}

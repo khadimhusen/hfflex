@@ -1,0 +1,34 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST"  autocomplete="off" >
+
+    {% csrf_token %}
+    {{ main_form|crispy }}
+    <button type="submit " class="btn btn-primary">Save Order</button>
+</form>
+
+{% endblock content %}
+{% block javascripts %}
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+        $( "#id_docdate" ).datetimepicker({format: 'd/m/Y H:i',});
+        $( "#id_inwarddate" ).datetimepicker({format: 'd/m/Y h:i',});
+                  }
+      );
+</script>
+
+{% endblock javascripts %}

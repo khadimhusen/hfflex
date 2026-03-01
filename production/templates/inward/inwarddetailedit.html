@@ -1,0 +1,113 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST">{% csrf_token %}
+    <legend>Inward Material detail</legend>
+    <div class="form-row">
+        <div class="form-group col-md-4 mb-0">{{ main_form.supplier|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ main_form.docdate|as_crispy_field }}</div>
+        <div class="form-group col-md-2 mb-0">{{ main_form.inwarddate|as_crispy_field }}</div>
+        <div class="form-group col-md-4 mb-0">{{ main_form.invoice|as_crispy_field }}</div>
+    </div>
+
+    {{ inward_form.management_form }}
+    {{ inward_form.non_form_errors }}
+    <div class="form-row">
+        <div class="form-group col mb-0" hidden>id</div>
+        <div class="form-group col-1 mb-0 p-0">Material</div>
+        <div class="form-group col-2 mb-0 p-0">Type</div>
+        <div class="form-group col-2 mb-0 p-0">Grade</div>
+        <div class="form-group col mb-0 p-0">size</div>
+        <div class="form-group col mb-0 p-0">micron</div>
+        <div class="form-group col mb-0 p-0">gross_wt</div>
+        <div class="form-group col mb-0 p-0">tare_wt</div>
+        <div class="form-group col mb-0 p-0">recieved</div>
+        <div class="form-group col mb-0 p-0">Nos.</div>
+        <div class="form-group col mb-0 p-0">Rate</div>
+        <div class="form-group col mb-0 p-0">qc_status</div>
+        <div class="form-group col mb-0 p-0">remark</div>
+        <div class="form-group col mb-0 p-0">Delete</div>
+    </div>
+    {% for form in inward_form %}
+    <div class="form-row">
+        <div class="form-group col mb-0" hidden>{{ form.id|as_crispy_field }}</div>
+        <div class="form-group col-1 mb-0 p-0">{{ form.materialname|as_crispy_field }}</div>
+        <div class="form-group col-2 mb-0 p-0">{{ form.item_mat_type|as_crispy_field }}</div>
+        <div class="form-group col-2 mb-0 p-0">{{ form.item_grade|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.size|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.micron|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.gross_wt|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.tare_wt|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.recieved|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.nos|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.rate|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.qc_status|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.remark|as_crispy_field }}</div>
+        <div class="form-group col mb-0 p-0">{{ form.DELETE|as_crispy_field }}</div>
+    </div>
+    {% endfor %}
+    <button type="submit " class="btn btn-primary">Save Inward</button>
+    <button  class="btn btn-primary" onclick="copyRow()" id="dup">Duplicate Row</button>
+
+</form>
+{% endblock content %}
+{% block javascripts %}
+
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+        $( "#id_docdate" ).datetimepicker({format: 'd/m/Y H:i',});
+        $( "#id_inwarddate" ).datetimepicker({format: 'd/m/Y H:i',});
+                  }
+    );
+</script>
+
+<script>
+    function copyRow(){
+
+var focusedElement = document.activeElement; // Get the currently focused element
+
+if (focusedElement) {
+    var elementType = focusedElement.tagName; // Get the type of the focused element (e.g., INPUT, BUTTON, etc.)
+    var elementId = focusedElement.id; // Get the ID of the focused element
+    var elementName = focusedElement.name; // Get the name attribute of the focused element
+
+    alert("Currently focused element:\nType: " + elementType + "\nID: " + elementId + "\nName: " + elementName);
+} else {
+    alert("No element is currently focused.");
+}
+
+
+    }
+
+</script>
+<script>
+    function myShortcutFunction() {
+    alert("Keyboard shortcut executed!");
+}
+
+// Add an event listener to the document to listen for keydown events
+document.addEventListener("keydown", function(event) {
+    // Check for the key combination you want (e.g., Ctrl+Alt+S)
+    if (event.ctrlKey && event.altKey && event.key === "D") {
+        // Prevent the default behavior (e.g., saving the page)
+        event.preventDefault();
+
+        // Call your custom function
+        myShortcutFunction();
+    }
+});
+
+</script>
+
+{% endblock javascripts %}

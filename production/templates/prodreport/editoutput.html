@@ -1,0 +1,72 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0" hidden>{{ outputform.content_type|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0" hidden>{{ outputform.object_id|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.materialname|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.item_mat_type|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.item_grade|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.size|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.micron|as_crispy_field }}</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0">{{ outputform.gross_wt|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.tare_wt|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.recieved|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.nos|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.qc_status|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ outputform.remark|as_crispy_field }}</div>
+
+        </div>
+
+        <div>
+
+            {% csrf_token %}
+            {{ problemformset.management_form }}
+            {% for p in problemformset %}
+            {{ p.ORDER }}
+            {{p.id}}
+            {{ p.tagname }}
+            {{ p.DELETE }}
+            <br>
+            {% endfor %}
+
+        </div>
+        <button type="submit">ok</button>
+        <button type="button"><a href="{% url 'production:prodreportdetail' prodreport %}">cancel</a></button>
+    </form>
+
+
+</div>
+
+
+{% endblock content %}
+{% block javascripts %}
+<script>
+    $( "#id_gross_wt" ).change(function() {
+    var b=$( "#id_gross_wt" ).val()- $( "#id_tare_wt" ).val()
+       $( "#id_recieved" ).val(b.toFixed(3))
+                                            });
+
+    $( "#id_tare_wt" ).change(function() {
+        var c=$( "#id_gross_wt" ).val()- $( "#id_tare_wt" ).val()
+    $( "#id_recieved" ).val(c.toFixed(3));
+                                            });
+
+
+
+</script>
+{% endblock javascripts %}

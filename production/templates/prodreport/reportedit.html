@@ -1,0 +1,154 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+<form method="POST"> {% csrf_token %}
+    <div>
+        <div id="home" class="container tab-pane active"><br>
+
+            <div><a class="btn btn-warning btn-sm" href="{% url 'order:jobdetail'  instance.prodprocess.job.id %}">
+                <h3>{{instance}}</h3>
+                </a>
+                <h4> Process Qty:- {{instance.prodprocess.qty}}-{{instance.prodprocess.unit}}</h4>
+            </div>
+
+            {{ main_form.non_form_errors }}
+            {{ statusform.non_form_errors }}
+
+            <div class="form-row">
+
+                <div class="form-group col-md-3 mb-0">{{ main_form.processdate|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ main_form.qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ main_form.unit|as_crispy_field }}</div>
+                <div class="form-group col-md-3 mb-0">{{ main_form.totalkg|as_crispy_field }}</div>
+                <div class="form-group col-md-3 mb-0">{{ statusform.status|as_crispy_field }}</div>
+            </div>
+        </div>
+        <div id="menu1" class="container tab-pane"><br>
+
+            <hr>
+            <h3>Production input Material detail</h3>
+            {{ input_form.management_form }}
+            {{ input_form.non_form_errors }}
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0" hidden>id</div>
+                <div class="form-group col-md-8 mb-0">Material</div>
+                <div class="form-group col-md-1 mb-0">Gross wt</div>
+                <div class="form-group col-md-1 mb-0">Balance wt</div>
+                <div class="form-group col-md-1 mb-0">NetInput</div>
+                <div class="form-group col-md-1 mb-0">Wt Gain</div>
+
+            </div>
+            {% for form in input_form %}
+            <div class="form-row">
+                <div class="col-md-1 mb-0" hidden>{{ form.id|as_crispy_field }}</div>
+                <div class="col-md-8 mb-0">{{ form.material|as_crispy_field }}</div>
+                <div class="col-md-1 mb-0">{{ form.grossinput|as_crispy_field }}</div>
+                <div class="col-md-1 mb-0">{{ form.returned|as_crispy_field }}</div>
+                <div class="col-md-1 mb-0">{{ form.inputqty|as_crispy_field }}</div>
+                <div class="col-md-1 mb-0">{{ form.wtgain|as_crispy_field }}</div>
+            </div>
+            {% endfor %}
+            <div class="form-row">
+                <div class="form-group col-md-8 mb-0" align="right"> Total </div>
+                <h4 class="form-group col-md-2 mb-0" id="total_input"> 0 </h4>
+                <h4 class="form-group col-md-2 mb-0" id="total_wtgain"> 0 </h4>
+            </div>
+        </div>
+        <div id="menu2" class="container tab-pane"><br>
+            <hr>
+            <legend>Production Output Material detail</legend>
+            {{ prod_form.management_form }}
+            {{ prod_form.non_form_errors }}
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0" hidden>id</div>
+                <div class="form-group col-md-2 mb-0">Material</div>
+                <div class="form-group col-md-2 mb-0">Type</div>
+                <div class="form-group col-md-1 mb-0">Grade</div>
+                <div class="form-group col-md-1 mb-0">size</div>
+                <div class="form-group col-md-1 mb-0">micron</div>
+                <div class="form-group col-md-1 mb-0">qc_status</div>
+                <div class="form-group col-md-1 mb-0">Grosswt</div>
+                <div class="form-group col-md-1 mb-0">Tare</div>
+                <div class="form-group col-md-1 mb-0">Net.Wt</div>
+                <div class="form-group col-md-1 mb-0">Nos.</div>
+            </div>
+            {% for form in prod_form %}
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0" hidden>{{ form.id|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ form.materialname|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ form.item_mat_type|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.item_grade|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.size|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.micron|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.qc_status|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.gross_wt|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.tare_wt|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.recieved|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.nos|as_crispy_field }}</div>
+            </div>
+            {% endfor %}
+
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0" hidden></div>
+                <div class="form-group col-md-2 mb-0"></div>
+                <div class="form-group col-md-3 mb-0"></div>
+                <div class="form-group col-md-3 mb-0"></div>
+                <div class="form-group col-md-1 mb-0"></div>
+                <div class="form-group col-md-1 mb-0"></div>
+                <div class="form-group col-md-1 mb-0">Total</div>
+                <div class="form-group col-md-1 mb-0"><h3 id="total_output"></h3></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Report</button>
+    </div>
+</form>
+{% endblock content %}
+{% block javascripts %}
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>$(function (){$( "#id_processdate" ).datetimepicker({format: 'd/m/Y H:i'});});</script>
+<script>
+$("#id_rawmaterialformset-6-materialname").change(function() {
+    $("#id_rawmaterialformset-6-size").val($("#id_film_size").val());
+});
+
+$(function() {
+            let inputsum = 0;
+            let wtgainsum = 0;
+            $('[id^="id_inputformset-"][id$="-inputqty"]').each(function(e){ inputsum +=parseFloat($(this).val()||0);});
+            $("#total_input").text(inputsum.toFixed(2));
+            $('[id^="id_inputformset-"][id$="-wtgain"]').each(function(e){ wtgainsum +=parseFloat($(this).val()||0);});
+            $("#total_wtgain").text(wtgainsum.toFixed(2));
+
+});
+
+ $( ".form-control").change(function() {
+            let inputsum = 0;
+            let wtgainsum = 0;
+            $('[id^="id_inputformset-"][id$="-inputqty"]').each(function(e){ inputsum +=parseFloat($(this).val()||0);});
+            $("#total_input").text(inputsum.toFixed(2));
+            $('[id^="id_inputformset-"][id$="-wtgain"]').each(function(e){ wtgainsum +=parseFloat($(this).val()||0);});
+            $("#total_wtgain").text(wtgainsum.toFixed(2));
+            });
+
+ $( ".form-control").change(function() {
+            let outputsum = 0;
+            $('[id^="id_prodformset-"][id$="-recieved"]').each(function(e){ outputsum +=parseFloat($(this).val()||0);});
+            $("#total_output").text(outputsum.toFixed(2));
+            });
+
+ $(function() {
+            let outputsum = 0;
+            $('[id^="id_prodformset-"][id$="-recieved"]').each(function(e){ outputsum +=parseFloat($(this).val()||0);});
+            $("#total_output").text(outputsum.toFixed(2));
+            });
+
+</script>
+
+{% endblock javascripts %}

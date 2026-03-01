@@ -1,0 +1,37 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+<h5> Material allotment form</h5>
+<form method="POST">
+    {{mainform}}
+   {% if mainform.instance.po.id%}  <a href="{% url 'purchase:purchasedetail' mainform.instance.po.id  %}" target="_blank" rel="noopener noreferrer"  > Podetail</a> {% endif %}
+
+<div class="form-row">
+    <div class="form-group col-md-12 mb-0">
+        <h5>{{ jobmaterial.job}}</h5>
+        <h5>{{ jobmaterial.materialname}}-{{ jobmaterial.item_mat_type}}-{{ jobmaterial.item_grade}}-{{ jobmaterial.size}} x {{ jobmaterial.micron}} required qty:- {{ jobmaterial.req}}/ To Order qty:- {{ jobmaterial.to_order}}</h5>
+    </div>
+</div>
+
+<h3>Job material</h3>
+
+    {% csrf_token %}
+
+    {{ matform.management_form }}
+    {% for form in matform %}
+    <p> {{form}} </p>
+
+    <hr>
+    {% endfor %}
+
+    <div class="form-group col-md-3 mb-0">
+        <div>
+            <button type="submit" class="btn btn-warning float-right ml-1">save material detail</button>
+        </div>
+    </div>
+</form>
+    </div>
+{% endblock content %}

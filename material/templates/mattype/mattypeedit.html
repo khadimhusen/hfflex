@@ -1,0 +1,16 @@
+{% extends 'home.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+
+<h3> Material-Type Detail Edit Form</h3>
+<br>
+<form method="POST">
+    {% csrf_token %}
+ {{ mattype_form|crispy }}
+
+
+    <button type="submit" class="btn btn-warning float-right">Update Material-Type</button>
+</form>
+{% endblock content %}

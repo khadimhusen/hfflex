@@ -1,0 +1,5 @@
+<h4>{{stock}}</h4>
+<h5>{{stock.content_object.prodprocess.job.joborder.customer}}</h5>
+{% for sto in stock.prodreports.all %}
+<h5 style="color:red">{{sto.prodprocess.job.joborder.customer.id}}</h5>
+{% endfor %}

@@ -1,0 +1,109 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<h3> Order detail form</h3>
+
+<div class="form-row">
+    <div class="form-group col-md-12 mb-0">
+        {{ order_form.customer|as_crispy_field }}
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-group col-md-4 mb-0">
+        {{ order_form.po|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-2 mb-0">
+        {{ order_form.podate|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-2 mb-0">
+        {{ order_form.deliverydate|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-2 mb-0">
+        {{ order_form.paymentterms|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-1 mb-0">
+        {{ order_form.tax1|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-1 mb-0">
+        {{ order_form.tax2|as_crispy_field }}
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-group col-md-2 mb-0">
+        {{ order_form.transport|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-4 mb-0">
+        {{ order_form.remark|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-4 mb-0">
+        {{ order_form.delivery_at|as_crispy_field }}
+    </div>
+    <div class="form-group col-md-2 mb-0">
+        {{ order_form.status|as_crispy_field }}
+    </div>
+</div>
+<hr>
+
+<h3>Job detail</h3>
+<form method="POST">
+    {% csrf_token %}
+
+    {{ job_forms.management_form }}
+
+    {% for error in job_forms.error %}
+
+    <p> {{error}} </p>
+
+    {% endfor %}
+    <div><a class="btn btn-primary" href="{% url 'itemmaster:itemadd' %}?next={{request.path}}">
+        <strong>+ To add new item master </strong></a>
+    </div>
+    <div class="form-row" align="center">
+
+        <div class="form-group col-md-4 mb-0">Itemmaster</div>
+        <div class="form-group col-md-1 mb-0">Prejob</div>
+        <div class="form-group col-md-1 mb-0">Quantity</div>
+        <div class="form-group col-md-1 mb-0">Unit</div>
+        <div class="form-group col-md-1 mb-0">Rate</div>
+        <div class="form-group col-md-1 mb-0">Waste</div>
+        <div class="form-group col-md-3 mb-0">Jobremark</div>
+    </div>
+    {% for form in job_forms %}
+    {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+    {% endfor %}
+
+    <div class="form-row">
+        <div class="form-group col-md-4 mb-0">{{ form.itemmaster|as_crispy_field }}</div>
+        <div class="form-group col-md-1 mb-0">{{ form.prejob|as_crispy_field }}</div>
+        <div class="form-group col-md-1 mb-0">{{ form.quantity|as_crispy_field }}</div>
+        <div class="form-group col-md-1 mb-0">{{ form.unit|as_crispy_field }}</div>
+        <div class="form-group col-md-1 mb-0">{{ form.rate|as_crispy_field }}</div>
+        <div class="form-group col-md-1 mb-0">{{ form.waste|as_crispy_field }}</div>
+        <div class="form-group col-md-3 mb-0">{{ form.jobremark|as_crispy_field }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="form-group col-md-3 mb-0">
+        <div>
+            <button class="btn btn-danger float-right ml-1"><a href="{% url 'order:orderlist' %}">Cancel</a></button>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-warning float-right ml-1">save job order</button>
+        </div>
+    </div>
+</form>
+
+<script src="{% static 'js/jquery.js' %}"></script>
+
+<script>
+	$(document).ready(function(){
+	$('[id^=id_orderform]').each(function() {$(this).attr({'disabled': 'disabled' })});
+});
+</script>
+
+
+{% endblock content %}

@@ -1,0 +1,68 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style>
+    .table{
+  font-size: 13px;}
+
+
+
+</style>
+{% endblock customcss %}
+{% block content %}
+
+<!--table start from here-->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex">
+                    <h2 class="card-title text-center">Pending For Dispatch list</h2>
+                    <a class="btn btn-danger btn ml-auto" href=" {% url 'production:dispatchadd' %}">Add Dispatch</a>
+                </div>
+                <div class="card-body">
+                    <div class="container">
+                        {% for key,value in obj %}
+                        <h4>{{key}}</h4>
+                        <table class="table table-striped table-bordered sm-table ">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Job Name</th>
+                                <th>Qty</th>
+                                <th>Pouch</th>
+                                <th>Rate</th>
+                                <th>Remark</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for jobname, data in value.items %}
+                            <tr>
+                                <td><a href="{% url 'order:jobdetail' jobname.id%}">{{ forloop.counter}}</a></td>
+                                <td>{{jobname}} {% if data.po %} <br> <span class="text-danger"> PO No:- {{ data.po|default:"" }}
+                                    {% endif %}</span></td>
+                                <td>{{data.qty}}Kg. </td>
+                                <td>({{data.nos}})Pcs. </td>
+                                <td>{{jobname.rate}}/{{jobname.unit}}</td>
+                                <td>{{data.remark|default:""}}</td>
+
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- table end here-->
+
+{% endblock content %}

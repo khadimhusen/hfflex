@@ -1,0 +1,9 @@
+{% extends 'home.html' %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{catform}}
+    {{supform}}
+    <button class="btn btn-warning btn-sm" type="submit">save</button>
+</form>
+{% endblock %}

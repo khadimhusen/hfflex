@@ -1,0 +1,174 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<style>.table{font-size:11px;}</style>
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+{% endblock customcss %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script>
+
+<!--table start from here-->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex">
+                    <h2 class="card-title text-center">{{q}} Process List</h2>
+                </div>
+                <div class="card-body">
+                    <h4>No. of Process {{process.paginator.count}}</h4>
+                    <form method="GET">
+                        <div class="form-row">
+
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.id|as_crispy_field}}
+                            </div>
+
+                            <div class="form-group col-md-2 mb-0 ">
+                                {{myFilter.form.cascade_filter|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-2 mb-0 ">
+                                {{myFilter.form.job|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.customer|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.job__jobstatus|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 " style="overflow-y: scroll; height:180px;">
+                                {{myFilter.form.cylinder|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.status|as_crispy_field}}
+                            </div>
+
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.created__gt|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.created__lt|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0">
+                                <label for="exampleFormControlSelect1">Page No.</label>
+                                <select class="form-control" id="exampleFormControlSelect1" name="page">
+
+                                    {% for i in process.paginator.page_range %}
+                                    {% if process.number == i %}
+                                    <option value="{{i}}" selected>{{ i }}</option>
+                                    {% else %}
+                                    <option value="{{i}}">{{ i }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class=" col-md-3 mb-2 ">
+                                <button class="btn btn-primary btn-sm" type="submit">search</button>
+                                <button class="btn btn-warning btn-sm" type="submit"
+                                        formaction="{% url 'order:processexcel' status=q %}?{{param}}">Download to excel
+                                </button>
+                                <button class="btn btn-danger btn-sm" type="submit"
+                                        formaction="{% url 'order:processexcel' status=q %}">Save
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-bordered  pagin-table"
+                               id="sort">
+                            <thead>
+                            <tr>
+                                <th>srno</th>
+                                <th>seq</th>
+                                <th>Id</th>
+                                <th>ItemId</th>
+                                <th>Job</th>
+                                <th>Size</th>
+                                <th>Cylinder Status</th>
+                                <th>Process</th>
+                                <th>Total-qty {{totalqty.qty__sum}}</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>report Qty Edit</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for proc in process %}
+                            <tr>
+                                <td class="index">{{forloop.counter}}</td>
+                                <td class="seq">{{proc.srno}}</td>
+                                <td class="jobid" ><a href="{% url 'order:jobdetail' proc.job.id %}">{{proc.id}}</a></td>
+                                <td class="itemid" ><a href="{% url 'itemmaster:itemdetailedit' proc.job.itemmaster.id %}">{{proc.job.itemmaster.id}}</a></td>
+                                <td>{{proc.job}}</td>
+                                <td>{{proc.job.film_size}}mm</td>
+                                <td>{{proc.job.itemmaster.cylinder_status}}</td>
+                                <td>{{proc.process}}</td>
+                                <td>{{proc.qty}}-{{proc.unit}}</td>
+                                <td>{{proc.status}}</td>
+                                <td>{% for p in proc.jobreport.all %}
+                                    <li>{{ p.processdate }}</li>
+                                    {% endfor %}
+                                </td>
+                                <td>{% for p in proc.jobreport.all %}
+                                    <li>({{ p.qty }}-{{p.unit}})<a
+                                            href="  {% url 'production:prodreportdetail' p.id %} ">
+                                        <i class="fa fa-edit"></i>
+                                    </a></li>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- table end here-->
+
+{% endblock content %}
+
+{% block javascripts %}
+
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>$(function(){$( "#id_created__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function(){$( "#id_created__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script type="text/javascript">
+  $('tbody').sortable();
+  var fixHelperModified = function(e, tr) {
+    var $originals = tr.children();
+    var $helper = tr.clone();
+    $helper.children().each(function(index) {
+        $(this).width($originals.eq(index).width())
+    });
+    return $helper;
+  },
+    updateIndex = function(e, ui) {
+        $('td.index', ui.item.parent()).each(function (i) {
+            $(this).html(i + 1);
+        });
+    };
+
+$("#sort tbody").sortable({
+    helper: fixHelperModified,
+    scroll: true,
+    stop: updateIndex
+}).disableSelection();
+
+
+</script>
+<script>
+
+</script>
+{% endblock javascripts %}

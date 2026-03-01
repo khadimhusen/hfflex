@@ -1,0 +1,89 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="card col-md-2 my-1">
+            <h3><strong>Inward Id:-</strong> {{inward.id}}</h3>
+        </div>
+        <div class="card col-md-8 my-1">
+            <h3><strong>Supplier</strong> {{inward.supplier}}</h3>
+        </div>
+        <div class="card col-md-2 my-1">
+            <h3><strong>docdate</strong> {{inward.docdate}}</h3>
+        </div>
+    </div>
+    <div>
+        {% regroup inward_list by full_name as material_list %}
+
+        <ul>
+            {% for material in material_list %}
+            <h3>{{ material.grouper }}</h3>
+
+            <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%">
+
+                <thead>
+                <tr>
+                    <th>Gross Wt.</th>
+                    <th>Tare Wt.</th>
+                    <th>Net Wt.</th>
+                    <th>Nos.</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for mate in material.list %}
+                <tr>
+                    <td class="gross{{forloop.parentloop.counter}}">{{mate.gross_wt|default:'' }}</td>
+                    <td class="tare{{forloop.parentloop.counter}}">{{mate.tare_wt|default:''}}</td>
+                    <td class="net{{forloop.parentloop.counter}}">{{mate.recieved|default:''}}</td>
+                    <td class="nos{{forloop.parentloop.counter}}">{{mate.nos|default:''}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                <tr class="font-weight-bold">
+                    <td id="gross{{forloop.counter}}"></td>
+                    <td id="tare{{forloop.counter}}"></td>
+                    <td id="net{{forloop.counter}}"></td>
+                    <td id="nos{{forloop.counter}}"></td>
+                </tr>
+                </tfoot>
+            </table>
+            <script>
+                    var netsum{{forloop.counter}} = 0;
+                    $('.net{{forloop.counter}}').each(function () {
+                        netsum{{forloop.counter}} += (!isNaN(parseFloat(this.innerText)) ? parseFloat(this.innerText):0);
+                    });
+                    $("#net{{forloop.counter}}").text(netsum{{forloop.counter}}.toFixed(3));
+
+                    var grosssum{{forloop.counter}} = 0;
+                    $('.gross{{forloop.counter}}').each(function () {
+                        grosssum{{forloop.counter}} += (!isNaN(parseFloat(this.innerText)) ? parseFloat(this.innerText):0);
+                    });
+                    $("#gross{{forloop.counter}}").text(grosssum{{forloop.counter}}.toFixed(3));
+
+                    var taresum{{forloop.counter}} = 0;
+                    $('.tare{{forloop.counter}}').each(function () {
+                        taresum{{forloop.counter}} += (!isNaN(parseFloat(this.innerText)) ? parseFloat(this.innerText):0);
+                    });
+                    $("#tare{{forloop.counter}}").text(taresum{{forloop.counter}}.toFixed(3));
+
+                    var nossum{{forloop.counter}} = 0;
+                    $('.nos{{forloop.counter}}').each(function () {
+                        nossum{{forloop.counter}} += (!isNaN(parseFloat(this.innerText)) ? parseFloat(this.innerText):0);
+                    });
+                    $("#nos{{forloop.counter}}").text(nossum{{forloop.counter}}.toFixed(0));
+
+
+            </script>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{% endblock content %}

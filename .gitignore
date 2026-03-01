@@ -1,0 +1,31 @@
+*.log
+local_settings.py
+db.sqlite3
+
+myprojectenv/
+pepeoijlsdkf/
+
+myproject/settings.py
+
+migrations/
+__pycache__/
+
+# Media files
+media/
+
+# Static files
+staticfiles/
+static/
+
+# Python
+*.pyc
+__pycache__/
+
+# Environment
+.env
+myprojectenv/
+venv/
+
+# Database
+*.sqlite3
+db.sqlite3

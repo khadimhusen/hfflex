@@ -1,0 +1,96 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<h4 class="text-center text-danger">Preorder</h4>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.customer|as_crispy_field }}</h6>
+            <h6>{{ preorder_form.contact_number|as_crispy_field }}</h6>
+            <h6>{{ preorder_form.gst|as_crispy_field }}</h6>
+            <h6>{{ preorder_form.schedule|as_crispy_field }}</h6>
+            <button class="btn btn-primary" type="submit">save</button>
+            <button class="btn btn-danger" type="submit" formmethod="post"
+                    formaction="{% url 'preorder:finalsubmit' preorder_form.instance.id %}">Final Submition
+            </button>
+        </div>
+        <div class="form-group col-md-6 mb-0">
+            <h6>{{ preorder_form.address|as_crispy_field }}</h6>
+        </div>
+    </div>
+    {{ jobforms.management_form}}
+
+    {% for job in jobforms %}
+
+    <div class="form-row {% if forloop.counter0|divisibleby:2 %} alert-primary {% else %} alert-danger {% endif %} m-2">
+        <div class="form-group col-md-1 mb-0 text-bg-warning" hidden>
+            <h6>{{ job.id|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-5 mb-0">
+            <h6>{{ job.jobname|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.qty|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.unit|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.rate|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            <h6>{{ job.preimg|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            <h6>{{ job.prefile|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.new_cyl_qty|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.cyl_cost|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-1 mb-0">
+            <h6>{{ job.design_charges|as_crispy_field }}</h6>
+        </div>
+        <div class="form-group col-md-7 mb-0">
+            <h6>{{ job.remark|as_crispy_field }}</h6>
+        </div>
+	<div class="form-group col-md-1 mb-0">
+            <h6>{{ job.DELETE|as_crispy_field }}</h6>
+        </div>
+    </div>
+
+    {% endfor %}
+</form>
+    <datalist id="customerlist">
+        {% for customer in customerlist %}
+        <option value="{{customer}}">{{customer}}</option>
+        {% endfor %}
+    </datalist>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_schedule" ).datetimepicker({format: 'd/m/Y'});
+                   }
+      );
+
+
+
+</script>
+{% endblock javascripts%}

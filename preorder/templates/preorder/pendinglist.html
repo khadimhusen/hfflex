@@ -1,0 +1,109 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style> .table{font-size: 14px;}</style>
+{% endblock customcss %}
+
+{% block content %}
+<!--table start from here-->
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex">
+                    <h2 class="card-title ">Order List </h2>
+                    <a class="btn btn-danger btn ml-auto" href=" {% url 'preorder:addpreorder' %}">+ Add new Preorder</a>
+                </div>
+                <div class="card-body">
+                    <h4>No. of Preorder {{total}}</h4>
+                    <div class="table-responsive">
+                        <form method="GET">
+                                <div class="form-group col-md-1 mb-0">
+                                    <label for="exampleFormControlSelect1">Page No.</label>
+                                    <select class="form-control" id="exampleFormControlSelect1" name="page">
+                                        {% for i in orders.paginator.page_range %}
+                                        {% if orders.number == i %}
+                                        <option value="{{i}}" selected>{{ i }}</option>
+                                        {% else %}
+                                        <option value="{{i}}">{{ i }}</option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class=" col-md-1 mb-0 ">
+                                    <button class="btn btn-primary" type="submit">search</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <table class="table table-striped table-bordered zero-configuration table-sm">
+                            <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Ord-By</th>
+                                <th>Customer</th>
+                                <th>address</th>
+                                <th>Jobs</th>
+                                <th>contact_number</th>
+                                <th>schedule</th>
+                                <th>final_submition</th>
+                                <th>order done</th>
+                                <th class="text-center">Action
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for order in orders %}
+
+                            <tr>
+                                <td>{{order.preorder.id}}</td>
+                                <td>{{order.preorder.createdby}}</td>
+                                <td>{{order.preorder.customer}}</td>
+                                <td ><p style="word-wrap: break-word">*** {{order.preorder.address}} *****</p></td>
+                                <td>
+
+                                    <li>{{order.jobname}}
+                                        {% if order.preimg %}-> <a href="{{order.preimg.url}}" target="_blank">img</a>{% endif %}</li>
+                                        {% if order.prefile %}-> <a href="{{order.prefile.url}}" target="_blank">img</a>{% endif %}</li>
+
+                                </td>
+                                <td>{{order.preorder.contact_number}}</td>
+                                <td>{{order.preorder.schedule}}</td>
+                                <td>{% if order.preorder.final_submition %} Done {% endif %}</td>
+                                <td>
+                                    {{order.preorder.done}}
+                                </td>
+                                <td class="text-center">
+                                    {% if not order.preorder.final_submition and request.user == order.createdby %}
+                                    <a class="btn btn-primary btn-sm"
+                                       href="  {% url 'preorder:editpreorder' order.preorder.id %} ">Edit</a> {% endif %}
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- table end here-->
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>$(function () {$( "#id_created__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_created__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+
+{% endblock javascripts %}

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>H F FLEX</title>
+</head>
+
+<body>
+{% load static %}
+{% load crispy_forms_tags %}
+<style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 95%;
+            margin: 2px;
+        }
+
+        .check tr {
+            line-height: 35px;
+        }
+
+
+        th,
+        td {
+            border: 1px solid black;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        h3 {
+            font-size: 16px;
+            padding: 2px;
+            margin: 0px;
+        }
+
+        h6 {
+            font-size: 12px;
+            padding: 3px;
+            margin: 0px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+
+        .centerdiv {
+            margin: auto;
+            text-align: center;
+            width: 90%;
+
+            padding: 3px;
+        }
+
+        .card {
+            border: 1px solid black;
+            border-radius: 5px;
+            margin: 2px;
+        }
+
+
+
+</style>
+
+<div class="container">
+    <div class="card col-md-2 my-1">
+        <h3><strong>Job Id:-</strong> <a href="{% url 'order:jobdetail' job.id %}">{{job.id}}</a></h3>
+    </div>
+    <div class="card col-md-10 my-1">
+        <h3><strong>Name:-</strong><a href="{% url 'order:jobdetail' job.id %}"> {{job.itemname}}</a></h3>
+    </div>
+</div>
+<div class="container">
+    <div class="card col-md-2 my-1">
+        <h6><strong>Item Code:-</strong> {{job.itemmaster.id}}</h6>
+    </div>
+    <div class="card col-md-2 my-1">
+        <h6><strong>Quantity:-</strong> {{job.quantity}} {{job.unit}}</h6>
+    </div>
+    <div class="card col-md-2 my-1">
+        <h6><strong>KG:-</strong> {{job.kgqty|floatformat}} KG.</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Po #:-</strong> {{job.joborder.po}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Po Date:-</strong> {{job.joborder.orderdate}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Job Status-</strong> {{job.jobstatus}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Supply Type:-</strong> {{job.supply_form}}</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Barcode:-</strong> {{job.barcode}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Pack Size:-</strong> {{job.packsize}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Repeat Length-</strong> {{job.replength|floatformat }} mm</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Open Width-</strong> {{job.openwidth|floatformat }} mm</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Sliting Size:-</strong> {{job.slit_size|floatformat }} mm</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>No Of Repeat:-</strong> {{job.no_of_repeat}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>No Of Ups:-</strong> {{job.no_of_ups}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Cylinder Length:-</strong> {{job.cyl_length|floatformat }} mm</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Cylinder Circum:-</strong> {{job.cyl_circum|floatformat }} mm</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>No Of Ply:-</strong> {{job.ply}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Printing:-</strong> {{job.printing}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Total Gsm:-</strong> {{job.totalgsm|floatformat }}</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Pouch Weight:-</strong> {{job.pouch_weight|floatformat }} Gms.</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Pouch Per Kg.:-</strong> {{job.pouch_per_kg|floatformat }} Pouch</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Pouch Type:-</strong> {{job.pouch_type }}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Film Size:-</strong> {{job.film_size }}</h6>
+    </div>
+
+    <div class="card col-md-3 my-1">
+        <h6><strong>Roll Direction:-</strong> {{job.unwind_direction}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Lami Rubber :-</strong> {{job.lami_rubber}}</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Total Pouch:-</strong> {{job.totalpouch|floatformat:0 }} Nos.</h6>
+    </div>
+    <div class="card col-md-3 my-1">
+        <h6><strong>Total Meter:-</strong> {{job.totalmeter}}</h6>
+    </div>
+    {% for att in job.jobitemattribute.all %}
+    <div class="card col-md-3 my-1">
+         <h6><strong>{{att.item_attirbuate}} :- </strong>{{att.attri_value}}</h6>
+    </div>
+    {% endfor %}
+
+
+</div>
+<div class="container">
+
+    <ul>
+        {% if job.jobremark %}
+        <li>
+            {{job.jobremark}}
+        </li>
+        {% endif %}
+        {% if job.remark %}
+        <li>
+            {{job.remark}}
+        </li>
+        {% endif %}
+        {% if job.itemmaster.remark %}
+        <li>
+            {{job.itemmaster.remark}}
+        </li>
+        {% endif %}
+
+    </ul>
+
+</div>
+
+
+<div class="centerdiv">
+    <h3 class="text-center"> Material detail</h3>
+
+    <table>
+        <thead>
+        <tr>
+            <th> Film</th>
+            <th> Type</th>
+            <th> Grade</th>
+            <th> Size</th>
+            <th> Micron</th>
+            <th> Gsm</th>
+            <th> Kg.</th>
+            <th> Meter</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for j in job.jobmaterial.all %}
+        <tr>
+            <td> {{j.materialname}}</td>
+            <td> {{j.item_grade}}</td>
+            <td> {{j.item_mat_type}}</td>
+            <td> {{j.size}}mm</td>
+            <td> {{j.micron}}</td>
+            <td> {{j.gsm|floatformat }}</td>
+            <td> {{j.required|floatformat }}</td>
+            <td> {{j.mat_length|floatformat }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th> Total</th>
+            <th>{{job.totalmicron|floatformat:2}}</th>
+            <th> {{job.totalgsm|floatformat:2}}</th>
+            <th> {{job.req|floatformat:2}}</th>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<HR>
+<div class="centerdiv">
+    <h3> Alloted Material </h3>
+    <table class="table table-bordered ">
+        <thead>
+        <tr>
+            <th class="text-left"> MATERIAL</th>
+            <th> QTY.</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for jobmaterial in job.jobmaterial.all %}
+        {% for mate in jobmaterial.jobmaterialstatus.all|dictsort:"id" %}
+        <tr  class="text-left">
+            <td>{{mate.allote}}</td>
+            <td>{{mate.qty|floatformat }} kg.</td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    <p>COLOR</p>
+    <table>
+        <thead>
+        <tr>
+            <th>color</th>
+            <th>Remark</th>
+        </tr>
+        </thead>
+        {% for p in job.jobcolors.all %}
+        <tr>
+            <td>{{p.color}}</td>
+            <td>{% if p.remark %}{{p.remark}}{% endif %}</td>
+        </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+
+</body>
+
+</html>

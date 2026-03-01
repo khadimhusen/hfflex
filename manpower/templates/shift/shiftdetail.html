@@ -1,0 +1,192 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style> .table{  font-size: 12px;}</style>
+{% endblock customcss %}
+
+{% block topscript %}
+
+{% endblock topscript %}
+
+
+{% block content %}
+
+
+    <div class="content p-4">
+        <div>
+            <div class="row">
+                <div class="col-4">
+                    <a href="{% url 'manpower:newshift' %} ">
+                    <button class="btn-primary"><p class="h6">Go to Shift</p></button>
+                    </a>
+                </div>
+                <div class="col-4">
+                    {% if instance.is_approved %}
+                    <h4 class="text-success"> This Shift is Approved </h4>
+                    {% else %}
+                    {% if request.user.username in 'cmshaikh,khadimhusen' %}
+                    <form action="{% url 'manpower:approveshift' instance.id %}" method="post">
+                        {% csrf_token %}
+                    <input class="btn btn-danger" type="submit" value="Approve Shift">
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                {% for person in instance.shiftperson.all %}
+                <div class="col-2"><h5>{{person.person}}</h5>
+                    <a href="{% url 'manpower:shiftdetail' instance.id %}?qperson={{person.id}}">
+                        <i class="fa fa-edit"></i>
+                    </a>
+                </div>
+                {% endfor %}
+                {% if not instance.is_approved %}
+                <form method="POST">
+                    {% csrf_token %}
+                    {{shiftpersonform}}
+                    <input class="btn btn-danger" type="submit" value="SAVE PERSON">
+                </form>
+                {% endif %}
+                <hr>
+            </div>
+
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-4 text-center"><h5>{{instance}}</h5></div>
+            <div class="col-4 text-center"><h5>Waste Time: <span class="text-danger">{{instance.wastetime}}</span>
+                Minute</h5></div>
+            <div class="col-4 text-center"><h5>Efficiency: {{instance.efficiency}} %</h5></div>
+        </div>
+        <hr>
+{% if not instance.is_approved %}
+        <form method="POST">{% csrf_token %}
+            {{ downtimeform.management_form }}
+                {{ downtimeform.non_form_errors }}
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0">{{ form.shift|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.jobid|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.speed|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.makeready|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.rolls|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ form.tag|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0" {% if request.user.username != "SLIT-1" %} hidden {% endif %}>
+                    {{ form.lot|as_crispy_field }}
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                   {% if downtimeform %}
+                    <lable>Reason</lable>
+                    {% for form in downtimeform %}
+                    {{form.reason|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-1 mb-0">
+                    {% if downtimeform %}
+                    <lable>Time</lable>
+                    {% for form in downtimeform %}
+                    <span hidden>{{form.id}}</span>
+                    {{form.downtime|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-1 mb-0">
+                    {% if downtimeform %}
+                    <lable>Delete</lable>
+                    {% for form in downtimeform %}
+                    {{form.DELETE|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+
+                </div>
+
+
+
+            </div> <div class="form-group col-md-1 mb-0"><input class="btn btn-primary" type="submit" value="Save"></div>
+        </form>
+        {% endif %}
+        <div class="row">
+            <div class="container">
+
+                <table class="table table-sm table-striped">
+                    <thead>
+                    <tr>
+                        <th>JOB</th>
+                        <th>QTY</th>
+                        <th>SPEED</th>
+                        <th>MAKEREADY</th>
+                        <th>ROLLS</th>
+                        <th>TAGS</th>
+                        {% if request.user.username == "SLIT-1" %}<th>LOT</th> {% endif %}
+                        <th>DOWNTIME</th>
+                        <th>RUNTIME</th>
+                        <th>REASON</th>
+                        <th>TOTALTIME</th>
+                        <th>EDIT</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in instance.activity.all %}
+                    <tr>
+                        <td>{{item.jobid}}</td>
+                        <td>{{item.qty}}</td>
+                        <td>{{item.speed}}</td>
+                        <td>{{item.makeready}} - {{item.makereadytime}}</td>
+                        <td>{{item.rolls}}</td>
+                        <td>{{item.tag}}</td>
+                        {% if request.user.username == "SLIT-1" %}<td >{{item.lot}}</td> {% endif %}
+                        <td>{{item.totaldowntime}}</td>
+                        <td>{{item.runningtime}}</td>
+                        <td>
+                            <ul>{% for down in item.downtimes.all %}
+                                <li class="h6">
+                                    {{down.reason}}-<span class="text-danger "><strong>{{down.downtime}}</strong></span>
+                                </li>
+                                {% endfor %}
+                                {% if item.other %}
+                                <li class="h6">
+                                    {{item.other}}- <span class="text-danger"><strong>{{item.downtime}}</strong></span>
+                                </li>
+                                {% endif %}
+                            </ul>
+
+                        </td>
+                        <td>{{item.totaltime}}</td>
+                        <td>
+                            {% if not instance.is_approved %}
+                            <a href="{% url 'manpower:shiftdetail' instance.id %}?qactivity={{item.id}}">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot>
+                    <tr style="background-color:#CCFFFF; COLOR:red; font-size:20px;">
+                        <td></td>
+                        <td>{{ instance.totalqty}}</td>
+                        <td></td>
+                        <td>{{instance.totalmakereadytime}}</td>
+                        <td>{{ instance.totalroll}}</td>
+                        {% if request.user.username == "SLIT-1" %}<td >{{ instance.totallot}}</td> {% endif %}
+
+                        <td>{{instance.totaldowntime}}</td>
+                        <td>{{instance.totalrunningtime}}</td>
+                        <td></td>
+                        <td>{{instance.actualtime}}</td>
+                        <td></td>
+                    </tr>
+
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+    </div>
+{% endblock content %}
+

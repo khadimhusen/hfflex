@@ -1,0 +1,124 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style>
+
+label   {color: #990000;
+         font-weight: 500;
+         font-size: 0.9rem }
+hr {background-color: #990000}
+
+
+</style>
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="post">
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6"><h2 class="card-title">Quotation Form</h2></div>
+                <div class="col-3">
+                    <button type="submit " class="btn btn-primary">Save Quote</button>
+                </div>
+            </div>
+        </div>
+        {% csrf_token %}
+
+
+        <div class="form-row">
+
+            <div class="form-group col-md-8 mb-0">
+                <div class="form-row ">
+                    <div class="form-group col-md-12 mb-0">
+                        {{ mainform.partyname|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row ">
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.contact|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.quotedate|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.design_rate|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.no_of_design|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row ">
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.cylinder_gst|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        {{ mainform.material_gst|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-6 mb-0">
+                        {{mainform.remark|as_crispy_field}}
+                    </div>
+                </div>
+            </div>
+            <div class="form-group col-md-4 mb-0">
+                {{ mainform.add|as_crispy_field }}
+            </div>
+        </div>
+        <hr>
+        <div class="container">
+            {{ quoteitemform.management_form}}
+            {% for form in quoteitemform %}
+            <div class="form-row border border-primary mb-2">
+                <span hidden>{{ form.id}}</span>
+                <div class="form-group col-md-1 mb-0">{{forloop.counter}}</div>
+                <div class="form-group col-md-4 mb-0">{{form.jobname|as_crispy_field}}</div>
+                <div class="form-group col-md-3 mb-0">{{form.dimension|as_crispy_field}}</div>
+                <div class="form-group col-md-4 mb-0">{{form.structure|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0"></div>
+                <div class="form-group col-md-1 mb-0">{{form.supply|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.cyl_rate|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.no_of_cyl|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.material_rate|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.pouch_per_kg|as_crispy_field}}</div>
+                <div class="form-group col-md-2 mb-0">{{form.per_pouch_cost|as_crispy_field}}</div>
+                <div class="form-group col-md-2 mb-0">{{form.moq|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.unit|as_crispy_field}}</div>
+                <div class="form-group col-md-1 mb-0">{{form.DELETE|as_crispy_field}}</div>
+            </div>
+
+
+            {% endfor %}
+
+
+            <div class="form-row">
+                <div class="form-group col-md-12 mb-0">
+                    {{mainform.quote_term|as_crispy_field}}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit " class="btn btn-primary">Save Quote</button>
+    </form>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+      $( "#id_quotedate" ).datetimepicker({
+            timepicker:false,
+            format: 'd/m/Y'})});
+
+
+</script>
+{% endblock javascripts%}

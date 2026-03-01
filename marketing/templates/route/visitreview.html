@@ -1,0 +1,121 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST">
+
+    <div class="card-body">
+        <h2 class="card-title">Visit Review Form</h2>
+
+    </div>
+    {% csrf_token %}
+
+    {{ routeform.management_form }}
+    <div class="form-row ">
+
+        <div class="form-group col-md-2 mb-0">
+            {{ routeform.route_date|as_crispy_field }}
+        </div>
+
+        <div class="form-group col-md-2 mb-0">
+            {{ routeform.marketing_person|as_crispy_field }}
+        </div>
+
+        <div class="form-group col-md-6 mb-0">
+            {{ routeform.route_link|as_crispy_field }}
+        </div>
+
+
+    </div>
+    <div class="row border">
+        <div class="col text-center"><h4>Visit Review</h4></div>
+    </div>
+
+    {{ routecustomerform.management_form }}
+    {{ routecustomerform.non_form_errors}}
+    <div class="container ">
+
+        <div class="form-row ">
+
+            <div class="form-group col-md-2 mb-0">Customer</div>
+            <div class="form-group col-md-1 mb-0">presentation</div>
+            <div class="form-group col-md-1 mb-0">need_analysis</div>
+            <div class="form-group col-md-1 mb-0">Packing Use</div>
+            <div class="form-group col-md-1 mb-0">Cost</div>
+            <div class="form-group col-md-1 mb-0">terms and condition</div>
+            <div class="form-group col-md-1 mb-0">old supplier relation</div>
+            <div class="form-group col-md-1 mb-0">customer sample</div>
+            <div class="form-group col-md-1 mb-0">our relation</div>
+            <div class="form-group col-md-10 mb-0"></div>
+            <div class="form-group col-md-1 mb-0">Delete</div>
+
+        </div>
+        {% for form in routecustomerform %}
+
+        {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+
+
+        {% endfor %}
+        <div class="form-row border border-warning ">
+
+            <div class="form-group col-md-2 mb-0">{{ form.instance.customername }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.presentation|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.need_analysis|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.packing_use|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.cost|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.terms_and_condition|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.old_supplier_relation|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.customer_sample|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.our_relation|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.DELETE|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0"></div>
+
+
+            <div class="form-group col-md-1 mb-0">{{ form.action_plan.label }}</div>
+            <div class="form-group col-md-5 mb-0">{{ form.action_plan|as_crispy_field }}</div>
+            <div class="form-group col-md-1 mb-0">{{ form.reason.label }}</div>
+            <div class="form-group col-md-5 mb-0">{{ form.reason|as_crispy_field }}</div>
+
+
+        </div>
+
+        {% endfor %}
+    </div>
+
+    <button type="submit " class="btn btn-primary">Save Route</button>
+</form>
+{{ routeform.errors }}
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_route_date" ).datetimepicker({
+       format: 'd/m/Y',
+
+});
+    });
+
+
+
+
+
+
+
+</script>
+
+
+{% endblock javascripts%}

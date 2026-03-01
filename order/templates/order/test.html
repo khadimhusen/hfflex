@@ -1,0 +1,4637 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hfflex</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png"/>
+
+
+
+</head>
+<body>
+<div class="container">
+    <!--navbar start here-->
+
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark" style="margin-: 10px; margin-right: 10px;">
+    <a class="navbar-brand" href="#">HFFLEX</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="/material/material/" id="navbarDropdown"
+                   role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    MaterialMaster
+                </a>
+
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="/material/material/">Material</a>
+                    <a class="dropdown-item" href="/material/mattype/">Material Type</a>
+                    <a class="dropdown-item" href="/material/grade/">Grade</a>
+
+                </div>
+
+
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/itemmaster/list/"> Item-Master</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/customer/list/">Customer</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="/order/orderlist/">Order</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="/order/joblist/">Jobs</a>
+            </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+        <a href="/logout/">
+            <button class="btn btn-danger mx-1"> logout</button>
+        </a>
+        <a href="/admin/">
+            <button class="btn btn-danger mx-1"> Admin</button>
+        </a>
+    </div>
+</nav>
+
+<!--navbar end here-->
+
+
+
+
+
+<h3> Order detail</h3>
+
+<div class="form-row">
+    <div class="form-group col-md-12 mb-0">
+
+
+
+
+    <div id="div_id_customer" class="form-group">
+
+            <label for="id_customer" class="col-form-label  requiredField">
+                Customer<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="customer" class="select form-control" required id="id_customer">
+  <option value="">---------</option>
+
+  <option value="39">&amp;&lt;h1&gt;&amp; s heading&lt;/h1&gt;</option>
+
+  <option value="40">1612201901 new customer</option>
+
+  <option value="38">&lt;h1&gt;  heading&lt;/h1&gt;</option>
+
+  <option value="46">AMAN ANSARI</option>
+
+  <option value="6">ARYAN AGRO</option>
+
+  <option value="44">BAVANI FOODS</option>
+
+  <option value="10">DFSD</option>
+
+  <option value="9">DSDASD</option>
+
+  <option value="8">EIGHT NUMBER</option>
+
+  <option value="48">F DFDF DFDDFDFDF</option>
+
+  <option value="14">FIRST CONSTOMER</option>
+
+  <option value="17">FOR TRY</option>
+
+  <option value="5">G S MASALE</option>
+
+  <option value="7">HFFLEX</option>
+
+  <option value="2" selected>JADHAO GRUHA UDHYOG</option>
+
+  <option value="11">KHADIMHUSEN</option>
+
+  <option value="1">LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="47">NETIJFLSDUSDH</option>
+
+  <option value="18">NEW 29-10-2019-01</option>
+
+  <option value="19">NEW 30-10-2019-01</option>
+
+  <option value="20">NEW 30-10-2019-02</option>
+
+  <option value="12">NUTRISH CROP SOLUTIONS PVT LTD</option>
+
+  <option value="29">New Customer 19112019</option>
+
+  <option value="42">Nutrish crop solutions pvt ltd</option>
+
+  <option value="4">SUDHIR</option>
+
+  <option value="13">THIS IS NEW CUSTOMER</option>
+
+  <option value="15">THIS IS NEW CUSTOMER FOR TESTING</option>
+
+  <option value="3">THREE</option>
+
+  <option value="16">VERY NIEW</option>
+
+  <option value="49">XVITA</option>
+
+  <option value="30">adding new1-12-2019</option>
+
+  <option value="34">asdf</option>
+
+  <option value="32">inlinenew</option>
+
+  <option value="45">malhar</option>
+
+  <option value="41">new 17-12-2019</option>
+
+  <option value="21">new 30-10-2019-03</option>
+
+  <option value="22">new 30-10-2019-04</option>
+
+  <option value="23">new 30-10-2019-05</option>
+
+  <option value="24">new 30-10-2019-06</option>
+
+  <option value="25">new 30-10-2019-08</option>
+
+  <option value="28">new 31-10-2019-01</option>
+
+  <option value="33">new test with multiple form</option>
+
+  <option value="31">newesjdhfkjsh</option>
+
+  <option value="43">qwer</option>
+
+  <option value="35">sadfsdfasdfs</option>
+
+  <option value="36">sarfaraj shiklagar</option>
+
+  <option value="37">this is heading</option>
+
+  <option value="26">very niewsdf</option>
+
+  <option value="27">very niewsdfqwer</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-group col-md-4 mb-0">
+
+
+
+
+    <div id="div_id_po" class="form-group">
+
+            <label for="id_po" class="col-form-label ">
+                Po
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="po" maxlength="32" class="textinput textInput form-control" id="id_po">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-2 mb-0">
+
+
+
+
+    <div id="div_id_podate" class="form-group">
+
+            <label for="id_podate" class="col-form-label  requiredField">
+                Podate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="podate" value="2019-12-12 12:31:43" class="datetimeinput form-control" required id="id_podate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-2 mb-0">
+
+
+
+
+    <div id="div_id_deliverydate" class="form-group">
+
+            <label for="id_deliverydate" class="col-form-label  requiredField">
+                Deliverydate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="deliverydate" value="2019-12-12 12:31:43" class="datetimeinput form-control" required id="id_deliverydate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-2 mb-0">
+
+
+
+
+    <div id="div_id_paymentterms" class="form-group">
+
+            <label for="id_paymentterms" class="col-form-label ">
+                Paymentterms
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="paymentterms" value="0" class="numberinput form-control" id="id_paymentterms">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-1 mb-0">
+
+
+
+
+    <div id="div_id_tax1" class="form-group">
+
+            <label for="id_tax1" class="col-form-label  requiredField">
+                Tax1<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="tax1" value="9.00" step="0.01" class="numberinput form-control" required id="id_tax1">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-1 mb-0">
+
+
+
+
+    <div id="div_id_tax2" class="form-group">
+
+            <label for="id_tax2" class="col-form-label  requiredField">
+                Tax2<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="tax2" value="9.00" step="0.01" class="numberinput form-control" required id="id_tax2">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-group col-md-3 mb-0">
+
+
+
+
+    <div id="div_id_transport" class="form-group">
+
+            <label for="id_transport" class="col-form-label ">
+                Transport
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="transport" maxlength="64" class="textinput textInput form-control" id="id_transport">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-5 mb-0">
+
+
+
+
+    <div id="div_id_remark" class="form-group">
+
+            <label for="id_remark" class="col-form-label ">
+                Remark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="remark" maxlength="512" class="textinput textInput form-control" id="id_remark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-2 mb-0">
+
+
+
+
+    <div id="div_id_delivery_at" class="form-group">
+
+            <label for="id_delivery_at" class="col-form-label  requiredField">
+                Delivery at<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="delivery_at" class="select form-control" required id="id_delivery_at">
+  <option value="">---------</option>
+
+  <option value="2" selected>JADHAO GRUHA UDHYOG-FACTORY</option>
+
+  <option value="33">JADHAO GRUHA UDHYOG-new address</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+    <div class="form-group col-md-2 mb-0">
+
+
+
+
+    <div id="div_id_status" class="form-group">
+
+            <label for="id_status" class="col-form-label  requiredField">
+                Status<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="status" class="select form-control" id="id_status">
+  <option value="Pending" selected>Pending</option>
+
+  <option value="Close">Close</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+
+    </div>
+</div>
+<hr>
+
+<h3>Job detail</h3>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-itemmaster" class="form-group">
+
+            <label for="id_jobformset-0-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-0-itemmaster" class="select form-control" id="id_jobformset-0-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1">1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8" selected>8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-quantity" class="form-group">
+
+            <label for="id_jobformset-0-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-0-quantity" value="100.000" step="0.001" class="numberinput form-control" id="id_jobformset-0-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-unit" class="form-group">
+
+            <label for="id_jobformset-0-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-0-unit" class="select form-control" id="id_jobformset-0-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-rate" class="form-group">
+
+            <label for="id_jobformset-0-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-0-rate" value="210.00" step="0.01" class="numberinput form-control" id="id_jobformset-0-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-waste" class="form-group">
+
+            <label for="id_jobformset-0-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-0-waste" value="12.00" step="0.01" class="numberinput form-control" id="id_jobformset-0-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-jobstatus" class="form-group">
+
+            <label for="id_jobformset-0-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-0-jobstatus" class="select form-control" id="id_jobformset-0-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-0-jobremark" class="form-group">
+
+            <label for="id_jobformset-0-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-0-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-0-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-itemmaster" class="form-group">
+
+            <label for="id_jobformset-1-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-1-itemmaster" class="select form-control" id="id_jobformset-1-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1">1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8" selected>8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-quantity" class="form-group">
+
+            <label for="id_jobformset-1-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-1-quantity" value="200.000" step="0.001" class="numberinput form-control" id="id_jobformset-1-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-unit" class="form-group">
+
+            <label for="id_jobformset-1-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-1-unit" class="select form-control" id="id_jobformset-1-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-rate" class="form-group">
+
+            <label for="id_jobformset-1-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-1-rate" value="210.00" step="0.01" class="numberinput form-control" id="id_jobformset-1-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-waste" class="form-group">
+
+            <label for="id_jobformset-1-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-1-waste" value="12.00" step="0.01" class="numberinput form-control" id="id_jobformset-1-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-jobstatus" class="form-group">
+
+            <label for="id_jobformset-1-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-1-jobstatus" class="select form-control" id="id_jobformset-1-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-1-jobremark" class="form-group">
+
+            <label for="id_jobformset-1-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-1-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-1-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-itemmaster" class="form-group">
+
+            <label for="id_jobformset-2-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-2-itemmaster" class="select form-control" id="id_jobformset-2-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1">1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8" selected>8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-quantity" class="form-group">
+
+            <label for="id_jobformset-2-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-2-quantity" value="200.000" step="0.001" class="numberinput form-control" id="id_jobformset-2-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-unit" class="form-group">
+
+            <label for="id_jobformset-2-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-2-unit" class="select form-control" id="id_jobformset-2-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-rate" class="form-group">
+
+            <label for="id_jobformset-2-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-2-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-2-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-waste" class="form-group">
+
+            <label for="id_jobformset-2-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-2-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-2-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-jobstatus" class="form-group">
+
+            <label for="id_jobformset-2-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-2-jobstatus" class="select form-control" id="id_jobformset-2-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-2-jobremark" class="form-group">
+
+            <label for="id_jobformset-2-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-2-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-2-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-itemmaster" class="form-group">
+
+            <label for="id_jobformset-3-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-3-itemmaster" class="select form-control" id="id_jobformset-3-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-quantity" class="form-group">
+
+            <label for="id_jobformset-3-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-3-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-3-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-unit" class="form-group">
+
+            <label for="id_jobformset-3-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-3-unit" class="select form-control" id="id_jobformset-3-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-rate" class="form-group">
+
+            <label for="id_jobformset-3-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-3-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-3-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-waste" class="form-group">
+
+            <label for="id_jobformset-3-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-3-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-3-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-jobstatus" class="form-group">
+
+            <label for="id_jobformset-3-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-3-jobstatus" class="select form-control" id="id_jobformset-3-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-3-jobremark" class="form-group">
+
+            <label for="id_jobformset-3-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-3-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-3-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-itemmaster" class="form-group">
+
+            <label for="id_jobformset-4-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-4-itemmaster" class="select form-control" id="id_jobformset-4-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-quantity" class="form-group">
+
+            <label for="id_jobformset-4-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-4-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-4-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-unit" class="form-group">
+
+            <label for="id_jobformset-4-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-4-unit" class="select form-control" id="id_jobformset-4-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-rate" class="form-group">
+
+            <label for="id_jobformset-4-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-4-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-4-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-waste" class="form-group">
+
+            <label for="id_jobformset-4-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-4-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-4-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-jobstatus" class="form-group">
+
+            <label for="id_jobformset-4-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-4-jobstatus" class="select form-control" id="id_jobformset-4-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-4-jobremark" class="form-group">
+
+            <label for="id_jobformset-4-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-4-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-4-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-itemmaster" class="form-group">
+
+            <label for="id_jobformset-5-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-5-itemmaster" class="select form-control" id="id_jobformset-5-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-quantity" class="form-group">
+
+            <label for="id_jobformset-5-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-5-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-5-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-unit" class="form-group">
+
+            <label for="id_jobformset-5-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-5-unit" class="select form-control" id="id_jobformset-5-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-rate" class="form-group">
+
+            <label for="id_jobformset-5-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-5-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-5-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-waste" class="form-group">
+
+            <label for="id_jobformset-5-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-5-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-5-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-jobstatus" class="form-group">
+
+            <label for="id_jobformset-5-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-5-jobstatus" class="select form-control" id="id_jobformset-5-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-5-jobremark" class="form-group">
+
+            <label for="id_jobformset-5-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-5-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-5-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-itemmaster" class="form-group">
+
+            <label for="id_jobformset-6-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-6-itemmaster" class="select form-control" id="id_jobformset-6-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-quantity" class="form-group">
+
+            <label for="id_jobformset-6-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-6-quantity" value="0.002" step="0.001" class="numberinput form-control" id="id_jobformset-6-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-unit" class="form-group">
+
+            <label for="id_jobformset-6-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-6-unit" class="select form-control" id="id_jobformset-6-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-rate" class="form-group">
+
+            <label for="id_jobformset-6-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-6-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-6-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-waste" class="form-group">
+
+            <label for="id_jobformset-6-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-6-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-6-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-jobstatus" class="form-group">
+
+            <label for="id_jobformset-6-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-6-jobstatus" class="select form-control" id="id_jobformset-6-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-6-jobremark" class="form-group">
+
+            <label for="id_jobformset-6-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-6-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-6-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-itemmaster" class="form-group">
+
+            <label for="id_jobformset-7-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-7-itemmaster" class="select form-control" id="id_jobformset-7-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-quantity" class="form-group">
+
+            <label for="id_jobformset-7-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-7-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-7-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-unit" class="form-group">
+
+            <label for="id_jobformset-7-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-7-unit" class="select form-control" id="id_jobformset-7-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-rate" class="form-group">
+
+            <label for="id_jobformset-7-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-7-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-7-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-waste" class="form-group">
+
+            <label for="id_jobformset-7-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-7-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-7-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-jobstatus" class="form-group">
+
+            <label for="id_jobformset-7-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-7-jobstatus" class="select form-control" id="id_jobformset-7-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-7-jobremark" class="form-group">
+
+            <label for="id_jobformset-7-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-7-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-7-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-itemmaster" class="form-group">
+
+            <label for="id_jobformset-8-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-8-itemmaster" class="select form-control" id="id_jobformset-8-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-quantity" class="form-group">
+
+            <label for="id_jobformset-8-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-8-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-8-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-unit" class="form-group">
+
+            <label for="id_jobformset-8-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-8-unit" class="select form-control" id="id_jobformset-8-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-rate" class="form-group">
+
+            <label for="id_jobformset-8-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-8-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-8-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-waste" class="form-group">
+
+            <label for="id_jobformset-8-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-8-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-8-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-jobstatus" class="form-group">
+
+            <label for="id_jobformset-8-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-8-jobstatus" class="select form-control" id="id_jobformset-8-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-8-jobremark" class="form-group">
+
+            <label for="id_jobformset-8-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-8-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-8-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-itemmaster" class="form-group">
+
+            <label for="id_jobformset-9-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-9-itemmaster" class="select form-control" id="id_jobformset-9-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-quantity" class="form-group">
+
+            <label for="id_jobformset-9-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-9-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-9-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-unit" class="form-group">
+
+            <label for="id_jobformset-9-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-9-unit" class="select form-control" id="id_jobformset-9-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-rate" class="form-group">
+
+            <label for="id_jobformset-9-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-9-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-9-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-waste" class="form-group">
+
+            <label for="id_jobformset-9-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-9-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-9-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-jobstatus" class="form-group">
+
+            <label for="id_jobformset-9-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-9-jobstatus" class="select form-control" id="id_jobformset-9-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-9-jobremark" class="form-group">
+
+            <label for="id_jobformset-9-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-9-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-9-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div class="form-row">
+    <div class=" form-group col-md-3 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-itemmaster" class="form-group">
+
+            <label for="id_jobformset-10-itemmaster" class="col-form-label  requiredField">
+                Itemmaster<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-10-itemmaster" class="select form-control" id="id_jobformset-10-itemmaster">
+  <option value="">---------</option>
+
+  <option value="1" selected>1-Jadhao Supari 500gms - JADHAO GRUHA UDHYOG</option>
+
+  <option value="2">2-RUCHI TURMERIC - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="3">3-namaskar atta 5kg - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="4">4-ncp humic acid - ARYAN AGRO</option>
+
+  <option value="5">5-5KG ATTA BAG - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="6">6-new - G S MASALE</option>
+
+  <option value="7">7-NEWSFDSFD - G S MASALE</option>
+
+  <option value="8">8-thisi svds - JADHAO GRUHA UDHYOG</option>
+
+  <option value="9">9-THISI SVDSSDFSFD - SUDHIR</option>
+
+  <option value="10">10-sjfdiojfdis - very niewsdf</option>
+
+  <option value="11">11-nrnkenrwenrwj - EIGHT NUMBER</option>
+
+  <option value="12">12-sdfsdafsd - EIGHT NUMBER</option>
+
+  <option value="13">13-sdfsdafsdfdsd - DFSD</option>
+
+  <option value="14">14-test1 - EIGHT NUMBER</option>
+
+  <option value="15">15-qw - DFSD</option>
+
+  <option value="16">16-tesrer - DSDASD</option>
+
+  <option value="17">17-df - DFSD</option>
+
+  <option value="18">18-sdfsdafsdfdsdsda - THREE</option>
+
+  <option value="19">19-aaa - DFSD</option>
+
+  <option value="20">20-fggf - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="21">21-asdffwfw - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="22">22-rashi - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="23">23-dk kabur - LOKMANGAL AGRO PVT LTD.</option>
+
+  <option value="24">24-fsfsfsdsdds aa sadas - HFFLEX</option>
+
+  <option value="25">25-XYZ - AMAN ANSARI</option>
+
+  <option value="26">26-mango pickelasdasd - AMAN ANSARI</option>
+
+  <option value="27">27-NOKIA - AMAN ANSARI</option>
+
+  <option value="28">28-NEW ITEMMASTER - JADHAO GRUHA UDHYOG</option>
+
+  <option value="29">29-NEW ITEMMASTER FDJFDK - JADHAO GRUHA UDHYOG</option>
+
+  <option value="30">30-XYZ - BAVANI FOODS</option>
+
+  <option value="31">31-XYZA - AMAN ANSARI</option>
+
+  <option value="32">32-S FSFD SFDS - AMAN ANSARI</option>
+
+  <option value="33">33-S FSFD SFDSXAXAX - AMAN ANSARI</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-quantity" class="form-group">
+
+            <label for="id_jobformset-10-quantity" class="col-form-label  requiredField">
+                Quantity<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-10-quantity" value="0.001" step="0.001" class="numberinput form-control" id="id_jobformset-10-quantity">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-unit" class="form-group">
+
+            <label for="id_jobformset-10-unit" class="col-form-label  requiredField">
+                Unit<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-10-unit" class="select form-control" id="id_jobformset-10-unit">
+  <option value="">---------</option>
+
+  <option value="1" selected>kg.</option>
+
+  <option value="2">Nos.</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-rate" class="form-group">
+
+            <label for="id_jobformset-10-rate" class="col-form-label  requiredField">
+                Rate<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-10-rate" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-10-rate">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-1 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-waste" class="form-group">
+
+            <label for="id_jobformset-10-waste" class="col-form-label  requiredField">
+                Waste<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="number" name="jobformset-10-waste" value="0.01" step="0.01" class="numberinput form-control" id="id_jobformset-10-waste">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-jobstatus" class="form-group">
+
+            <label for="id_jobformset-10-jobstatus" class="col-form-label  requiredField">
+                Jobstatus<span class="asteriskField">*</span>
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <select name="jobformset-10-jobstatus" class="select form-control" id="id_jobformset-10-jobstatus">
+  <option value="Pending">Pending</option>
+
+  <option value="Close">Close</option>
+
+  <option value="unplanned" selected>unplanned</option>
+
+  <option value="Completed">Completed</option>
+
+  <option value="Cancelled">Cancelled</option>
+
+  <option value="Hold">Hold</option>
+
+</select>
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+    <div class=" form-group col-md-2 mb-0">
+
+
+
+    <div id="div_id_jobformset-10-jobremark" class="form-group">
+
+            <label for="id_jobformset-10-jobremark" class="col-form-label ">
+                Jobremark
+            </label>
+
+
+
+
+
+
+
+
+                <div class="">
+                    <input type="text" name="jobformset-10-jobremark" maxlength="256" class="textinput textInput form-control" id="id_jobformset-10-jobremark">
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+    <br>
+</div>
+
+<script src="/static/js/jquery.js"></script>
+
+<script>
+	$(document).ready(function(){
+        $('input').each(function() {$(this).attr({'disabled': 'disabled' })});
+        $('select').each(function() {$(this).attr({'disabled': 'disabled' })});
+        $('textarea').each(function() {$(this).attr({'disabled': 'disabled' })});
+});
+
+
+
+
+
+
+</script>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous">
+    </script>
+
+
+</div>
+
+<div class="container ">
+
+    <h6> This website project of H F FLEX PVT. LTD.</h6>
+
+    <h7>   Coping content of this website is Strictly prohibited. </h7>
+</div>
+
+
+
+
+
+
+</body>
+
+
+</html>

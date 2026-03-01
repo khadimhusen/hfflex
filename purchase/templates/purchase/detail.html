@@ -1,0 +1,414 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load extra_tag %}
+
+
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/purchase.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row ">
+        <button class="btn btn-primary btn-sm m-2 p-2" onclick="downloadimage()">Download Po image</button>
+        <a class="btn btn-warning btn-sm m-2 p-2" href="{% url 'purchase:popdf' po.id %}">Download Po Pdf</a>
+        <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'purchase:purchaseedit' po.id %}">Edit Po</a>
+
+        {% if user|user_in_department:"can_approve_po" and not po.approvedby %}
+
+        <form action="{% url 'purchase:poapproval' po.id %}" method="post">
+            {% csrf_token %}
+            <div hidden>{{poapprovalform}}</div>
+            <button class="btn btn-warning btn-sm m-2 p-2" type="submit">Po approval
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#home">PO Details</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu1">Po Notes</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu2">Po Ref Item</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu3">Follow up date</a>
+        </li>
+
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div id="home" class="container tab-pane active"><br>
+            <div class="container col-12 border bg-light" id="download">
+                <div class="row text-center">
+                    <div class="col-12"><h5 class="text-center"><u>Purchase Order</u></h5></div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-2 text-center">
+                        <div id="logo">
+                            <img src="/static/images/hflogo.png" width="90" height="100">
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <h1 class="name font-weight-bold">H F FLEX PVT. LTD.</h1>
+                        <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7447456686
+                            <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+                        </p>
+                    </div>
+                    <div class="col-4">
+                        <h3>Po # {{po.id}} </h3>
+                        <h6 class="text-danger">(Order Status:{{po.status}})</h6>
+                        <div>Po Created Date:- {{po.created|date:"d/m/Y"}}</div>
+                        <div>Delivery Expected At :- {{po.delivery_date|date:"d/m/Y"}}</div>
+                        <div>Transport By:- {{po.transport}}</div>
+                        <div>Payment Term:- {{po.payment_terms}}</div>
+                    </div>
+                </div>
+                <hr>
+                <main>
+                    <div class="row">
+                        <div class="col-7 side-border" id="client">
+                            <div class="to">Purchase Order TO:</div>
+                            <h4 class="name">{{po.supplier}}</h4>
+                            {% for add in po.supplier.addresses.all %}
+                            <div class="address">{{add.addname}}, {{add.add1}}</div>
+                            <div class="address">{{add.add2}} Pincode- {{add.pincode|default_if_none:""}}</div>
+                            {% endfor %}
+                            <div>{% if po.supplier.gst %} Gst:- {{po.supplier.gst}}{% endif %}</div>
+                            {% for person in po.supplier.persons.all|slice:"1" %}
+                            <div>Contact Person:-{{person.name}} <b>( {{ person.mobile}} )</b></div>
+                            {% endfor %}
+                            {% with email=po.supplier.email %}{% if email %}
+                            <div class="email"><a href="mailto:{{email}}@gmail.com">
+                                {{email}}</a></div>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div id="delivery" class="col-5 side-border ">
+                            <div class="to">Delivery To:</div>
+                            <h4 class="name">{{po.ship_to}}</h4>
+                            <div class="address">{{po.delivery_at.addname}}, {{po.delivery_at.add1}}</div>
+                            <div class="address">{{po.delivery_at.add2}} Pincode- {{po.delivery_at.pincode}}</div>
+                            <div>Gst:- 27AADCH3462K1ZF</div>
+                            <div>Contact Person:-{{po.createdby.profile.prefix }}
+                                {{po.createdby.get_full_name|title }}<b>( {{po.createdby.profile.mobile }} )</b>
+                            </div>
+                            <div class="email"><a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a></div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class=" table-responsive">
+                            <table class="table table-sm table-striped " border="0" cellspacing="0" cellpadding="0">
+                                <thead>
+                                <tr>
+                                    <th class="">#</th>
+                                    <th class="col-4">DESCRIPTION</th>
+                                    <th class="col-1 text-center">CATEGORY</th>
+                                    <th class="col-1 text-center">ORD.QTY</th>
+                                    <th class="col-1 text-center">REC.QTY</th>
+                                    <th class="col-1 text-center">PENDING</th>
+                                    <th class="col-2">UNIT PRICE</th>
+                                    <th class="col-2">TOTAL</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for item in po.poitem.all %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td class="verysmall">{{item.description|linebreaks }}</td>
+                                    <td class="text-center small-9">--{{item.category|default:""}}--</td>
+                                    <td class="text-center small-9">{{item.qty|floatformat }} {{item.unit}}</td>
+                                    <td class="text-center small-9">{{item.rec_qty|floatformat }}</td>
+                                    <td class="text-center small-9">{{item.pendingqty|floatformat }}</td>
+                                    <td class="small-9">{{item.rate|floatformat:2 }} Rs./{{item.unit}}</td>
+                                    <td class="small-9"> Rs. {{item.total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <th></th>
+                                    <th class="text-right" colspan="2">Total Qty :-</th>
+                                    <th class="text-center">{{po.totalqty}}</th>
+                                    <th class="text-center">{{po.totalrecqty}}</th>
+                                    <th class="text-center">{{po.totalpendingqty}}</th>
+                                    <th class="text-center">SubTotal Amt :-</th>
+                                    <th>Rs. {{po.pototal|floatformat:2 }}</b></th>
+                                </tr>
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td colspan="6" rowspan="3">Terms & Condition:-
+                                        <ul class="verysmall m-0 p-1">
+                                            {% for term in po.poterm.all %}
+                                            <li>{{term|linebreaks }}</li>
+                                            {% endfor %}
+                                        </ul>
+
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">Cgst {{po.tax1|floatformat:2 }} %</td>
+                                    <td>Rs. {{po.cgst|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+
+                                    <td class="text-center">Sgst {{po.tax2|floatformat:2 }} %</td>
+                                    <td>Rs. {{po.sgst|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th colspan="6" class="text-center"><h5>Amount in Word:- {{po.inword}} Rupees</h5>
+                                    </th>
+                                    <th class="text-center">GRAND TOTAL</th>
+                                    <th>Rs. {{po.grosstotal|floatformat:0 }}</th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row border">
+                        <div class="col-12">
+                            <h6><span style="color:red">Remark:-</span> <span> <p><em>{{po.remark|default_if_none:"---"}}</em></p></span>
+                            </h6>
+                        </div>
+
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5>Created By</h5>
+                            {% if po.createdby %}
+                            <h6 class="name"><em>{{po.createdby.get_full_name|upper}}</em></h6>
+                            <div>Date:- {{po.created|date:"d/m/Y"}}</div>
+
+                            {% else %}
+                            -
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <h5>Approved By</h5>
+                            {% if po.approvedby %}
+                            <h6 class="name"><em>{{po.approvedby.get_full_name|upper}}</em></h6>
+                            <div>Date:- {{po.approve_date|date:"d/m/Y"}}</div>
+
+                            {% else %}
+                            <h4 class="name text-danger"><em>Pending For Approval </em></h4>
+                            {% endif %}
+                        </div>
+                    </div>
+                </main>
+
+            </div>
+
+        </div>
+
+        <div id="menu1" class="container tab-pane fade"><br>
+            <div class="row my-2 ">
+                <div class="col-8 ">
+                    <form action="{% url 'purchase:addpoimage' po.id %}" method="POST" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+                        {{poimageform|crispy}}
+                        <button class="btn btn-primary" type="submit" value="submit"> Save Image</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Button trigger modal start-->
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                Launch demo modal
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <! modal end here -->
+
+
+            <div class="row my-2">
+                <div class="col-12">
+                    <div id="demo" class="carousel slide" data-ride="carousel">
+                        <!-- Indicators -->
+                        <ul class="carousel-indicators">
+                            {% for image in po.poimage.all %}
+                            {% if forloop.first %}
+                            <li data-target="#demo" data-slide-to="{{loop.counter0}}" class="active"></li>
+                            {% else %}
+                            <li data-target="#demo" data-slide-to="{{loop.counter0}}"></li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+
+                        <!-- The slideshow -->
+                        <div class="carousel-inner" align="center">
+                            {% for image in po.poimage.all %}
+                            {% if forloop.first %}
+                            <div class="carousel-item active">
+
+                                <a href="{{ image.poimage.url }}" target="_blank">
+                                    <img src="{{ image.poimage.url }}" rel="noopener noreferrer" alt="no image"
+                                         height="400px" width="500px">
+                                </a>
+                                <div class="carousel-caption d-none d-md-block">
+                                    <h5 class="text-primary">{{image.imagename}}</h5>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="carousel-item">
+
+                                <a href="{{ image.poimage.url }}" target="_blank">
+                                    <img src="{{ image.poimage.url }}" rel="noopener noreferrer" alt="no image"
+                                         height="400">
+                                </a>
+                                <div class="carousel-caption d-none d-md-block">
+                                    <h5 class="text-primary">{{image.imagename}}</h5>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Left and right controls -->
+                        <a class="carousel-control-prev btn" href="#demo" data-slide="prev">
+                            <span style="color:red"> <strong>Prev </strong></span>
+                        </a>
+                        <a class="carousel-control-next btn" href="#demo" data-slide="next">
+                            <span style="color:red"><strong>Next</strong></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div id="menu2" class="container tab-pane fade"><br>
+            <div class="container">
+                {% regroup mat by material as material_list %}
+                <div class="row m-4">{% for material in material_list %}
+
+
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>{{ material.grouper }}</th>
+                            <th>Qty.</th>
+                        </tr>
+                        </thead>
+                        <tbody>{% for item in material.list %}
+                        <tr>
+
+                            <td>{{forloop.counter}}</td>
+                            <td><a href="{% url 'order:jobdetail' item.job.id %}">#</a>{{ item.job }}</td>
+                            <td class="{{item}}"> {{ item.qty }}</td>
+
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="menu3" class="container tab-pane fade"><br>
+            <div class="container">
+
+                <form action="{% url 'purchase:poexpeteddate' po.id %}" method="POST" autocomplete="off">
+
+                    {% csrf_token %}
+                    {{followupform|crispy}}
+                    <button class="btn btn-primary" type="submit" value="submit"> Update New Date</button>
+                </form>
+
+                <table class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>sr no.</th>
+                        <th>Date</th>
+                        <th>Remark</th>
+                        <th>Created BY</th>
+
+
+                    </tr>
+                    </thead>
+                    <tbody>{% for item in po.itemexpecteddate.all %}
+                    <tr>
+
+                        <td>{{forloop.counter}}</td>
+                        <td>{{item.expected_date}}</td>
+                        <td>{{item.remark}}</td>
+                        <td>{{item.createdby}}-{{item.created }}</td>
+                    </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+</div>
+
+</div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.1/html2canvas.min.js"></script>
+<script type="text/javascript">
+
+        function downloadimage() {
+            var container = document.getElementById("download");
+            html2canvas(container, { allowTaint: true,scale: 1.5 }).then(function (canvas) {
+
+                var link = document.createElement("a");
+                document.body.appendChild(link);
+                link.download = '{{po.id}}-{{po.supplier}}.png';
+                link.href = canvas.toDataURL();
+                link.target = '_blank';
+                link.click();
+            });
+        }
+
+</script>
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function(){$( "#id_expected_date").datetimepicker({format: 'd/m/Y'})});
+</script>
+
+{% endblock javascripts %}

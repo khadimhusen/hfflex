@@ -1,0 +1,24 @@
+<li class="nav-item dropdown">
+    <a herf="#" id="pre_job" class="nav-link dropdown_toggle" data-toggle="dropdown"
+       style="color:lightgreen">
+        <strong>PreJob= {{jobcount}}</strong>
+    </a>
+
+    <div class="dropdown-menu " aria-labelledby="pre_job" style="width:1000px">
+        <ul>
+
+            <table class="table dropdown-item">
+                {% for item in joblist %}
+                <tr>
+                    <td>{{item.jobname}}</td>
+                    <td>{{item.qty}} </td>
+                    <td> {{item.customer}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+        </ul>
+
+    </div>
+
+</li>

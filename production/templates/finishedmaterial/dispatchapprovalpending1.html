@@ -1,0 +1,83 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style>
+    .table{
+  font-size: 13px;}
+
+
+
+
+</style>
+{% endblock customcss %}
+{% block content %}
+
+<!--table start from here-->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex">
+                    <h2 class="card-title text-center">Pending For Dispatch Approval list</h2>
+                               </div>
+                <div class="container">
+
+                    <table class="table table-striped table-bordered" id="example">
+                        {% for cust in customerlist %}
+
+                        {% endfor %}
+                        {% for k,v in obj.items %}
+                        <thead>
+                        <tr>
+                            <th class="text-center">{{k}}</th>
+                            <th>Ready Qty</th>
+                            <th>Remark</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for job,value in v.items %}
+                        <tr>
+                            <form action="{% url 'production:dispatchapproval' job.id %}" method="post">{% csrf_token %}
+
+                                <td>
+                                    {{job}}- <strong>Order qty ={{value.orderqty}} Kg. </strong>
+                                </td>
+                                <td>{{value.qty}} Kg.</td>
+                                <td>
+                                    {{value.dips_app_form.dispatch_remark}}<div hidden>{{value.dips_app_form.dispatch_approval}}</div>
+                                </td>
+                                <td>
+                                    {% if request.user.username in 'khadimhusen,firoj,admin' %}
+                                    <input type="submit" value="Approve">
+                                    {% endif %}
+                                </td>
+                            </form>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                        {% endfor %}
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- table end here-->
+
+{% endblock content %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>$(function () {$( "#id_created__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_created__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+
+{% endblock javascripts %}
