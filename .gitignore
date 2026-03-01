@@ -37,4 +37,4 @@ db.sqlite3
 get-pip.py
 
 .idea/
-
+.sql
