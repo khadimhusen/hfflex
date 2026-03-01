@@ -34,3 +34,4 @@ venv/
 # Database
 *.sqlite3
 db.sqlite3
+get-pip.py
