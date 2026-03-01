@@ -9,6 +9,9 @@ myproject/settings.py
 
 backup_folder/
 
+backup_folder/
+*.json
+
 migrations/
 __pycache__/
 
