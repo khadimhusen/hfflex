@@ -38,3 +38,4 @@ get-pip.py
 
 .idea/
 .sql
+backup.sql
