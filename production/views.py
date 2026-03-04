@@ -614,7 +614,7 @@ def dispatchpending(request):
                                                recieved__gt=0.001,
                                                prodreports__prodprocess__job__dispatch_approval=True
                                                ).prefetch_related(
-        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__jobroder__customer')
+        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__joborder__customer')
 
     for material in material_list:
         cust = material.content_object.prodprocess.job.joborder.customer.name
@@ -668,7 +668,7 @@ def dispatchapprovalpending(request):
                                                prodreports__prodprocess__job__jobstatus__in=["Completed",
                                                                                              "Partially Ready"]
                                                ).prefetch_related(
-        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__jobroder__customer')
+        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__joborder__customer')
 
     for material in material_list:
         cust = material.content_object.prodprocess.job.joborder.customer.name
@@ -703,7 +703,7 @@ def dispatchapprovalpending1(request):
                                                recieved__gt=0.001,
                                                prodreports__prodprocess__job__dispatch_approval=False
                                                ).prefetch_related(
-        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__jobroder__customer')
+        "content_object__prodprocess__job__itemmaster").order_by('prodreports__prodprocess__job__joborder__customer')
 
     for material in material_list:
         cust = material.content_object.prodprocess.job.joborder.customer.name
