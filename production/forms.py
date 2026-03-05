@@ -251,9 +251,15 @@ class DispatchNewForm(forms.ModelForm):
 
 class DispatchForm(forms.ModelForm):
 
+    class Meta:
+        model = DispatchRegister
+        exclude = ["createdby", "editedby", "lock"]
+        widgets = {
+            'dispatch_material': CheckboxSelectMultiple(),  # ← move here
+        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['dispatch_material'].widget = CheckboxSelectMultiple()
         self.fields['dispatch_material'].queryset = Stockdetail.objects.none()
         self.fields['dispatch_material'].label_from_instance = lambda \
                 obj: f"{obj.prodreports.all().first().prodprocess.job.rate}/{obj.prodreports.all().first().prodprocess.job.unit}-{obj.prodreports.all().first().prodprocess.job.itemname}= Gross Wt. {obj.gross_wt}"
@@ -278,9 +284,7 @@ class DispatchForm(forms.ModelForm):
                 qc_status="Finished", prodreports__prodprocess__job__dispatch_approval=True,
                 prodreports__checked=True, prodreports__approved=True)
 
-    class Meta:
-        model = DispatchRegister
-        exclude = ["createdby", "editedby", "lock"]
+
 
 
 class JobAllotementForm(forms.ModelForm):
