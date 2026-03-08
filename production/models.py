@@ -298,7 +298,7 @@ class DispatchRegister(models.Model):
         return round(result['recieved__sum'] or 0, 3)
 
 
-class DispatchDetail(models.Model):
+class OtherDispatchItem(models.Model):
     dispatch = models.ForeignKey(DispatchRegister, on_delete=models.PROTECT, related_name='dispatchdetail')
     dispatchstock = models.OneToOneField(Stockdetail, on_delete=models.PROTECT, related_name='dispatchdetail',
                                          null=True, blank=True)
