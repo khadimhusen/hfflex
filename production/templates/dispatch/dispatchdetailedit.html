@@ -2,19 +2,40 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
 {% endblock customcss %}
+
 {% block content %}
-<div class="container my-0">
+<form method="POST" id="dispatchForm" data-address-url="{% url 'order:ajax_load_address' %}" novalidate
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <h2 class="card-title"> Dispatch Form</h2>
+    <button type="submit" class="btn btn-primary">Save dispatch</button>
 
-    <form method="POST" id="dispatchForm" data-address-url="{% url 'order:ajax_load_address' %}" novalidate
-          enctype="multipart/form-data" >
+    <div class="container">
 
-        <div class="card-body">
-            <h2 class="card-title"> Dispatch Form</h2>
-        </div>
-        {% csrf_token %}
-        <div class="row">
-            <div class="col-7">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a href="#form1" class="nav-link active" data-toggle="tab">
+                    Dispatch Detail
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#form2" class="nav-link " data-toggle="tab">
+                    Dispatch Material Item
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#form3" class="nav-link " data-toggle="tab">
+                    Other Item
+                </a>
+            </li>
+
+        </ul>
+        <div class="tab-content">
+            <div id="form1" class="container tab-pane active">
                 <div class="form-row">
                     <div> {{ dispatch_form.non_form_errors }}</div>
                 </div>
@@ -48,6 +69,7 @@
                         {{ dispatch_form.transport|as_crispy_field }}
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-md-4 mb-0">
                         {{ dispatch_form.value|as_crispy_field }}
@@ -55,7 +77,7 @@
                     <div class="form-group col-md-4 mb-0">
                         {{ dispatch_form.vehicle|as_crispy_field }}
                     </div>
-                      <div class="form-group col-md-4 mb-0">
+                    <div class="form-group col-md-4 mb-0">
                         {{ dispatch_form.person|as_crispy_field }}
                     </div>
                 </div>
@@ -71,31 +93,52 @@
                     </div>
                 </div>
             </div>
-            <div class="col-5 vertical-scrollable">
-                <div class="form-row">Disptach
-                    <div class="form-group col-md-12 mb-0 " style="height: 400px;  overflow:scroll;">
-                        {% if not disp.lock %}
-                        {{ dispatch_form.dispatch_material|as_crispy_field }}
+            <div id="form2" class="container tab-pane fade">
+                <div class=" vertical-scrollable">
+                    <div class="form-row">Disptach
+                        <div class="form-group col-md-12 mb-0 " style="height: 400px;  overflow:scroll;">
+                            {% if not disp.lock %}
+                            {{ dispatch_form.dispatch_material|as_crispy_field }}
 
-                        {% for mate in pendingmaterial %}
-                        <li style="color:red">{{mate}}</li>
-                        {% endfor %}
+                            {% for mate in pendingmaterial %}
+                            <li style="color:red">{{mate}}</li>
+                            {% endfor %}
 
-                        {% else %}
-                        {% for item in dispatchedlist %}
+                            {% else %}
+                            {% for item in dispatchedlist %}
 
-                        <li style="color:Green">{{item}}</li>
-                        {% endfor %}
-                        {% endif %}
+                            <li style="color:Green">{{item}}</li>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+
                     </div>
 
                 </div>
+            </div>
+            <div id="form3" class="container tab-pane fade">
+                <div class="container">{{ otheritemform.management_form}}
 
+                    <hr>
+                    {% for formitem in otheritemform %}
+                    <div class="form-row">
+                        <span hidden>{{ formitem.id}}</span>
+                        <div class="form-group col-md-1 mb-0">{{forloop.counter}}</div>
+                        <div class="form-group col-md-5 mb-0">{{ formitem.item_detail|as_crispy_field }}</div>
+                        <div class="form-group col-md-1 mb-0">{{ formitem.qty|as_crispy_field }}</div>
+                        <div class="form-group col-md-1 mb-0">{{ formitem.unit|as_crispy_field }}</div>
+                        <div class="form-group col-md-1 mb-0">{{ formitem.approxvalue|as_crispy_field }}</div>
+
+                    </div>
+                    <hr>
+                    {% endfor %}
+                </div>
             </div>
         </div>
-        <button type="submit " class="btn btn-primary">Save dispatch</button>
-    </form>
-</div>
+    </div>
+
+</form>
+
 {% endblock content %}
 
 

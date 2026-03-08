@@ -299,12 +299,14 @@ class DispatchRegister(models.Model):
 
 
 class OtherDispatchItem(models.Model):
-    dispatch = models.ForeignKey(DispatchRegister, on_delete=models.PROTECT, related_name='dispatchdetail')
-    dispatchstock = models.OneToOneField(Stockdetail, on_delete=models.PROTECT, related_name='dispatchdetail',
-                                         null=True, blank=True)
+    dispatch = models.ForeignKey(DispatchRegister, on_delete=models.PROTECT, related_name='otherdispatchitem')
+    item_detail = models.TextField(max_length=1024)
+    qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name='otherdispatchitem')
+    approxvalue = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
-        return str(self.dispatch.dispatchdate)
+        return self.itemn_detail[0:40]
 
 
 class ProdProblem(models.Model):

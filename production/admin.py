@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (Inward, Stockdetail, ProdReport, ProdInput, ProdPerson, JobMaterialStatus,
-                     DispatchRegister, DispatchDetail, JobQc, ProblemTag, ProductionProblem)
+                     DispatchRegister, OtherDispatchItem, JobQc, ProblemTag, ProductionProblem)
 
 
 class MaterialdetailAdmin(admin.ModelAdmin):
@@ -26,7 +26,7 @@ admin.site.register(ProdInput)
 admin.site.register(ProdPerson)
 admin.site.register(JobMaterialStatus)
 admin.site.register(DispatchRegister)
-admin.site.register(DispatchDetail)
+admin.site.register(OtherDispatchItem)
 admin.site.register(JobQc)
 admin.site.register(ProblemTag)
 admin.site.register(ProductionProblem)

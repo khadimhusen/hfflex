@@ -12,7 +12,7 @@ import datetime
 
 from material.models import Material
 from .models import (Inward, Stockdetail, ProdReport, ProdInput, ProdPerson, JobMaterialStatus,
-                     DispatchRegister, DispatchDetail, ProdProblem, ProblemTag)
+                     DispatchRegister, ProdProblem, ProblemTag, OtherDispatchItem)
 
 from order.models import JobProcess, JobMaterial, Job
 from myproject.access import accessview
@@ -20,7 +20,7 @@ from .forms import (InwardForm, InwardMaterialForm, ProdReportForm, NewProdRepor
                     ProdOutputAddForm, ProdInputForm, JobMaterialStatusForm, ProdInputEditForm,
                     DispatchForm, JobAllotementForm, StockMaterailAlloteForm, AddPersonForm,
                     StockMaterailUsedForm, ProdInputBlankForm, DispatchNewForm, AddProblemForm, StockMaterailEditForm,
-                    DispatchApprovalForm, Jobmaterialtoroder, AddJobQcForm, ProblemTagForm)
+                    DispatchApprovalForm, Jobmaterialtoroder, AddJobQcForm, ProblemTagForm, OtherItemDispatchForm)
 from .filters import ProdReportFilter, StockFilter, DispatchFilter, InwardFilter
 
 
@@ -540,6 +540,8 @@ def dispatchunlock(request, id=None):
 @accessview
 def dispatchdetailedit(request, id=None):
     disp = get_object_or_404(DispatchRegister, id=id)
+    formset=inlineformset_factory(DispatchRegister,OtherDispatchItem,OtherItemDispatchForm,can_delete=True,max_num=12)
+    otheritemform=formset(request.POST or None,instance=disp)
     displock = disp.lock
     context = {}
     context['disp'] = disp
@@ -563,24 +565,28 @@ def dispatchdetailedit(request, id=None):
             for item in disp.dispatch_material.all()]
         context['dispatchedlist'] = dispatchedlist
 
-    if request.method == 'POST':
-        dispatch_form = DispatchForm(request.POST, request.FILES or None ,instance=disp)
+    if request.method == 'POST' :
+        dispatch_form = DispatchForm(request.POST, request.FILES or None,instance=disp)
         context['dispatch_form'] = dispatch_form
-        if dispatch_form.is_valid():
+        context['otheritemform'] = otheritemform
+        if dispatch_form.is_valid() and otheritemform.is_valid():
             dispatch = dispatch_form.save(commit=False)
             dispatch.editedby = request.user
             dispatch.save()
+            otheritemform.save()
+
             if not displock:
+                otheritemform.save()
                 dispatch_form.save_m2m()
             return HttpResponseRedirect(reverse('production:dispatchdetail', kwargs={'id': dispatch.id}))
         else:
 
             return render(request, 'dispatch/dispatchdetailedit.html', context)
     else:
-        dispatch_form = DispatchForm(instance=disp)
+        dispatch_form = DispatchForm( instance=disp)
+        context['otheritemform'] = otheritemform
         context['dispatch_form'] = dispatch_form
         return render(request, 'dispatch/dispatchdetailedit.html', context)
-
 
 @login_required(login_url='/login/')
 @accessview

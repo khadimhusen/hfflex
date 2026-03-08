@@ -6,7 +6,7 @@ from order.models import Job, JobMaterial
 from purchase.models import Po
 from quality.models import QCTest
 from .models import (Stockdetail, Inward, ProdReport, ProdInput, JobMaterialStatus,
-                     DispatchRegister, ProdPerson, ProdProblem, JobQc, ProblemTag,ProductionProblem)
+                     DispatchRegister, ProdPerson, ProdProblem, JobQc, ProblemTag, ProductionProblem, OtherDispatchItem)
 from customer.models import Customer, Address
 from employee.models import Worker, Department
 from crispy_forms.helper import FormHelper
@@ -396,3 +396,16 @@ class ProblemTagForm(forms.ModelForm):
         model= ProblemTag
         fields= ['tagname']
 
+class OtherItemDispatchForm(forms.ModelForm):
+
+    class Meta:
+        model=OtherDispatchItem
+        fields = "__all__"
+        widgets = {
+            "itemn_detail": forms.Textarea(attrs={'rows': 1, 'cols': 80,
+                                                 'style': 'overflow: hidden',
+                                                 'oninput': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                                 'onfocus': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                                 'list': 'itemlist'
+                                                 })
+        }
