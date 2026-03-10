@@ -1,0 +1,131 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>Challan Item List</h4>
+    </div>
+
+    {# Filter Form #}
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET">
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-3 mb-1">
+                        {{ myFilter.form.party_name|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-1">
+                        {{ myFilter.form.status|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-1">
+                        {{ myFilter.form.itemname|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-1 pt-2">
+                        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                        <a href="{% url 'returnable:challanitemlist' %}" class="btn btn-secondary btn-sm">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Results Count #}
+    <p class="text-muted small mb-1">
+        Showing {{ challanitem_list.start_index }}–{{ challanitem_list.end_index }}
+        of {{ challanitem_list.paginator.count }} items
+    </p>
+
+    {# Table #}
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Party Name</th>
+                <th>Challan ID</th>
+                <th>Status</th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Received</th>
+                <th>Pending</th>
+                <th>Unit</th>
+                <th>Approx Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in challanitem_list %}
+            <tr>
+                <td>{{ forloop.counter0|add:challanitem_list.start_index }}</td>
+                <td>
+                    <a href="{% url 'returnable:returnableedit' id=item.returnable.id %}">
+                        {{ item.returnable.party_name.name }}
+                    </a>
+                </td>
+                <td>{{ item.returnable.id }}</td>
+                <td>
+                    {% if item.returnable.status == "Dispatched" %}
+                    <span class="badge badge-primary">{{ item.returnable.status }}</span>
+                    {% elif item.returnable.status == "Delivered" %}
+                    <span class="badge badge-success">{{ item.returnable.status }}</span>
+                    {% elif item.returnable.status == "Partially received" %}
+                    <span class="badge badge-warning">{{ item.returnable.status }}</span>
+                    {% elif item.returnable.status == "Received" %}
+                    <span class="badge badge-secondary">{{ item.returnable.status }}</span>
+                    {% else %}
+                    <span class="badge badge-light">{{ item.returnable.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.itemname }}</td>
+                <td>{{ item.category }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.receivedqty }}</td>
+                <td>
+                    {% if item.pendingqty > 0 %}
+                    <span class="text-danger font-weight-bold">{{ item.pendingqty }}</span>
+                    {% else %}
+                    <span class="text-success">{{ item.pendingqty }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.approxvalue }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center text-muted">No items found.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Pagination #}
+    {% if challanitem_list.has_other_pages %}
+    <nav>
+        <ul class="pagination pagination-sm">
+            {% if challanitem_list.has_previous %}
+            <a class="page-link" href="?page={{ challanitem_list.previous_page_number }}{{ param }}">«</a>
+            {% endif %}
+
+            {% for num in challanitem_list.paginator.page_range %}
+            {% if challanitem_list.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > challanitem_list.number|add:'-3' and num < challanitem_list.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{{ param }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if challanitem_list.has_next %}
+            <a class="page-link" href="?page={{ challanitem_list.next_page_number }}{{ param }}">»</a>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock content %}

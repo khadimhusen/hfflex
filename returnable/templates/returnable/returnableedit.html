@@ -1,0 +1,97 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<script src="{% static 'js/jquery.js' %}"></script>
+{% endblock customcss %}
+{% block content %}
+
+<h4> Returnable Challan</h4>
+<form method="POST" id="returnableform" data-address-url="{% url 'returnable:ajax_load_address' %}" novalidate>
+
+    {% csrf_token %}
+    <div class="container">
+        <div class="form-row">
+            <div class="form-group col-md-6 mb-0"> {{ returnable_form.party_name|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.dispatch_date|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.expected_date|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.receivedby|as_crispy_field }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.contact|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.transportby|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.recieptnumber|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.person|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.vehicle|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0"> {{ returnable_form.status|as_crispy_field }}</div>
+
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6 mb-0"> {{ returnable_form.remark|as_crispy_field }}</div>
+            <div class="form-group col-md-6 mb-0"> {{ returnable_form.address|as_crispy_field }}</div>
+        </div>
+        <div class="container">{{ challanitemforms.management_form}}
+
+
+            <div class="form-row">
+
+                <div class="form-group col-md-1 mb-0 ">#</div>
+                <div class="form-group col-md-2 mb-0 ">Itemname</div>
+                <div class="form-group col-md-3 mb-0 ">Description</div>
+                <div class="form-group col-md-2 mb-0 ">Type</div>
+                <div class="form-group col-md-1 mb-0 ">Qty</div>
+                <div class="form-group col-md-1 mb-0 ">Unit</div>
+                <div class="form-group col-md-1 mb-0 ">Approx Value</div>
+                <div class="form-group col-md-1 mb-0 ">Delete</div>
+            </div>
+
+            <hr style="background-color: red; height: 1px; border: 0;">
+            {% for challanitemform in challanitemforms %}
+
+
+            <div class="form-row">
+                <span hidden>{{ challanitemform.id}}</span>
+                <span hidden>{{ challanitemform.returnable}}</span>
+                <span hidden>{{ challanitemform.id}}</span>
+                <div class="form-group col-md-1 mb-0">( {{forloop.counter}} )</div>
+                <div class="form-group col-md-5 mb-0">{{ challanitemform.itemname|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ challanitemform.category|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ challanitemform.qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ challanitemform.unit|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ challanitemform.approxvalue|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ challanitemform.DELETE|as_crispy_field }}</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0">Detail</div>
+                <div class="form-group col-md-11 mb-0">{{ challanitemform.description|as_crispy_field }}</div>
+            </div>
+
+            <hr style="background-color: maroon; height: 1px; ">
+
+            {% endfor %}
+
+            </tbody>
+            </table>
+
+
+        </div>
+
+    </div>
+
+
+    <button type="submit " class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function(){
+        $( "#id_dispatch_date").datetimepicker({format: 'd/m/Y h:i'});
+        $( "#id_expected_date").datetimepicker({format: 'd/m/Y h:i'});
+        });
+
+
+
+</script>
+
+{% endblock content %}

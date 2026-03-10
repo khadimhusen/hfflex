@@ -1,0 +1,68 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="POST">
+
+        <div class="card-body">
+            <h2 class="card-title">New Recieved Challan Form</h2>
+
+        </div>
+        {% csrf_token %}
+        {{ rc_form.management_form }}
+        {{ rc_form.non_field_errors }}
+        {{ rc_form.errors }}
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ rc_form.party_name|as_crispy_field }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0">
+                {{ rc_form.received_date|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ rc_form.transport|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ rc_form.recieptnumber|as_crispy_field }}
+            </div>
+
+
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-11 mb-0">
+                {{ rc_form.remark|as_crispy_field }}
+            </div>
+        </div>
+
+
+        <button type="submit " class="btn btn-primary">Save Order</button>
+    </form>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+
+    $( "#id_received_date" ).datetimepicker({format: 'd/m/Y h:i',value: new Date(Date.now() ),});
+    });
+
+
+</script>
+
+{% endblock javascripts%}

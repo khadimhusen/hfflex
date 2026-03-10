@@ -148,7 +148,6 @@
         {% endif %}
 
 
-
         {% if user|user_in_department:"sidepurchase" %}
         <!-- packing report-->
         <li>
@@ -180,7 +179,20 @@
             </ul>
         </li>
         {% endif %}
+        {% if user|user_in_department:"sideretrunable" %}
 
+        <!-- Process nav-->
+        <li>
+            <a href="#Returnable" data-toggle="collapse"><strong style="color:lightgreen">R</strong>eturnable</a>
+            <ul id="Returnable" class="list-unstyled collapse">
+                <li><a href="{% url 'returnable:returnablelist'  %}">returnable</a></li>
+                <li><a href="{% url 'returnable:challanitemlist'  %}">challanitemlist</a></li>
+                <li><a href="{% url 'returnable:receivedchallannew' %}">receivedchallannew</a></li>
+                <li><a href="{% url 'returnable:receivedlist' %}">Receivedlist</a></li>
+
+            </ul>
+        </li>
+        {% endif %}
 
         {% if user|user_in_department:"sidestock" %}
         <!-- Production report-->

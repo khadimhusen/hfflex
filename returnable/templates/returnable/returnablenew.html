@@ -1,0 +1,113 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+<div class="container">
+    <form method="POST" id="returnableform" data-address-url="{% url 'returnable:ajax_load_address' %}" novalidate>
+
+        <div class="card-body">
+            <h2 class="card-title">New Returnable Challan Form</h2>
+
+        </div>
+        {% csrf_token %}
+        {{ returnable_form.management_form }}
+        {{ returnable_form.non_field_errors }}
+        {{ returnable_form.errors }}
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ returnable_form.party_name|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-1 mb-0">
+                <a class="btn btn-primary" href="{% url 'customer:customerdetailadd' %}?next={{request.path}}">
+                    <strong>+</strong></a>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.dispatch_date|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.expected_date|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.receivedby|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.contact|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.recieptnumber|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-3 mb-0">
+                {{ returnable_form.transportby|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-2 mb-0">
+                {{ returnable_form.person|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-3 mb-0">
+                {{ returnable_form.vehicle|as_crispy_field }}
+            </div>
+            <div class="form-group col-md-3 mb-0">
+                {{ returnable_form.status|as_crispy_field }}
+            </div>
+
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-11 mb-0">
+                {{ returnable_form.remark|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group col-md-11 mb-0">
+                {{ returnable_form.address|as_crispy_field }}
+            </div>
+
+        </div>
+
+        <button type="submit " class="btn btn-primary">Save Order</button>
+    </form>
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+<script>
+    $(function () {
+
+    $( "#id_dispatch_date" ).datetimepicker({format: 'd/m/Y h:i',value: new Date(Date.now() ),});
+    $( "#id_expected_date" ).datetimepicker({format: 'd/m/Y h:i',value: new Date(Date.now() + 864e5 * 7),});
+    });
+
+</script>
+<script>
+    $("#id_party_name").change(function () {
+      console.log("party name changed");
+      var url = $("#returnableform").attr("data-address-url");
+      var customerId = $(this).val();
+      console.log("party id :- ",customerId)
+
+      $.ajax({
+        url: url,
+        data: {
+          'customer': customerId
+        },
+        success: function (data) {
+          $("#id_address").html(data);
+        }
+      });
+    });
+</script>
+{% endblock javascripts%}

@@ -1,0 +1,176 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block customcss%}
+<link rel="stylesheet" href="{% static 'css/purchase.css' %}">
+{% endblock customcss %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row ">
+        <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'returnable:returnableedit' rc.id %}">Edit challan</a>
+        <a class="btn btn-danger btn-sm m-2 p-2"
+           href="{% url 'returnable:returnable_pdf' rc.id %}"
+           target="_blank">
+            Download PDF
+        </a>
+    </div>
+
+    <div class="container col-12 border bg-light" id="download">
+        <div class="row text-center">
+            <div class="col-12"><h5 class="text-center"><u>Returnable Challan</u></h5></div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-2 text-center">
+                <div id="logo">
+                    <img src="/static/images/hflogo.png" width="90" height="100">
+                </div>
+            </div>
+            <div class="col-6 text-center">
+                <h1 class="name font-weight-bold">H F FLEX PVT. LTD.</h1>
+                <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7447456686
+                    <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+                </p>
+            </div>
+            <div class="col-4">
+                <h4># {{rc.id}}</h4>
+                <div>Dispatch Date:- {{rc.dispatch_date|date:"d/m/Y"}}</div>
+                <div>Transport By:- {{rc.transportby}}</div>
+                <div>Lr No:- {{rc.recieptnumber}}</div>
+                <div>Return Expected Date :- {{rc.expected_date|date:"d/m/Y"}}</div>
+            </div>
+        </div>
+        <hr>
+        <main>
+            <div class="row">
+                <div class="col-7 side-border" id="client">
+                    <div class="to">Delivery TO:</div>
+                    <h4 class="name">{{rc.party_name}}</h4>
+
+                    <div class="address">{{rc.address.addname}}, {{rc.address.add1}}</div>
+                    <div class="address">{{rc.address.add2}} Pincode- {{rc.address.pincode}}</div>
+
+                    <div>{% if rc.supplier.gst %} Gst:- {{rc.supplier.gst}}{% endif %}</div>
+
+                    {% for person in rc.supplier.persons.all|slice:"1" %}
+                    <div>Contact Person:-{{person.name}} <b>( {{ person.mobile}} )</b></div>
+                    {% endfor %}
+                    {% with email=rc.supplier.email %}{% if email %}
+                    <div class="email"><a href="mailto:{{email}}@gmail.com">
+                        {{email}}</a></div>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <div id="delivery" class="col-5 side-border ">
+                    <div class="to">Return address To:</div>
+                    <h4 class="name">H F FLEX PVT LTD.</h4>
+                    <div class="address">Factory:- 25,Lucky lark Textile Park, Gardi</div>
+                    <div class="address">Vita, Dist:- Khanapur, Pincode- 415311</div>
+                    <div>Gst:- 27AADCH3462K1ZF</div>
+                    <div>Contact Person:-{{cr.createdby.profile.prefix }}
+                        {{cr.createdby.get_full_name|title }}<b>( {{cr.createdby.profile.mobile }} )</b>
+                    </div>
+                    <div class="email"><a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a></div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class=" table-responsive">
+                    <table class="table table-sm table-striped " border="0" cellspacing="0" cellpadding="0">
+                        <thead>
+                        <tr>
+                            <th class="">#</th>
+                            <th class="col-6">DESCRIPTION</th>
+                            <th class="col-1 text-center">CATEGORY</th>
+                            <th class="col-1 text-center">QTY</th>
+                            <th class="col-1 text-center">Rec.QTY</th>
+                            <th class="col-1 text-center">Pen.QTY</th>
+                            <th class="col-1 text-center">Approx Value</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in rc.challanitem.all %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td class="text-left "> {{item.itemname}}
+                                <br>
+                                <span>{{item.description|linebreaks }}</span></td>
+                            <td class="text-center small-9">--{{item.category|default:""}}--</td>
+                            <td class="text-center small-9">{{item.qty|floatformat }} {{item.unit}}</td>
+                            <td class="text-center small-9">{{item.receivedqty|floatformat }}</td>
+                            <td class="text-center small-9">{{item.pendingqty|floatformat }}</td>
+                            <td class="small-9" id="approxvalue">{{item.approxvalue|floatformat:2 }} Rs.</td>
+
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <th></th>
+                            <th class="text-right" colspan="2">Total Qty :-</th>
+                            <th class="text-center">{{rc.totalqty}}</th>
+                            <th class="text-center">{{rc.total_rec_qty}}</th>
+                            <th class="text-center">{{rc.totalpendingqty}}</th>
+
+                            <th>Rs. {{rc.totalamount|floatformat:2 }}</b></th>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+            <div class="row border">
+                <div class="col-12">
+                    <h6><span style="color:red">Remark:-</span>
+                        <span> <p><em>{{po.remark|default_if_none:"---"}}</em></p></span>
+                    </h6>
+                </div>
+
+            </div>
+            <div class="row text-center">
+                <div class="col-6">
+                    <h5>Created By</h5>
+                    {% if rc.createdby %}
+                    <h6 class="name"><em>{{rc.createdby.get_full_name|upper}}</em></h6>
+                    <div>Date:- {{rc.created|date:"d/m/Y"}}</div>
+
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+
+</div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.1/html2canvas.min.js"></script>
+<script type="text/javascript">
+
+        function downloadimage() {
+            var container = document.getElementById("download");
+            html2canvas(container, { allowTaint: true,scale: 1.5 }).then(function (canvas) {
+
+                var link = document.createElement("a");
+                document.body.appendChild(link);
+                link.download = '{{rc.id}}-{{rc.party_name}}.png';
+                link.href = canvas.toDataURL();
+                link.target = '_blank';
+                link.click();
+            });
+        }
+
+
+</script>
+
+
+{% endblock javascripts %}

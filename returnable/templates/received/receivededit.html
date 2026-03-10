@@ -1,0 +1,56 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
+{% endblock customcss %}
+
+{% block content %}
+<h4>Received Challan</h4>
+
+<form method="POST" novalidate>
+    {% csrf_token %}
+    <div class="container">
+        <div class="form-row">
+
+            <div class="form-group col-md-6 mb-0">{{ rc_form.party_name|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ rc_form.received_date|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ rc_form.transport|as_crispy_field }}</div>
+            <div class="form-group col-md-2 mb-0">{{ rc_form.recieptnumber|as_crispy_field }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-10 mb-0">{{ rc_form.remark|as_crispy_field }}</div>
+        </div>
+
+        <div class="container">
+            {{ rc_item_form.management_form }}
+            <hr style="background-color: red; height: 1px; border: 0;">
+
+            {% for rc_item in rc_item_form %}
+            <div class="form-row">
+                <div class="form-group col-md-1 mb-0">({{ forloop.counter }})</div>
+                <div class="form-group col-md-1 mb-0">{{ rc_item.id }} </div>
+                <div class="form-group col-md-4 mb-0">{{ rc_item.received_item|as_crispy_field }}</div>
+                <div class="form-group col-md-2 mb-0">{{ rc_item.qty|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ rc_item.unit|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ rc_item.status|as_crispy_field }}</div>
+                <div class="form-group col-md-1 mb-0">{{ rc_item.DELETE|as_crispy_field }}</div>
+            </div>
+            <hr style="background-color: maroon; height: 1px;">
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        $("#id_received_date").datetimepicker({ format: 'd/m/Y' });
+    });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,131 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>Received Challan List</h4>
+        <a href="{% url 'returnable:receivedchallannew' %}" class="btn btn-success btn-sm">+ New</a>
+    </div>
+
+    {# Filter Form #}
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="GET">
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-1 mb-1">
+                        {{ myFilter.form.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-3 mb-1">
+                        {{ myFilter.form.party_name|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-1">
+                        {{ myFilter.form.received_date__gt|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-1">
+                        {{ myFilter.form.received_date__lt|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-2 mb-1">
+                        {{ myFilter.form.createdby|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-2 mb-1 pt-2">
+                        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                        <a href="{% url 'returnable:receivedlist' %}" class="btn btn-secondary btn-sm">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Results Count #}
+    <p class="text-muted small mb-1">
+        Showing {{ returnable_list.start_index }}–{{ returnable_list.end_index }}
+        of {{ returnable_list.paginator.count }} records
+    </p>
+
+    {# Table #}
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>ID</th>
+                    <th>Party Name</th>
+                    <th>Received Date</th>
+                    <th>Transport</th>
+                    <th>Receipt No.</th>
+                    <th>Remark</th>
+                    <th>Approval</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for challan in returnable_list %}
+                <tr>
+                    <td>{{ forloop.counter0|add:returnable_list.start_index }}</td>
+                    <td>{{ challan.id }}</td>
+                    <td>{{ challan.party_name.name }}</td>
+                    <td>{{ challan.received_date|date:"d/m/Y" }}</td>
+                    <td>{{ challan.transport|default:"—" }}</td>
+                    <td>{{ challan.recieptnumber|default:"—" }}</td>
+                    <td>{{ challan.remark|default:"—" }}</td>
+                    <td>
+                        {% if challan.approvedby %}
+                            <span class="badge badge-success">Approved</span>
+                        {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ challan.createdby.get_full_name|default:challan.createdby.username }}</td>
+                    <td>
+                        <a href="{% url 'returnable:r_c_edit' id=challan.id %}" class="btn btn-xs btn-outline-primary">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center text-muted">No records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Pagination #}
+    {% if returnable_list.has_other_pages %}
+    <nav>
+        <ul class="pagination pagination-sm">
+            {% if returnable_list.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ returnable_list.previous_page_number }}{{ param }}">«</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">«</span></li>
+            {% endif %}
+
+            {% for num in returnable_list.paginator.page_range %}
+                {% if returnable_list.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > returnable_list.number|add:'-3' and num < returnable_list.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{{ param }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if returnable_list.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ returnable_list.next_page_number }}{{ param }}">»</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">»</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock content %}
