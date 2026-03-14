@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from .filters import JobProcessFilter, JobFilter, JobMaterialFilter
 from .models import JobProcess, Job, JobMaterial
 from openpyxl.styles import Alignment
-from employee.models import Department
 
 
 def joblist(request):
@@ -27,10 +26,7 @@ def joblist(request):
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = 'Job'
-    if Department.objects.filter(department_name="directors", user=request.user).exists():
-        columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%','Margin','per kg']
-    else:
-        columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%']
+    columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%']
 
     worksheet.column_dimensions['B'].width = 20
     row_num = 1
@@ -39,14 +35,8 @@ def joblist(request):
         cell.value = column_title
     for job in job_list:
         row_num += 1
-        if Department.objects.filter(department_name="directors", user=request.user).exists():
-            row = [job.id, str(job.itemname), job.quantity, str(job.unit), job.kgqty, str(job.jobstatus),
-               job.film_size, job.jobwaste,job.profit['difference'],job.profit['per_kg']]
-        else:
-
-            row = [job.id, str(job.itemname), job.quantity, str(job.unit), job.kgqty, str(job.jobstatus),
-                   job.film_size, job.jobwaste]
-
+        row = [job.id, str(job.itemname), job.quantity, str(job.unit), job.kgqty, str(job.jobstatus),
+               job.film_size, job.jobwaste]
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value

@@ -10,8 +10,6 @@
 
 <div class="container">
 
-
-
     <div class="row ">
         {% if first %}
         <button class="btn btn-warning m-0"><a href="{% url 'order:jobdetail' first.id %}">First< </a></button>
@@ -530,26 +528,24 @@
                         <td>{{value.input|abs }}</td>
                     </tr>
                     {% endif %}
-
                     {% endfor %}
                     <tr>
                         <td align="right"><strong>Total Input</strong></td>
-                        <td ><strong>{% if request.user.username in 'khadimhusen,firoj' %}{{job.cost}}{% endif %}</strong></td>
+                        <td ><strong>{% if request.user.username in 'khadimhusen,firoj' %}{{cost}}{% endif %}</strong></td>
                         <td><strong>{{netinput|abs}}</strong></td>
                         <td><strong>{{totalwaitgain|abs}}</strong></td>
 
                     </tr>
-
                     {% if request.user.username in 'khadimhusen,firoj' %}
                     <tr>
                         <td align="right"><strong>Net Output</strong></td>
-                        <td ><strong>{{job.salecost}}</strong></td>
+                        <td ><strong>{{salecost}}</strong></td>
                         <td><strong>{{netoutput}}</strong></td>
                     </tr>
                     <tr>
                         <td align="right"><strong>Difference</strong></td>
-                        <td ><strong>{{job.profit.difference}}</strong></td>
-                        <td><strong>{{job.profit.per_kg}} </strong></td>
+                        <td ><strong>{{difference}}</strong></td>
+                        <td><strong>{{diff_per_kg}}</strong></td>
                     </tr>
                     {% endif %}
                     </tbody>
@@ -571,7 +567,7 @@
                     {% if value.qty > 0.0001 %}
                     <tr>
                         <td>{{key}}</td>
-                        <td {% if "WASTE" in key %} style="color:red" {% endif %} > {{value.qty}}</td>
+                        <td {% if 'WASTE' in key %} style="color:red"{% endif %} >{{value.qty}}</td>
                     </tr>
                     {% endif %}
                     {% endfor %}
