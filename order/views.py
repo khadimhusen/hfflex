@@ -48,7 +48,7 @@ def joblist(request):
 
 @login_required(login_url='/login/')
 @accessview
-def jobdetail(request, id):
+def jobdetail1(request, id):
     job = get_object_or_404(
         Job.objects.select_related('itemmaster', 'unit', 'joborder').prefetch_related('jobimages', 'jobmaterial',
                                                                                       'jobprocess',
@@ -89,15 +89,12 @@ def jobdetail(request, id):
     netoutput = 0
     totalwaitgain = 0
     wastekg = 0
-    cost = 0
 
     for key in inputdetail:
 
         if inputdetail[key]["qty"] < -0.0001:
             netinput = round(netinput + inputdetail[key]["qty"], 3)
             totalwaitgain = round(totalwaitgain + inputdetail[key]["input"], 3)
-
-            cost += inputdetail[key]["amount"]
         elif inputdetail[key]["qty"] > 0.0001:
             if not 'WASTE' in key:
                 netoutput = round(netoutput + inputdetail[key]["qty"], 3)
@@ -127,10 +124,6 @@ def jobdetail(request, id):
     context['netoutput'] = netoutput
     context["grossoutput"] = wastekg + netoutput
     context['wastepercent'] = wastepercent
-    context['cost'] = cost
-    context['salecost'] = round(netoutput * job.kgrate, 3)
-
-    context['difference'] = context['salecost'] - cost
     if netoutput:
         context['diff_per_kg'] = round(context['difference'] / netoutput, 3)
 
@@ -178,6 +171,145 @@ def jobdetail(request, id):
         itemdict["dispatched_id"] = item.dispached.all().first().id if item.dispached.all().first() is not None else 0
 
         finished_list.append(itemdict)
+
+    context['finished_list'] = sorted(finished_list, key=lambda k: k['dispatched_id'])
+
+    return render(request, 'job/detail.html', context)
+
+
+
+@login_required(login_url='/login/')
+@accessview
+def jobdetail(request, id):
+    job = get_object_or_404(
+        Job.objects.select_related('itemmaster', 'unit', 'joborder').prefetch_related(
+            'jobimages',
+            'jobmaterial',
+            'jobmaterial__materialname',
+            'jobmaterial__item_mat_type',
+            'jobmaterial__item_grade',
+            'jobprocess',
+            'jobprocess__process',
+            'jobprocess__unit',
+            'jobprocess__jobreport',
+            'jobprocess__jobreport__prodinput__material__materialname',
+            'jobprocess__jobreport__prodinput__material__item_mat_type',
+            'jobprocess__jobreport__prodinput__material__item_grade',
+            'jobprocess__jobreport__output__materialname',
+            'jobprocess__jobreport__output__item_mat_type',
+            'jobprocess__jobreport__output__item_grade',
+            'jobcolors',
+        ), id=id)
+
+    # --- build inputdetail for waste breakdown table only ---
+    inputdetail = {}
+
+    for a in job.jobprocess.all():
+        for b in a.jobreport.all():
+            for c in b.prodinput.all():
+                key = c.material.mate_name
+                qty = round((-c.wtgain or 0), 3)
+                amt = round(((c.material.rate or 0) * (c.inputqty or 0)), 3)
+                if key not in inputdetail:
+                    inputdetail[key] = {"qty": qty, "input": round((-c.inputqty or 0), 3), "amount": amt}
+                else:
+                    inputdetail[key]["qty"]    += qty
+                    inputdetail[key]["input"]  += round((-c.inputqty or 0), 3)
+                    inputdetail[key]["amount"] += amt
+
+            for d in b.output.all():
+                key = d.mate_name
+                qty = round((d.recieved or 0), 3)
+                if key not in inputdetail:
+                    inputdetail[key] = {"qty": qty, "input": qty, "amount": 0}
+                else:
+                    inputdetail[key]["qty"]   += qty
+                    inputdetail[key]["input"] += qty
+
+    # --- summary values still needed in view (not in model) ---
+    netinput      = 0
+    totalwaitgain = 0
+    wastekg       = 0
+
+    for key, val in inputdetail.items():
+        if val["qty"] < -0.0001:
+            netinput      = round(netinput + val["qty"], 3)
+            totalwaitgain = round(totalwaitgain + val["input"], 3)
+        elif val["qty"] > 0.0001:
+            if 'WASTE' in key:
+                wastekg = round(wastekg + val["qty"], 3)
+
+    wastepercent = 0
+    if netinput != 0:
+        netwaste     = netinput + job.netoutput
+        wastepercent = round(netwaste * 100 / netinput, 3)
+
+    first   = Job.objects.values('id').first()
+    last    = Job.objects.values('id').last()
+    nextjob = Job.objects.values('id').filter(id__gt=id).order_by('-id').last()
+    prevjob = Job.objects.values('id').filter(id__lt=id).order_by('-id').first()
+
+    context = {
+        'job'          : job,
+        'next'         : nextjob,
+        'prev'         : prevjob,
+        'first'        : first,
+        'last'         : last,
+        'waste'        : inputdetail,
+        'totalwaitgain': totalwaitgain,
+        'netinput'     : netinput,
+        'netoutput'    : job.netoutput,
+        'grossoutput'  : wastekg + job.netoutput,
+        'wastepercent' : wastepercent,
+        'cost'         : job.cost,
+        'salecost'     : job.salecost,
+        'difference'   : job.profit['difference'],
+        'diff_per_kg'  : job.profit['per_kg'],
+    }
+
+    parentform = modelform_factory(Job, fields=('jobstatus', 'account_clearance_date', 'approvedby'))
+
+    if request.method == 'POST':
+        status_form           = parentform(request.POST, instance=job)
+        accountclearance_form = parentform(request.POST, instance=job,
+                                           initial={"jobstatus": "Unplanned",
+                                                    "account_clearance_date": datetime.now(),
+                                                    "approvedby": request.user})
+        context['status_form']           = status_form
+        context['accountclearance_form'] = accountclearance_form
+
+        if status_form.is_valid():
+            status_form.save()
+            messages.success(request, 'status save sucessfully.')
+            return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
+        elif accountclearance_form.is_valid():
+            a = accountclearance_form.save(commit=False)
+            a.account_clearance_date = timezone.now()
+            a.save()
+            messages.success(request, 'order save sucessfully.')
+            return redirect('/order/joblist/?q=Account clearance')
+        else:
+            return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
+    else:
+        context['status_form']           = parentform(instance=job)
+        context['accountclearance_form'] = parentform(instance=job,
+                                                       initial={"jobstatus": "Unplanned",
+                                                                "account_clearance_date": datetime.now(),
+                                                                "approvedby": request.user})
+
+    finished_list = []
+    for item in job.job_disptached.all():
+        first_dispatch = item.dispached.all().first()
+        finished_list.append({
+            "id"           : item.id,
+            "object_id"    : item.object_id,
+            "grosswt"      : item.gross_wt,
+            "tarewt"       : item.tare_wt,
+            "netwt"        : item.recieved,
+            "nos"          : item.nos,
+            "remark"       : item.remark,
+            "dispatched_id": first_dispatch.id if first_dispatch else 0,
+        })
 
     context['finished_list'] = sorted(finished_list, key=lambda k: k['dispatched_id'])
 
