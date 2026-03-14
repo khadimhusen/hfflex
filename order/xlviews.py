@@ -8,48 +8,186 @@ from employee.models import Department
 
 
 def joblist(request):
-
     q = request.GET.get('q', None)
-    if q != None:
-        print(q)
+    if q is not None:
         job_list = Job.objects.filter(jobstatus=q)
     else:
-        print(q)
         job_list = Job.objects.all()
 
     myFilter = JobFilter(request.GET, job_list)
-    job_list = myFilter.qs
+    job_list = myFilter.qs.select_related(
+        'itemmaster', 'unit', 'joborder'
+    )
+
+    # check director ONCE before the loop
+    is_director = Department.objects.filter(
+        department_name="directors", user=request.user
+    ).exists()
+
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
     response['Content-Disposition'] = 'attachment; filename={date}-job.xlsx'.format(
-        date=datetime.now().strftime('%Y-%m-%d'), )
+        date=datetime.now().strftime('%Y-%m-%d'),
+    )
+
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = 'Job'
-    if Department.objects.filter(department_name="directors", user=request.user).exists():
-        columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%','Margin','per kg']
+
+    if is_director:
+        columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%', 'Margin', 'per kg']
     else:
         columns = ['id', 'Itemmaster', 'Quantity', 'Unit', 'Kg', 'Status', 'Size', 'Waste%']
 
     worksheet.column_dimensions['B'].width = 20
+
     row_num = 1
     for col_num, column_title in enumerate(columns, 1):
-        cell = worksheet.cell(row=row_num, column=col_num)
-        cell.value = column_title
+        worksheet.cell(row=row_num, column=col_num).value = column_title
+
+    if is_director:
+        # pre-fetch all job ids in this queryset
+        job_ids = list(job_list.values_list('id', flat=True))
+
+        # pull all production summary data in bulk — one set of queries total
+        from production.models import ProdInput, ProdReport, Stockdetail
+        from django.contrib.contenttypes.models import ContentType
+        from django.db.models import Sum
+
+        report_qs = ProdReport.objects.filter(
+            prodprocess__job_id__in=job_ids
+        ).values('id', 'prodprocess__job_id')
+
+        # map: job_id -> [report_ids]
+        job_report_map = {}
+        for r in report_qs:
+            job_report_map.setdefault(r['prodprocess__job_id'], []).append(r['id'])
+
+        all_report_ids = [rid for rids in job_report_map.values() for rid in rids]
+
+        # bulk fetch all inputs
+        inputs = ProdInput.objects.filter(
+            prodreport__in=all_report_ids
+        ).select_related(
+            'material__materialname',
+            'material__item_mat_type',
+            'material__item_grade',
+            'prodreport__prodprocess',
+        ).values(
+            'prodreport__prodprocess__job_id',
+            'material__rate',
+            'inputqty',
+            'wtgain',
+            'material__materialname__name',
+            'material__item_mat_type__mat_type',
+            'material__item_grade__grade',
+            'material__size',
+            'material__micron',
+        )
+
+        # bulk fetch all outputs
+        ct = ContentType.objects.get_for_model(ProdReport)
+        outputs = Stockdetail.objects.filter(
+            content_type=ct,
+            object_id__in=all_report_ids,
+        ).select_related(
+            'materialname', 'item_mat_type', 'item_grade'
+        ).extra(
+            select={'job_id': '''
+                SELECT prodprocess__job_id FROM production_prodreport
+                WHERE production_prodreport.id = production_stockdetail.object_id
+            '''}
+        )
+
+        # simpler: get job_id via report map (reverse lookup)
+        report_to_job = {}
+        for job_id, rids in job_report_map.items():
+            for rid in rids:
+                report_to_job[rid] = job_id
+
+        # build per-job inputdetail dict
+        from collections import defaultdict
+        job_inputdetail = defaultdict(dict)
+
+        for inp in inputs:
+            jid  = inp['prodreport__prodprocess__job_id']
+            key  = (f"{inp['material__materialname__name']} - "
+                    f"{inp['material__item_mat_type__mat_type']} - "
+                    f"{inp['material__item_grade__grade']}-"
+                    f"{inp['material__size']}mm X {inp['material__micron']}mic")
+            qty  = round(-(inp['wtgain'] or 0), 3)
+            amt  = round((inp['material__rate'] or 0) * (inp['inputqty'] or 0), 3)
+            if key not in job_inputdetail[jid]:
+                job_inputdetail[jid][key] = {"qty": qty, "amount": amt}
+            else:
+                job_inputdetail[jid][key]["qty"]    += qty
+                job_inputdetail[jid][key]["amount"] += amt
+
+        out_qs = Stockdetail.objects.filter(
+            content_type=ct,
+            object_id__in=all_report_ids,
+        ).values('object_id', 'recieved',
+                 'materialname__name',
+                 'item_mat_type__mat_type',
+                 'item_grade__grade',
+                 'size', 'micron')
+
+        for out in out_qs:
+            jid = report_to_job.get(out['object_id'])
+            if jid is None:
+                continue
+            key = (f"{out['materialname__name']} - "
+                   f"{out['item_mat_type__mat_type']} - "
+                   f"{out['item_grade__grade']}-"
+                   f"{out['size']}mm X {out['micron']}mic")
+            qty = round((out['recieved'] or 0), 3)
+            if key not in job_inputdetail[jid]:
+                job_inputdetail[jid][key] = {"qty": qty, "amount": 0}
+            else:
+                job_inputdetail[jid][key]["qty"] += qty
+
+        # compute cost, netoutput per job from inputdetail
+        job_cost      = {}
+        job_netoutput = {}
+        for jid, detail in job_inputdetail.items():
+            cost      = 0
+            netoutput = 0
+            for key, val in detail.items():
+                if val["qty"] < -0.0001:
+                    cost += val["amount"]
+                elif val["qty"] > 0.0001 and 'WASTE' not in key:
+                    netoutput = round(netoutput + val["qty"], 3)
+            job_cost[jid]      = round(cost, 3)
+            job_netoutput[jid] = netoutput
+
+    # also pre-compute jobwaste in bulk the same way (avoid per-job DB hit)
+    # jobwaste is already stored as job.job_waste (saved field) — use that instead
     for job in job_list:
         row_num += 1
-        if Department.objects.filter(department_name="directors", user=request.user).exists():
-            row = [job.id, str(job.itemname), job.quantity, str(job.unit), job.kgqty, str(job.jobstatus),
-               job.film_size, job.jobwaste,job.profit['difference'],job.profit['per_kg']]
+        if is_director:
+            jid      = job.id
+            cost     = job_cost.get(jid, 0)
+            netout   = job_netoutput.get(jid, 0)
+            salecost = round(netout * job.kgrate, 3)
+            diff     = round(salecost - cost, 3)
+            per_kg   = round(diff / netout, 3) if netout else 0
+            row = [
+                job.id, str(job.itemname), job.quantity, str(job.unit),
+                job.kgqty, str(job.jobstatus), job.film_size,
+                job.job_waste,   # ← stored field, no DB hit
+                diff, per_kg,
+            ]
         else:
-
-            row = [job.id, str(job.itemname), job.quantity, str(job.unit), job.kgqty, str(job.jobstatus),
-                   job.film_size, job.jobwaste]
+            row = [
+                job.id, str(job.itemname), job.quantity, str(job.unit),
+                job.kgqty, str(job.jobstatus), job.film_size,
+                job.job_waste,   # ← stored field, no DB hit
+            ]
 
         for col_num, cell_value in enumerate(row, 1):
-            cell = worksheet.cell(row=row_num, column=col_num)
-            cell.value = cell_value
+            worksheet.cell(row=row_num, column=col_num).value = cell_value
+
     workbook.save(response)
     return response
 
