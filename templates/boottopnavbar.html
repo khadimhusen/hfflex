@@ -97,6 +97,9 @@
                     <a class="dropdown-item"
                        href="{% url 'order:processlist' 'Pouching' %}?job__jobstatus=Pending&status=Pending&job__jobstatus=Unplanned&status=Incomplete&page=1">Pending
                         for Pouching </a>
+                    <a class="dropdown-item"
+                       href="{% url 'order:processlist' 'Doctoring' %}?job__jobstatus=Pending&status=Pending&job__jobstatus=Unplanned&status=Incomplete&page=1">Pending
+                        for Doctoring </a>
                     <a class="dropdown-item" href="{% url 'order:processlist' 'All' %}?status=Running">Running</a>
 
 
