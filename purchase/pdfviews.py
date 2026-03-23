@@ -361,7 +361,7 @@ def newpopdf(request, id):
         para = Paragraph(f'<font size=7>{itemdesc}</font>', styleN)
         datalist.append(para)
 
-        para.wrapOn(p, 240, 0)
+        para.wrapOn(p, 250, 0)
         pageheight = pageheight + para.height
 
         datalist.append(item.category)
@@ -369,7 +369,7 @@ def newpopdf(request, id):
         datalist.append(round(item.rate, 2))
         datalist.append(item.unit)
         datalist.append(item.total)
-        if pageheight / mm < 220:
+        if pageheight / mm < 180:
             data.append(datalist)
         else:
             pagestartposition = 150
