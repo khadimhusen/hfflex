@@ -1,59 +1,73 @@
 from django.contrib import admin
-from .models import Order, Job, JobMaterial
-from .models import JobProcess, JobColor, JobImage
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage
 
 
-class JobTabular(admin.TabularInline):
+# ── Inlines ───────────────────────────────────────────────────────────────────
+
+class JobTabularInline(admin.TabularInline):
     model = Job
+    extra = 1
 
 
-class JobMaterilTabular(admin.TabularInline):
+class JobImageInline(admin.TabularInline):
+    model = JobImage
+    extra = 1
+
+
+class JobProcessInline(admin.TabularInline):
+    model = JobProcess
+    extra = 1
+
+
+class JobMaterialInline(admin.TabularInline):
     model = JobMaterial
+    extra = 1
 
 
+class JobColorInline(admin.TabularInline):
+    model = JobColor
+    extra = 1
+
+
+# ── ModelAdmins ───────────────────────────────────────────────────────────────
+
+@admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    inlines = [JobTabular]
-
-    class Meta:
-        model = Job
+    inlines = [JobTabularInline]
 
 
-class JobprocessAdmin(admin.ModelAdmin):
+@admin.register(JobProcess)
+class JobProcessAdmin(admin.ModelAdmin):
     list_display = ['process']
     ordering = ['process']
 
 
-class JobDetail(admin.ModelAdmin):
+@admin.register(Job)
+class JobAdmin(admin.ModelAdmin):
     list_display = ('id', 'itemmaster', 'jobstatus', 'kgqty', 'created')
     list_editable = ('jobstatus',)
     ordering = ['itemmaster', 'created']
     list_filter = ('jobstatus', 'created')
+    search_fields = ('itemmaster__name',)  # adjust field to your model
+    inlines = [JobImageInline, JobMaterialInline, JobProcessInline, JobColorInline]
+    actions = ['remove_account_approval']
+
+    def remove_account_approval(self, request, queryset):
+        updated = queryset.update(account_clearance_date=None, approvedby=None, jobstatus='Account clearance')
+        self.message_user(request, f'{updated} job(s) account approval removed.')
+    remove_account_approval.short_description = 'Remove account approval'
 
 
-class JobImageAdmin(admin.TabularInline):
-    model = JobImage
+@admin.register(JobMaterial)
+class JobMaterialAdmin(admin.ModelAdmin):
+    pass
 
 
-class JobProcessinline(admin.TabularInline):
-    model = JobProcess
-
-class JobMaterialinline(admin.TabularInline):
-    model = JobMaterial
-
-class JobColorinline(admin.TabularInline):
-    model = JobColor
-
-class JobDetailAdmin(admin.ModelAdmin):
-    inlines = [JobImageAdmin, JobMaterialinline, JobProcessinline, JobColorinline]
-
-    class Meta:
-        model = Job
+@admin.register(JobImage)
+class JobImageAdmin(admin.ModelAdmin):
+    pass
 
 
-admin.site.register(Order, OrderAdmin)
-admin.site.register(Job, JobDetailAdmin)
-admin.site.register(JobProcess, JobprocessAdmin)
-admin.site.register(JobMaterial)
-admin.site.register(JobImage)
-admin.site.register(JobColor)
-
+@admin.register(JobColor)
+class JobColorAdmin(admin.ModelAdmin):
+    pass
