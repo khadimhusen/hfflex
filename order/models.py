@@ -412,64 +412,6 @@ class Job(models.Model):
         return netoutput
 
 
-    # --- in Job model, after kgrate property ---
-
-    # def _production_summary(self):
-    #     """
-    #     Shared helper that walks all production inputs/outputs for this job
-    #     and returns (cost, netoutput).
-    #     Mirrors the logic in jobdetail view.
-    #     """
-    #     from production.models import ProdInput, Stockdetail, ProdReport
-    #
-    #     inputdetail = {}
-    #
-    #     allreports = ProdReport.objects.filter(prodprocess__job=self).prefetch_related(
-    #         'prodinput__material', 'output'
-    #     )
-    #
-    #     for report in allreports:
-    #         for c in report.prodinput.select_related('material').all():
-    #             key = c.material.mate_name
-    #             if key not in inputdetail:
-    #                 inputdetail[key] = {
-    #                     "qty": round((-c.wtgain or 0), 3),
-    #                     "amount": round(((c.material.rate or 0) * (c.inputqty or 0)), 3),
-    #                 }
-    #             else:
-    #                 inputdetail[key]["qty"] += round((-c.wtgain or 0), 3)
-    #                 inputdetail[key]["amount"] += round(((c.material.rate or 0) * (c.inputqty or 0)), 3)
-    #
-    #         for d in report.output.select_related().all():
-    #             key = d.mate_name
-    #             if key not in inputdetail:
-    #                 inputdetail[key] = {"qty": round((d.recieved or 0), 3), "amount": 0}
-    #             else:
-    #                 inputdetail[key]["qty"] += round((d.recieved or 0), 3)
-    #
-    #     cost = 0
-    #     netoutput = 0
-    #     for key, val in inputdetail.items():
-    #         if val["qty"] < -0.0001:  # net input material
-    #             cost += val["amount"]
-    #         elif val["qty"] > 0.0001:
-    #             if 'WASTE' not in key:  # finished output, not waste
-    #                 netoutput = round(netoutput + val["qty"], 3)
-    #
-    #     return round(cost, 3), netoutput
-    #
-    # @property
-    # def cost(self):
-    #     """Total raw-material cost consumed for this job (from production entries)."""
-    #     cost, _ = self._production_summary()
-    #     return cost
-    #
-    # @property
-    # def salecost(self):
-    #     """Revenue at kg-rate for net finished output produced."""
-    #     _, netoutput = self._production_summary()
-    #     return round(netoutput * self.kgrate, 3)
-
 class JobMaterialManager(models.Manager):
     def get_queryset(self):
         return super(JobMaterialManager, self).get_queryset().select_related()

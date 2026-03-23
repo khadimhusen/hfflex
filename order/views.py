@@ -48,138 +48,6 @@ def joblist(request):
 
 @login_required(login_url='/login/')
 @accessview
-def jobdetail1(request, id):
-    job = get_object_or_404(
-        Job.objects.select_related('itemmaster', 'unit', 'joborder').prefetch_related('jobimages', 'jobmaterial',
-                                                                                      'jobprocess',
-                                                                                      'jobprocess__jobreport',
-                                                                                      'jobprocess__process',
-                                                                                      'jobprocess__unit',
-                                                                                      'jobcolors',
-                                                                                      'jobmaterial__materialname',
-                                                                                      'jobmaterial__item_mat_type',
-                                                                                      'jobmaterial__item_grade'), id=id)
-
-    inputdetail = {}
-
-    for a in job.jobprocess.all():
-        for b in a.jobreport.all():
-            for c in b.prodinput.select_related().all():
-
-                if not inputdetail.get(c.material.mate_name):
-                    inputdetail[c.material.mate_name] = {"qty": round((-c.wtgain or 0), 3),
-                                                         "input": round((-c.inputqty or 0), 3),
-                                                         "amount": round(((c.material.rate or 0) * c.inputqty or 0), 3),
-                                                         }
-
-                else:
-                    inputdetail[c.material.mate_name]["qty"] += round((-c.wtgain or 0), 3)
-                    inputdetail[c.material.mate_name]["input"] += round((-c.inputqty or 0), 3)
-                    inputdetail[c.material.mate_name]["amount"] += round(((c.material.rate or 0) * c.inputqty or 0), 3)
-
-            for d in b.output.select_related().all():
-                if not inputdetail.get(d.mate_name):
-                    inputdetail[d.mate_name] = {"qty": round((d.recieved or 0), 3),
-                                                "input": round((d.recieved or 0), 3), "amount": 0}
-                else:
-                    inputdetail[d.mate_name]["qty"] += round((d.recieved or 0), 3)
-                    inputdetail[d.mate_name]["input"] += round((d.recieved or 0), 3)
-
-    netinput = 0
-    netoutput = 0
-    totalwaitgain = 0
-    wastekg = 0
-
-    for key in inputdetail:
-
-        if inputdetail[key]["qty"] < -0.0001:
-            netinput = round(netinput + inputdetail[key]["qty"], 3)
-            totalwaitgain = round(totalwaitgain + inputdetail[key]["input"], 3)
-        elif inputdetail[key]["qty"] > 0.0001:
-            if not 'WASTE' in key:
-                netoutput = round(netoutput + inputdetail[key]["qty"], 3)
-            else:
-                wastekg = round(wastekg + inputdetail[key]["qty"], 3)
-
-    netwaste = netinput + netoutput
-
-    wastepercent = 0
-    if not netinput == 0:
-        wastepercent = round(netwaste * 100 / netinput, 3)
-
-    first = Job.objects.values('id').all().first()
-    last = Job.objects.values('id').all().last()
-    nextjob = Job.objects.values('id').filter(id__gt=id).order_by('-id').last()
-    prevjob = Job.objects.values('id').filter(id__lt=id).order_by('-id').first()
-
-    context = {}
-    context['job'] = job
-    context['next'] = nextjob
-    context['prev'] = prevjob
-    context['first'] = first
-    context['last'] = last
-    context['waste'] = inputdetail
-    context['totalwaitgain'] = totalwaitgain
-    context['netinput'] = netinput
-    context['netoutput'] = netoutput
-    context["grossoutput"] = wastekg + netoutput
-    context['wastepercent'] = wastepercent
-    if netoutput:
-        context['diff_per_kg'] = round(context['difference'] / netoutput, 3)
-
-    parentform = modelform_factory(Job, fields=('jobstatus','account_clearance_date','approvedby'))
-
-    if request.method == 'POST':
-        status_form = parentform(request.POST, instance=job)
-        context['status_form'] = status_form
-        accountclearance_form = parentform(request.POST, instance=job,
-                                           initial={"jobstatus": "Unplanned","account_clearance_date":datetime.now(),"approvedby":request.user})
-        context['accountclearance_form'] = accountclearance_form
-        if status_form.is_valid():
-            status_form.save()
-            messages.success(request, 'status save sucessfully.')
-            print("i am inside the status clearance")
-            return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
-        elif accountclearance_form.is_valid():
-            a=accountclearance_form.save(commit=False)
-            a.account_clearance_date=timezone.now()
-            print(a)
-            a.save()
-            print("i am inside the account clearance")
-            messages.success(request, 'order save sucessfully.')
-            return redirect('/order/joblist/?q=Account clearance')
-        else:
-            return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
-    else:
-        status_form = parentform(instance=job)
-        context['status_form'] = status_form
-        accountclearance_form = parentform(instance=job,
-                                           initial={"jobstatus": "Unplanned","account_clearance_date":datetime.now(),"approvedby":request.user})
-        context['accountclearance_form'] = accountclearance_form
-
-    finished_list = []
-
-    for item in job.job_disptached.all():
-        itemdict = {}
-        itemdict["id"] = item.id
-        itemdict["object_id"] = item.object_id
-        itemdict["grosswt"] = item.gross_wt
-        itemdict["tarewt"] = item.tare_wt
-        itemdict["netwt"] = item.recieved
-        itemdict["nos"] = item.nos
-        itemdict["remark"] = item.remark
-        itemdict["dispatched_id"] = item.dispached.all().first().id if item.dispached.all().first() is not None else 0
-
-        finished_list.append(itemdict)
-
-    context['finished_list'] = sorted(finished_list, key=lambda k: k['dispatched_id'])
-
-    return render(request, 'job/detail.html', context)
-
-
-
-@login_required(login_url='/login/')
-@accessview
 def jobdetail(request, id):
     job = get_object_or_404(
         Job.objects.select_related('itemmaster', 'unit', 'joborder').prefetch_related(
@@ -201,9 +69,8 @@ def jobdetail(request, id):
             'jobcolors',
         ), id=id)
 
-    # --- build inputdetail for waste breakdown table only ---
+    # build inputdetail for waste breakdown table
     inputdetail = {}
-
     for a in job.jobprocess.all():
         for b in a.jobreport.all():
             for c in b.prodinput.all():
@@ -226,23 +93,25 @@ def jobdetail(request, id):
                     inputdetail[key]["qty"]   += qty
                     inputdetail[key]["input"] += qty
 
-    # --- summary values still needed in view (not in model) ---
     netinput      = 0
     totalwaitgain = 0
     wastekg       = 0
-
     for key, val in inputdetail.items():
         if val["qty"] < -0.0001:
             netinput      = round(netinput + val["qty"], 3)
             totalwaitgain = round(totalwaitgain + val["input"], 3)
-        elif val["qty"] > 0.0001:
-            if 'WASTE' in key:
-                wastekg = round(wastekg + val["qty"], 3)
+        elif val["qty"] > 0.0001 and 'WASTE' in key:
+            wastekg = round(wastekg + val["qty"], 3)
+
+    # call _production_cost_summary ONCE — avoids 4 separate DB round trips
+    cost, netoutput = job._production_cost_summary()
+    salecost    = round(netoutput * job.kgrate, 3)
+    difference  = round(salecost - cost, 3)
+    diff_per_kg = round(difference / netoutput, 3) if netoutput else 0
 
     wastepercent = 0
     if netinput != 0:
-        netwaste     = netinput + job.netoutput
-        wastepercent = round(netwaste * 100 / netinput, 3)
+        wastepercent = round((netinput + netoutput) * 100 / netinput, 3)
 
     first   = Job.objects.values('id').first()
     last    = Job.objects.values('id').last()
@@ -258,13 +127,13 @@ def jobdetail(request, id):
         'waste'        : inputdetail,
         'totalwaitgain': totalwaitgain,
         'netinput'     : netinput,
-        'netoutput'    : job.netoutput,
-        'grossoutput'  : wastekg + job.netoutput,
+        'netoutput'    : netoutput,
+        'grossoutput'  : wastekg + netoutput,
         'wastepercent' : wastepercent,
-        'cost'         : job.cost,
-        'salecost'     : job.salecost,
-        'difference'   : job.profit['difference'],
-        'diff_per_kg'  : job.profit['per_kg'],
+        'cost'         : cost,
+        'salecost'     : salecost,
+        'difference'   : difference,
+        'diff_per_kg'  : diff_per_kg,
     }
 
     parentform = modelform_factory(Job, fields=('jobstatus', 'account_clearance_date', 'approvedby'))
@@ -312,18 +181,19 @@ def jobdetail(request, id):
         })
 
     context['finished_list'] = sorted(finished_list, key=lambda k: k['dispatched_id'])
-
     return render(request, 'job/detail.html', context)
 
 
 @login_required(login_url='/login/')
 @accessview
 def jobprint(request, id=None):
-    job = get_object_or_404(Job, id=id)
-    images = job.jobimages.all()
-    context = {}
-    context['job'] = job
-    context['images'] = images
+    job = get_object_or_404(
+        Job.objects.select_related('itemmaster', 'unit', 'joborder')
+                   .prefetch_related('jobimages'), id=id)
+    context = {
+        'job'   : job,
+        'images': job.jobimages.all(),
+    }
     return render(request, 'print/jobdetailprint.html', context)
 
 
