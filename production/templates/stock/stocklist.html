@@ -15,8 +15,9 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <h4 class="card-title text-center">Stock, No. of Material {{total}} and total balance=<span
-                        style="color:Red ">{{totalbalance.balance__sum|floatformat }}</span></h4>
+                <h4 class="card-title text-center">Stock, No. of Material {{total}} and Balance=<span
+                        style="color:Red ">{{totalbalance.balance__sum|floatformat }}
+                    and Available= {{totalavailable.available__sum|floatformat }}</span></h4>
                 <div class="card-body">
                     <form method="GET">
                         <div class="form-row">

@@ -425,6 +425,7 @@ def stocklist(request):
         allote=(Sum('jobmaterialstatus__qty', distinct=True)) or 0)
     totalcount = stock_list.count()
     totalbalance = stock_list.aggregate(Sum('balance'))
+    totalavailable = stock_list.aggregate(Sum('available'))
 
     page = request.GET.get('page', 1)
     paginator = Paginator(stock_list, 100)
@@ -437,7 +438,7 @@ def stocklist(request):
         stocks = paginator.page(paginator.num_pages)
 
     return render(request, 'stock/stocklist.html', {'stocks': stocks, 'total': totalcount, 'myFilter': myFilter,
-                                                    'totalbalance': totalbalance})
+                                                    'totalbalance': totalbalance, 'totalavailable':totalavailable})
 
 
 @login_required(login_url='/login/')
