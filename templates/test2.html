@@ -1,4 +1,256 @@
+<<<<<<< HEAD
 
+=======
+<!DOCTYPE html>
+<html>
+
+{% load static %}
+<body style="margin:0; padding:0; font-family:Arial, sans-serif;">
+
+<!-- WRAPPER -->
+<table width="100%" border="0" cellspacing="0" cellpadding="0"
+       style="max-width:750px; margin:auto; border:1px solid #ccc;">
+
+    <!-- ========== BANNER 1 ========== -->
+    <tr>
+        <td style="padding:20px;">
+
+            <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+
+                    <!-- Logo -->
+                    <td width="80" style="vertical-align:top;">
+                        <img src="https://hfflex.com/static/gmail/logosvg.svg"
+                             width="80" height="80" style="display:block;" alt="HF Logo">
+                    </td>
+
+                    <!-- Company Info -->
+                    <td style="padding-left:15px; vertical-align:top;">
+                        <h2 style="margin:0; color:#ff7a00; font-size:22px;">
+                            HF GROUP OF INDUSTRIES
+                        </h2>
+
+                        <p style="margin:4px 0; font-size:16px;">
+                            <span style="color:#ff7a00;">●</span> <strong>HF FLEX PVT. LTD.</strong>
+                        </p>
+
+                        <p style="margin:4px 0; font-size:16px;">
+                            <span style="color:#ff7a00;">●</span> <strong>HF PRINT PACK PVT. LTD.</strong>
+                        </p>
+
+                        <p style="margin:10px 0 0; font-size:14px; color:#555;">
+                            Innovating Packaging for Every Industry
+                        </p>
+                    </td>
+
+                    <!-- Years Experience -->
+                    <td width="160" style="text-align:center; border-left:1px dashed #bbb;">
+                        <div style="font-size:40px; color:#ff7a00; font-weight:bold; line-height:40px;">
+                            11+
+                        </div>
+                        <div style="margin-top:5px; font-size:14px; color:#666; font-weight:bold;">
+                            YEARS<br>OF INDUSTRY EXPERIENCE
+                        </div>
+                    </td>
+
+                </tr>
+            </table>
+
+        </td>
+    </tr>
+
+    <!-- ========== BANNER 2 (Overlapping + Rounded Left) ========== -->
+    <tr>
+        <td style="padding:10px;">
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:700px;" border="0">
+                <tr>
+
+                    <!-- LEFT TOP -->
+                    <td style="width:42%; padding:20px 0 0 20px; vertical-align:top;">
+
+                        <p style="margin:0; font-size:13px; font-weight:bold; color:#555;">
+                            TRUSTED BY OVER
+                        </p>
+
+                        <p style="margin:0; font-size:34px; font-weight:bold; color:#000;">
+                            5000+
+                        </p>
+
+                        <p style="margin:0 0 25px 0; font-size:14px; color:#555;">
+                            SATISFIED CUSTOMERS
+                        </p>
+
+                    </td>
+
+                    <!-- RIGHT SIDE IMAGE (MERGED CELL) -->
+                    <td rowspan="2" style="width:60%; text-align:left; vertical-align:middle; padding-left: -60px;">
+
+                        <img src="https://hfflex.com/static/gmail/pouches.png"
+                             style="max-width:100%; height:auto; display:block;">
+                    </td>
+
+                </tr>
+
+                <!-- LEFT BOTTOM (DARK BOX) -->
+                <tr>
+                    <td style="padding-left:20px; padding-bottom:20px; vertical-align:top;">
+
+                        <div style="
+                                    background:#3b3b3b;
+                                    padding:30px 25px;
+                                    width:200px;
+                                    color:#fff;
+                                    border-radius:0px 35px 0px 0px;
+                                    margin-top:-10px;      /* Overlap effect */
+                                  ">
+                            <p style="margin:0; font-size:20px;">Leading Flexible</p>
+                            <p style="margin:0; font-size:34px; font-weight:bold; color:#ff8a00;">Packaging</p>
+                            <p style="margin:0; font-size:34px;">Solutions</p>
+                        </div>
+
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+    <!-- ================= PRODUCT GALLERY SECTION ================= -->
+    <tr>
+        <td style="padding:20px;">
+
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="max-width:700px;">
+                <tr>
+                    <td align="center"
+                        style="font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color:#ff7a00;
+                        padding: 20px 10px; max-width:700px;">
+                        We provide custom packaging solutions tailored to industry-specific requirements.
+                    </td>
+                </tr>
+            </table>
+
+            <!-- PRODUCT GRID -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="max-width:700px;">
+                <tr style="max-width:700px;">
+
+                    {% for i in my_range %}
+
+                    <td align="center" style="padding:2px;">
+                        <img src="https://hfflex.com/static/gmail/p{{forloop.counter}}.jpg" width="80"
+                             style="border-radius:8px; max-height:90px;"/>
+                    </td>
+                    {% if forloop.counter|divisibleby:8 %}
+                </tr>
+                <tr style="max-width:700px;">
+                    {% endif %}
+                    {% endfor %}
+
+                </tr>
+                <!-- About + Why Choose Us Section -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f3;">
+                    <tr>
+                        <!-- LEFT SIDE (TEXT) -->
+                        <td width="60%"
+                            style="padding:30px 25px; font-family:Arial, sans-serif; color:#444; line-height:1.6;">
+
+                            <h2 style="margin:0; font-size:26px; font-weight:bold; color:#555;">
+                                Dear Valued Customer,
+                            </h2>
+
+                            <p style="font-size:18px; margin-top:25px;">
+                                <strong>HF Flex Pvt Ltd</strong> is a trusted manufacturer of
+                                flexible packaging materials, providing innovative and high-quality
+                                packaging solutions for various industries.
+                            </p>
+
+                            <p style="font-size:18px;">
+                                Since 2014, our establishment has focused on delivering
+                                <strong>reliable, customized, and cost-effective packaging</strong>
+                                products that help brands stand out in competitive markets.
+                            </p>
+
+                            <p style="font-size:18px;">
+                                With modern manufacturing facilities and experienced professionals,
+                                we ensure that every packaging solution meets the highest standards
+                                of <strong>quality, durability, and performance.</strong>
+                            </p>
+
+                        </td>
+
+                        <!-- RIGHT SIDE (WHY CHOOSE US) -->
+                        <td width="40%"
+                            style="background:#2f2f2f; padding:30px 20px; color:white; font-family:Arial, sans-serif;">
+
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="font-size:42px; color:white; padding-bottom:15px;">?</td>
+                                    <td style="color:white; padding-bottom:15px;">
+                                        <h3 style="margin:0; color:white; font-size:22px;">Why Choose Us:</h3>
+                                    </td>
+                                </tr>
+
+                                <!-- Feature 1 -->
+                                <tr>
+                                    <td width="60" style="padding:15px 0;">
+                                        <img src="https://hfflex.com/static/gmail/customized.svg" width="55">
+                                    </td>
+                                    <td style="font-size:16px; color:white;">
+                                        <strong>CUSTOMIZED</strong><br>PRODUCT DEVELOPMENT
+                                    </td>
+                                </tr>
+
+                                <!-- Feature 2 -->
+                                <tr>
+                                    <td width="60" style="padding:15px 0;">
+                                        <img src="https://hfflex.com/static/gmail/icon2.svg" width="55">
+                                    </td>
+                                    <td style="font-size:16px; color:white;">
+                                        <strong>STRICT QUALITY</strong><br>CONTROL
+                                    </td>
+                                </tr>
+
+                                <!-- Feature 3 -->
+                                <tr>
+                                    <td width="60" style="padding:15px 0;">
+                                        <img src="https://hfflex.com/static/gmail/icon3.svg" width="55">
+                                    </td>
+                                    <td style="font-size:16px; color:white;">
+                                        <strong>TIMELY</strong><br>DELIVERY
+                                    </td>
+                                </tr>
+
+                                <!-- Feature 4 -->
+                                <tr>
+                                    <td width="60" style="padding:15px 0;">
+                                        <img src="https://hfflex.com/static/gmail/icon4.svg" width="55">
+                                    </td>
+                                    <td style="font-size:16px; color:white;">
+                                        <strong>EXPERTISE IN</strong><br>DIVERSE INDUSTRIES
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+            </table>
+        </td>
+        <td>
+
+        </td>
+    </tr>
+
+
+    <!-- CONTACT US SECTION -->
+
+    <!-- =========================================================== -->
+
+</table>
+
+</body>
+=======
+>>>>>>> 5c4ac4f093764f3620bc4b1258df38220afffe5f
 <!DOCTYPE html>
 <html>
 
@@ -247,3 +499,8 @@
 </table>
 
 </body>
+<<<<<<< HEAD
+=======
+>>>>>>> 7264432c36450ba81aab8383ef3ed453d842b1af
+</html>
+>>>>>>> 5c4ac4f093764f3620bc4b1258df38220afffe5f
