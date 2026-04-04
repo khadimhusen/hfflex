@@ -20,7 +20,7 @@ def user_login(request):
                 messages.success(request, f'Welcome {username} ', )
                 return HttpResponseRedirect(reverse('manpower:newshift'))
 
-            if (username in ["anas", "cmshaikh", "amol","akshay" , "tayyab", "ganesh"]):
+            if (username in ["anas", "cmshaikh", "amol", "akshay", "tayyab", "ganesh"]):
                 messages.success(request, f'Welcome {username} ')
                 return HttpResponseRedirect(reverse('quotation:quotationlist'))
 
@@ -66,7 +66,7 @@ def test(request):
         instance = ContentType(id=item.get('id', 0), app_label=item.get('fields').get("app_label"),
                                model=item.get('fields', 0).get("model"))
         instances.append(instance)
-    print (instances)
+    print(instances)
     # Bulk update the instances in the database
     ContentType.objects.bulk_update(instances, ['app_label', 'model'])
     return render(request, 'jobmaterial/test.html', {})
@@ -74,3 +74,11 @@ def test(request):
 
 def noaccess(request):
     return render(request, 'noaccess.html')
+
+
+def test1(request):
+    return render(request, 'test1.html', {'my_range': range(16)})
+
+
+def test2(request):
+    return render(request, 'test2.html', {'my_range': range(16)})
