@@ -30,7 +30,7 @@ def returnablelist(request):
     returnable_list = myFilter.qs.select_related('party_name', 'createdby')
 
     page = request.GET.get('page', 1)
-    paginator = Paginator(returnable_list, 2)
+    paginator = Paginator(returnable_list, 100)
     try:
         returnable_list = paginator.page(page)
     except PageNotAnInteger:
