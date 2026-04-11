@@ -17,7 +17,7 @@
 
                     <!-- Logo -->
                     <td width="80" style="vertical-align:top;">
-                        <img src="https://hfflex.com/static/gmail/logosvg.svg"
+                        <img src="https://hfflex.co.in/static/gmail/logosvg.svg"
                              width="80" height="80" style="display:block;" alt="HF Logo">
                     </td>
 
@@ -56,7 +56,7 @@
         </td>
     </tr>
 
-    <!-- ========== BANNER 2 (Overlapping + Rounded Left) ========== -->
+    <!-- ========== BANNER 2 ========== -->
     <tr>
         <td style="padding:10px;">
 
@@ -80,10 +80,10 @@
 
                     </td>
 
-                    <!-- RIGHT SIDE IMAGE (MERGED CELL) -->
+                    <!-- RIGHT SIDE IMAGE -->
                     <td rowspan="2" style="width:60%; text-align:left; vertical-align:middle; padding-left: -60px;">
 
-                        <img src="https://hfflex.com/static/gmail/pouches.png"
+                        <img src="https://hfflex.co.in/static/gmail/pouches.png"
                              style="max-width:100%; height:auto; display:block;">
                     </td>
 
@@ -99,8 +99,7 @@
                                     width:200px;
                                     color:#fff;
                                     border-radius:0px 35px 0px 0px;
-                                    margin-top:-10px;      /* Overlap effect */
-                                  ">
+                                    margin-top:-10px;">
                             <p style="margin:0; font-size:20px;">Leading Flexible</p>
                             <p style="margin:0; font-size:34px; font-weight:bold; color:#ff8a00;">Packaging</p>
                             <p style="margin:0; font-size:34px;">Solutions</p>
@@ -112,136 +111,180 @@
             </table>
         </td>
     </tr>
-    <!-- ================= PRODUCT GALLERY SECTION ================= -->
+
+    <!-- ================= PRODUCT SECTION ================= -->
     <tr>
         <td style="padding:20px;">
 
             <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="max-width:700px;">
                 <tr>
                     <td align="center"
-                        style="font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color:#ff7a00;
-                        padding: 20px 10px; max-width:700px;">
+                        style="font-size:16px; font-weight:bold; color:#ff7a00; padding:20px 10px;">
                         We provide custom packaging solutions tailored to industry-specific requirements.
                     </td>
                 </tr>
             </table>
 
             <!-- PRODUCT GRID -->
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="max-width:700px;">
-                <tr style="max-width:700px;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+                <tr>
 
                     {% for i in my_range %}
-
                     <td align="center" style="padding:2px;">
-                        <img src="https://hfflex.com/static/gmail/p{{forloop.counter}}.jpg" width="80"
+                        <img src="https://hfflex.co.in/static/gmail/p{{forloop.counter}}.jpg" width="80"
                              style="border-radius:8px; max-height:90px;"/>
                     </td>
+
                     {% if forloop.counter|divisibleby:8 %}
                 </tr>
-                <tr style="max-width:700px;">
+                <tr>
                     {% endif %}
                     {% endfor %}
 
                 </tr>
-                <!-- About + Why Choose Us Section -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f3;">
-                    <tr>
-                        <!-- LEFT SIDE (TEXT) -->
-                        <td width="60%"
-                            style="padding:30px 25px; font-family:Arial, sans-serif; color:#444; line-height:1.6;">
-
-                            <h2 style="margin:0; font-size:26px; font-weight:bold; color:#555;">
-                                Dear Valued Customer,
-                            </h2>
-
-                            <p style="font-size:18px; margin-top:25px;">
-                                <strong>HF Flex Pvt Ltd</strong> is a trusted manufacturer of
-                                flexible packaging materials, providing innovative and high-quality
-                                packaging solutions for various industries.
-                            </p>
-
-                            <p style="font-size:18px;">
-                                Since 2014, our establishment has focused on delivering
-                                <strong>reliable, customized, and cost-effective packaging</strong>
-                                products that help brands stand out in competitive markets.
-                            </p>
-
-                            <p style="font-size:18px;">
-                                With modern manufacturing facilities and experienced professionals,
-                                we ensure that every packaging solution meets the highest standards
-                                of <strong>quality, durability, and performance.</strong>
-                            </p>
-
-                        </td>
-
-                        <!-- RIGHT SIDE (WHY CHOOSE US) -->
-                        <td width="40%"
-                            style="background:#2f2f2f; padding:30px 20px; color:white; font-family:Arial, sans-serif;">
-
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="font-size:42px; color:white; padding-bottom:15px;">?</td>
-                                    <td style="color:white; padding-bottom:15px;">
-                                        <h3 style="margin:0; color:white; font-size:22px;">Why Choose Us:</h3>
-                                    </td>
-                                </tr>
-
-                                <!-- Feature 1 -->
-                                <tr>
-                                    <td width="60" style="padding:15px 0;">
-                                        <img src="https://hfflex.com/static/gmail/customized.svg" width="55">
-                                    </td>
-                                    <td style="font-size:16px; color:white;">
-                                        <strong>CUSTOMIZED</strong><br>PRODUCT DEVELOPMENT
-                                    </td>
-                                </tr>
-
-                                <!-- Feature 2 -->
-                                <tr>
-                                    <td width="60" style="padding:15px 0;">
-                                        <img src="https://hfflex.com/static/gmail/icon2.svg" width="55">
-                                    </td>
-                                    <td style="font-size:16px; color:white;">
-                                        <strong>STRICT QUALITY</strong><br>CONTROL
-                                    </td>
-                                </tr>
-
-                                <!-- Feature 3 -->
-                                <tr>
-                                    <td width="60" style="padding:15px 0;">
-                                        <img src="https://hfflex.com/static/gmail/icon3.svg" width="55">
-                                    </td>
-                                    <td style="font-size:16px; color:white;">
-                                        <strong>TIMELY</strong><br>DELIVERY
-                                    </td>
-                                </tr>
-
-                                <!-- Feature 4 -->
-                                <tr>
-                                    <td width="60" style="padding:15px 0;">
-                                        <img src="https://hfflex.com/static/gmail/icon4.svg" width="55">
-                                    </td>
-                                    <td style="font-size:16px; color:white;">
-                                        <strong>EXPERTISE IN</strong><br>DIVERSE INDUSTRIES
-                                    </td>
-                                </tr>
-
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-
             </table>
-        </td>
-        <td>
+
+            <!-- ABOUT + WHY CHOOSE US -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f3;">
+                <tr>
+
+                    <!-- LEFT TEXT -->
+                    <td width="60%" style="padding:30px 25px; color:#444; line-height:1.6;">
+                        <h2 style="margin:0; font-size:26px; font-weight:bold; color:#555;">
+                            Dear Valued Customer,
+                        </h2>
+
+                        <p style="font-size:18px; margin-top:25px;">
+                            <strong>HF Flex Pvt Ltd</strong> is a trusted manufacturer of flexible
+                            packaging materials, providing innovative and high-quality packaging solutions.
+                        </p>
+
+                        <p style="font-size:18px;">
+                            Since 2014, our establishment has focused on delivering
+                            <strong>reliable, customized, and cost-effective packaging</strong>
+                            products for competitive markets.
+                        </p>
+
+                        <p style="font-size:18px;">
+                            We ensure every packaging solution meets the highest standards of
+                            <strong>quality, durability, and performance.</strong>
+                        </p>
+                    </td>
+
+                    <!-- RIGHT WHY CHOOSE US -->
+                    <td width="40%" style="background:#2f2f2f; padding:30px 20px; color:white;">
+
+                        <table width="100%">
+                            <tr>
+                                <td style="font-size:42px; padding-bottom:15px;">?</td>
+                                <td>
+                                    <h3 style="margin:0; font-size:22px;">Why Choose Us:</h3>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="60" style="padding:15px 0;">
+                                    <img src="https://hfflex.co.in/static/gmail/customized.svg" width="55">
+                                </td>
+                                <td style="font-size:16px;">
+                                    <strong>CUSTOMIZED</strong><br>PRODUCT DEVELOPMENT
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="60" style="padding:15px 0;">
+                                    <img src="https://hfflex.co.in/static/gmail/icon2.svg" width="55">
+                                </td>
+                                <td style="font-size:16px;">
+                                    <strong>STRICT QUALITY</strong><br>CONTROL
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="60" style="padding:15px 0;">
+                                    <img src="https://hfflex.co.in/static/gmail/icon3.svg" width="55">
+                                </td>
+                                <td style="font-size:16px;">
+                                    <strong>TIMELY</strong><br>DELIVERY
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="60" style="padding:15px 0;">
+                                    <img src="https://hfflex.co.in/static/gmail/icon4.svg" width="55">
+                                </td>
+                                <td style="font-size:16px;">
+                                    <strong>EXPERTISE IN</strong><br>DIVERSE INDUSTRIES
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+            </table>
 
         </td>
     </tr>
 
+    <!-- ================= CONTACT HEADER ================= -->
+    <tr>
+        <td style="background:#ff7a00; color:white; text-align:center;
+                   font-size:28px; font-weight:bold; padding:18px;">
+            CONTACT US:
+        </td>
+    </tr>
 
-    <!-- CONTACT US SECTION -->
+    <!-- ================= CONTACT SECTION ================= -->
+    <tr>
+        <td style="padding:25px;">
 
-    <!-- =========================================================== -->
+            <table width="100%" cellspacing="0" cellpadding="5" style="font-size:15px; color:#333;">
+
+                <tr>
+
+                    <!-- PHONE -->
+                    <td width="25%" valign="top">
+                        <img src="https://hfflex.co.in/static/gmail/phone.svg" width="28"><br><br>
+                        +91 8552827683<br>
+                        +91 7447456686<br>
+                        +91 7447416585<br>
+                        hfflexpvtltd@gmail.com
+                    </td>
+
+                    <!-- CORPORATE OFFICE -->
+                    <td width="25%" valign="top">
+                        <img src="https://hfflex.co.in/static/gmail/office.svg" width="28"><br><br>
+                        <strong>Corporate Office:</strong><br>
+                        Dyandip Plaza, 1st Floor, Vita-Mayni Road,<br>
+                        Opp. Babasaheb Deshmukh Bank, Vita,<br>
+                        Tal-Khanapur, Sangli – 415311
+                    </td>
+
+                    <!-- FACTORY -->
+                    <td width="25%" valign="top">
+                        <img src="https://hfflex.co.in/static/gmail/factory.svg" width="28"><br><br>
+                        <strong>Factory Address:</strong><br>
+                        25, Luck Lark Textile Park, Gardi,<br>
+                        Vita-Mayni Road, Tal-Khanapur,<br>
+                        Sangli, MH – 415311
+                    </td>
+
+                    <!-- PUNE BRANCH -->
+                    <td width="25%" valign="top">
+                        <img src="https://hfflex.co.in/static/gmail/office.svg" width="28"><br><br>
+                        <strong>Pune Branch:</strong><br>
+                        606, 6th Floor ANP Landmark,<br>
+                        Opp. Golden Care Hospital,<br>
+                        Wakad, Pune – 411057
+                    </td>
+
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
 
 </table>
 
