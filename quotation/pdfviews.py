@@ -39,188 +39,6 @@ def drawpath(canvas, startpoint, nodes):
         cpath.lineTo(*node)
     canvas.drawPath(cpath,stroke=1,fill=1)
 
-@login_required(login_url='/login/')
-@accessview
-def oldquotepdf(_, id):
-
-    quote = get_object_or_404(Quotation, id=id)
-    buffer = io.BytesIO()
-
-    p = canvas.Canvas(buffer, pagesize=A4, bottomup=1)
-
-    def pageheader():
-
-        p.setLineWidth(1)
-        p.setStrokeColor(yellow)
-        p.setFillColor(yellow)
-
-        drawpath(p, (0, A4[1]), ((80, A4[1]), (0, A4[1] - 80)))
-        p.setFillColor(orange)
-        p.setStrokeColor(orange)
-        drawpath(p, (0, A4[1] - 0), ((73, A4[1] - 0), (0, A4[1] - 73)))
-        p.setFillColor(black)
-        p.setStrokeColor(black)
-        drawpath(p, [5, A4[1] - 140], [(A4[0] - 5, A4[1] - 140)])
-        drawpath(p, [5, A4[1] - 90], [(A4[0] - 5, A4[1] - 90)])
-
-        p.setFillColorRGB(0.7, 0.9, 0)
-        p.setStrokeColorRGB(0.7, 0.9, 0)
-        drawpath(p, [A4[0] - 30, A4[1]], [(A4[0], A4[1]), (A4[0], 0), (A4[0] - 30, 0)])
-        p.rotate(90)
-        p.setFont("times", 14)
-        p.setFillColorRGB(0.1, 0.4, 0.6)
-        HF="   H F FLEX  "
-        p.drawCentredString(450, -580,HF*12)
-        p.rotate(-90)
-        p.setFont("arial", 10)
-        p.setFillColorRGB(0.0, 0.2, 0.5)
-        p.drawRightString(A4[0] - 180, A4[1] - 30, 'Quotation No:- ')
-        p.setFont("arial", 16)
-        p.drawString(A4[0] - 180, A4[1] - 30, f'# {((6 - len(str(   quote.id))) * "0") + str(quote.id)}')
-
-        p.setFont("arial", 10)
-        p.drawRightString(A4[0] - 180, A4[1] - 45, 'Date:- ')
-        p.drawString(A4[0] - 180, A4[1] - 45, quote.created.strftime("%d/%m/%Y"))
-        p.drawRightString(A4[0] - 180, A4[1] - 60, 'Created By:- ')
-        p.drawRightString(A4[0] - 180, A4[1] - 70, 'Company GST:-')
-        p.drawString(A4[0] - 180, A4[1] - 70, "27AADCH3462K1ZF")
-        p.drawRightString(A4[0] - 180, A4[1] - 85, 'Company CIN:-')
-        p.drawString(A4[0] - 180, A4[1] - 85, "U74900PN2014PTC150332")
-        p.setFillColorRGB(0.95, 0.95, 0.95)
-        p.setFont("timesbd", 25)
-        p.drawCentredString(A4[0] / 2 - 98, A4[1] - 30, "H F Flex Pvt. Ltd.")
-        p.setFillColorRGB(0.80, 0, 0)
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 34, "H F Flex Pvt. Ltd.")
-        p.setFillColorRGB(0, 0.2, 0.5)
-        p.setFont("arial", 9)
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 45, "25, Lucky Lark Textile Park, Gardi, Vita")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 57, "Tal- Khanapur, Dist- Sangli, Maharashtra-415311")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 70, f"Contact:- {quote.createdby.profile.mobile}")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 84, " Email:- hfflexpvtltd@gmail.com, Website: www.hfflex.co.in")
-        p.setFillColorRGB(0.10, 0.10, 0.10)
-        p.drawString(35, A4[1] - 105, f'Customer:- {quote.partyname.upper()}')
-        p.drawString(35, A4[1] - 120, f'Address:- {quote.add or "-"}')
-        p.drawString(35, A4[1] - 135, f'Contact:- {quote.contact or "-"}')
-
-
-
-    pageheader()
-
-    flow_obj = []
-    styles = getSampleStyleSheet()
-
-    styleN = styles["BodyText"]
-
-    data = [["#",
-             Paragraph("Description", styleN),
-             Paragraph("Cylinder<br/>Detail", styleN),
-             Paragraph("Cylinder<br/>Cost", styleN),
-             Paragraph("Material<br/>Rate", styleN),
-             Paragraph("Pouch<br/> Per<br/>Kg.", styleN),
-             Paragraph("Per Pouch <br/> Cost.", styleN),
-             Paragraph("MOQ", styleN),
-             Paragraph("Total", styleN)]]
-    i = 1
-    pageheight = 67*mm
-    for item in quote.quotationitems.all():
-        itemdata = []
-        itemdata.append(str(i))
-        i = i + 1
-
-        itemdesc=f'{item.jobname}<br/> Size:- {item.dimension}<br/>{item.structure}<br/> Supply :- {item.supply}'
-        para=Paragraph(f'<font name=arial size=8 >{itemdesc}</font>', styleN)
-        itemdata.append(para)
-
-        para.wrapOn(p, 165, 0)
-        pageheight=pageheight+para.height
-        if item.cyl_rate and item.no_of_cyl:
-            itemdata.append(Paragraph(f'<font size=8>Rs.{round(item.cyl_rate)} x {item.no_of_cyl}Nos.</font>',styleN))
-            itemdata.append(Paragraph(f'<font size=8>Rs.{round(item.item_cylinder_cost,0)}</font>', styleN))
-        else:
-            itemdata.append(Paragraph(f'<font size=8>-</font>', styleN))
-            itemdata.append(Paragraph(f'<font size=8>-</font>', styleN))
-
-        if item.material_rate:
-            itemdata.append(Paragraph(f'<font size=8>Rs.{round(item.material_rate, 1)} </font>',styleN))
-        else:
-            itemdata.append(Paragraph(f'<font size=8>-</font>',styleN))
-
-        itemdata.append(Paragraph(f'<font size=8>{item.pouch_per_kg or "-"}</font>',styleN))
-        itemdata.append(Paragraph(f'<font size=8>Rs. {item.per_pouch_cost or "-"}</font>',styleN))
-        itemdata.append(Paragraph(f'<font size=8>{item.moq} {item.unit}</font>',styleN))
-        itemdata.append(Paragraph(f'<font size=8>Rs.{round(item.itemtotalcost)}</font>',styleN))
-        data.append(itemdata)
-    else:
-        data.append([str(pageheight/mm)])
-        terms = ""
-        for term in quote.quote_term.all():
-            terms = terms + "*" +term.term + "<br/>"
-        for term in quote.additionalterms.all():
-            terms = terms + "*" + term.term + "<br/>"
-
-    styleN.leading = 11
-
-    termsandcondition = Paragraph(f'<font  size=8>{terms}</font>', styleN)
-
-    sbibank="""<font size=8>Bank Name:- State bank of India<br/>
-                Branch:- VITA,<br/>
-                Current Account Name- H F FLEX PVT. LTD.<br/>
-                Bank Account No:-38244070864 <br/>
-                BANK IFS CODE: SBIN0000285</font>"""
-
-    sbibankdetail=Paragraph(sbibank,styleN)
-
-    a = Image("static/images/husensign.png",1 * inch,1 * inch)
-
-    data.append([ "Bank Detail", "","Cylinder Total", quote.totalcylindercost, a ,  "","Material. total","", quote.totalmaterialcost])
-    data.append([sbibankdetail, "",f'Gst @{quote.cylinder_gst} %', round(quote.cylindergst,2),"","",f'Gst @{quote.material_gst} %',"",round(quote.materialgst,0)])
-    data.append(["", "", Paragraph(f'<font size=8> Cylinder<br/>Gross Total</font>',styleN) ,Paragraph(f'<font size=9> {round(quote.grosscylindercost,0)}</font>',styleN),"","","Material Gross Total","",round(quote.grossmaterialcost,2)  ])
-
-    data.append([f'Amount in Word:- {quote.amountinword}'])
-
-    tstyle = TableStyle([("GRID", (0, 0), (-1, -1), 0.25, colors.gray),
-                         ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),
-                         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                         ("FONTSIZE", (0, 0), (-1, -1), 8),
-
-                         ('SPAN', (0, -4), (1, -4)),#bankdetail
-                         ('SPAN', (-2, -4), (-3, -4)),
-                         ('SPAN', (-2, -3), (-3, -3)),
-                         ('SPAN', (-2, -2), (-3, -2)),
-                         ('SPAN', (0, -2), (1, -3)),
-                         ('SPAN', (0, -1), (-1, -1)),
-                         ('SPAN', (4, -2), (5, -4)),
-                         ('SPAN', (0, -5), (-1, -5)),
-
-                         ])
-
-    t = Table(data, colWidths=[15,170,55,60,50,45,50,50,55])
-
-    t.setStyle(tstyle)
-    flow_obj.append(t)
-
-    frame1 = Frame(15,30, 550, A4[1]-170, showBoundary=False)
-    frame1.addFromList(flow_obj, p)
-    p.showPage()
-    if not quote.approvedby:
-        p.setFillColorRGB(0.80, 0, 0, 0.4)
-        p.setFont("arial", 30)
-        p.drawCentredString(A4[0] / 2, 20, "Pending for Approval")
-    else:
-        p.setFillColorRGB(0, 0.8, 0, 0.4)
-        p.setFont("arial", 30)
-        p.drawCentredString(A4[0] / 2, 20, "Approved")
-
-    p.setFillColorRGB(0.90, 0, 0,1)
-    p.setFont("arial", 8)
-    p.drawCentredString(A4[0] / 2, 7, "Note:-Please Don't Print This Unless Extremely Necessary")
-    p.setTitle(f"Po-{quote.id}")
-    p.save()
-    buffer.seek(0)
-
-    return FileResponse(buffer, as_attachment=True, filename=f'{quote.id} - {quote.partyname}.pdf')
-
 
 @login_required(login_url='/login/')
 @accessview
@@ -347,8 +165,7 @@ def quotepdf(_, id):
         if pageheight/mm < 180:
             data.append(itemdata)
         else:
-            p.setFont("arial", 20)
-            p.drawString(100, 100, " Page Continue ... ")
+            # Draw a "continued" notice at the bottom of the current page
             tstyle = TableStyle([("GRID", (0, 0), (-1, -1), 0.25, colors.gray),
                                  ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),
                                  ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -362,12 +179,16 @@ def quotepdf(_, id):
             # frame1.addFromList([t,t], p)
 
             frame1.addFromList([customertable,t], p)
+
             p.showPage()
             frame1 = Frame(15, 30, 550, A4[1] - 130, showBoundary=False)
             letterheader()
             pageheight = 67 * mm
             data = [tabelheader]
             data.append(itemdata)
+
+            para.wrapOn(p, 165, 0)
+            pageheight += para.height  # re-add height for this item on new page
 
 
     else:
@@ -453,7 +274,30 @@ def quotepdf(_, id):
         termstable.setStyle(terstablestyle)
     # frame1.addFromList([t,t], p)
 
-    frame1.addFromList([customertable,t, Spacer(0,5),summrytable, Spacer(0,5),termstable], p)
+    # frame1.addFromList([customertable,t, Spacer(0,5),summrytable, Spacer(0,5),termstable], p)
+
+    # Replace the final frame1.addFromList(...) with this:
+
+    story_items = [customertable, t, Spacer(0, 5), summrytable, Spacer(0, 5), termstable]
+    frame1.addFromList(story_items, p)
+
+    while story_items:
+        # Draw "continued" notice at bottom of current page BEFORE showPage
+        p.setFont("arial", 9)
+        p.setFillColorRGB(0.9, 0.0, 0.0)
+        p.setLineWidth(0.5)
+        p.setStrokeColorRGB(0.9, 0.0, 0.0)
+        p.line(15, 45, A4[0] - 35, 45)
+        p.drawCentredString(A4[0] / 2, 33, "Continued on next page...")
+        p.setFillColorRGB(0, 0, 0)
+
+        p.showPage()
+        frame1 = Frame(15, 30, 550, A4[1] - 140, showBoundary=False)
+        letterheader()
+
+        # Draw "continued from" notice at top of new page
+
+        frame1.addFromList(story_items, p)
 
     p.setTitle(f"Quote-{quote.id} - {quote.partyname} - {quote.createdby}")
     p.save()
@@ -533,8 +377,14 @@ def letterheadquotepdf(_, id):
         if pageheight/mm < 190:
             data.append(itemdata)
         else:
-            p.setFont("arial", 20)
-            p.drawString(100, 100, " Page Continue ... ")
+            # Draw a "continued" notice at the bottom of the current page
+            p.setFont("arial", 9)
+            p.setFillColorRGB(0.4, 0.4, 0.4)
+            p.setStrokeColorRGB(0.7, 0.7, 0.7)
+            p.setLineWidth(0.5)
+            p.line(15, 45, A4[0] - 35, 45)  # thin separator line
+            p.drawCentredString(A4[0] / 2, 33, "✦  Continued on next page...  ✦")
+            p.setFillColorRGB(0, 0, 0)  # reset fill color
             tstyle = TableStyle([("GRID", (0, 0), (-1, -1), 0.25, colors.gray),
                                  ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)),
                                  ("ALIGN", (0, 0), (-1, -1), "CENTER"),
@@ -553,6 +403,8 @@ def letterheadquotepdf(_, id):
             pageheight = 67 * mm
             data = [tabelheader]
             data.append(itemdata)
+            para.wrapOn(p, 165, 0)
+            pageheight += para.height  # re-add height for this item on new page
 
 
     else:
@@ -634,6 +486,8 @@ def letterheadquotepdf(_, id):
     # frame1.addFromList([t,t], p)
 
     frame1.addFromList([customertable,t, Spacer(0,5),summrytable, Spacer(0,5),termstable], p)
+
+
 
     p.setTitle(f"Quote-{quote.id} - {quote.partyname} - {quote.createdby}")
     p.save()
