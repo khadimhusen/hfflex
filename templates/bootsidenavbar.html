@@ -208,7 +208,17 @@
             </ul>
         </li>
         {% endif %}
+        {% if user|user_in_department:"sideresolutions" %}
+        <li>
+            <a href="#Resolution" data-toggle="collapse"><strong style="color:lightgreen">R</strong>esolutions</a>
+            <ul id="Resolution" class="list-unstyled collapse">
+                <li><a href="{% url 'resolutions:resolution_list' %}">All</a></li>
 
+
+            </ul>
+        </li>
+
+        {% endif %}
 
         {% if user|user_in_department:"sidebank" %}
         <li>
@@ -225,6 +235,8 @@
             </ul>
         </li>
         {% endif %}
+
+
         <!-- Manpower nav-->
 
 

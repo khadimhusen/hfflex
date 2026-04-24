@@ -4,7 +4,6 @@ from . import views
 from django.conf.urls.static import static
 from django.conf import settings
 
-
 urlpatterns = [
                   path('admin/', admin.site.urls),
                   path('login/', views.user_login, name='home'),
@@ -19,7 +18,7 @@ urlpatterns = [
                   path('preorder/', include('preorder.urls')),
                   path('material/', include('material.urls')),
                   path('quality/', include("quality.urls")),
-                  path('marketing/',include("marketing.urls")),
+                  path('marketing/', include("marketing.urls")),
                   path('purchase/', include('purchase.urls')),
                   path('manpower/', include('manpower.urls')),
                   path('quotation/', include('quotation.urls')),
@@ -27,6 +26,8 @@ urlpatterns = [
                   path('test/', views.test, name='test'),
                   path('test1/', views.test1, name='test1'),
                   path('test2/', views.test2, name='test2'),
+                  path('ckeditor5/', include('django_ckeditor_5.urls')),
+                  path('resolutions/', include('resolutions.urls')),
                   path('permisiondenid/', views.noaccess, name='noaccess'),
                   path('api-auth/', include('rest_framework.urls')),
                   path('returnable/', include('returnable.urls')),

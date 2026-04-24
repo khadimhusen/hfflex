@@ -282,3 +282,10 @@ class CylinderMovement(models.Model):
 
     def __str__(self):
         return f'Date:- {self.movementdate} - Location:- {self.location}( {self.row} , {self.column} )'
+
+
+class ItemStandardParameter(models.Model):
+    from coa.models import StdParameter
+
+    standard_parameter = models.ForeignKey(StdParameter,on_delete=models.PROTECT)
+    value = models.CharField(max_length=32)

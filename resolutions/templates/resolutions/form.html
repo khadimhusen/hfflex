@@ -1,0 +1,48 @@
+{% extends "home.html" %}
+{% block extra_head %}{{ form.media }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ action }} Resolution</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card mb-3">
+      <div class="card-header">Resolution Details</div>
+      <div class="card-body row g-3">
+        <div class="col-md-4">{{ form.resolution_number.label_tag }}{{ form.resolution_number }}</div>
+        <div class="col-md-8">{{ form.title.label_tag }}{{ form.title }}</div>
+        <div class="col-md-4">{{ form.meeting_date.label_tag }}{{ form.meeting_date }}</div>
+        <div class="col-md-4">{{ form.meeting_type.label_tag }}{{ form.meeting_type }}</div>
+        <div class="col-md-4">{{ form.meeting_location.label_tag }}{{ form.meeting_location }}</div>
+        <div class="col-md-2">{{ form.status.label_tag }}{{ form.status }}</div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Resolution Content</div>
+      <div class="card-body">{{ form.content }}</div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Attached Documents</div>
+      <div class="card-body">
+        {{ formset.management_form }}
+        {% for doc_form in formset %}
+        <div class="row g-2 mb-2 align-items-center">
+          <div class="col-md-4">{{ doc_form.name }}</div>
+          <div class="col-md-6">{{ doc_form.file }}</div>
+          <div class="col-md-2">
+            {% if doc_form.instance.pk %}
+              {{ doc_form.DELETE.label_tag }} {{ doc_form.DELETE }}
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Resolution</button>
+    <a href="{% url 'resolutions:resolution_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+RESULT_CHOICE=[("Pass","Pass"),("Fail","Fail")]

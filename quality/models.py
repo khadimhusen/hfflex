@@ -2,6 +2,8 @@ from django.db import models
 from itemmaster.models import Process
 
 
+
+
 class QCTest(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
@@ -9,3 +11,4 @@ class QCTest(models.Model):
 
     def __str__(self):
         return self.name
+
