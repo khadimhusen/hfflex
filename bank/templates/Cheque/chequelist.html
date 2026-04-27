@@ -7,10 +7,6 @@
     .table{
   font-size: 12px;}
 
-
-
-
-
 </style>
 {% endblock customcss %}
 {% block content %}
@@ -43,19 +39,22 @@
                                 {{myFilter.form.status|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
-                                {{myFilter.form.cheque__from|as_crispy_field}}
+                                {{myFilter.form.cheque_from|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
-                                {{myFilter.form.cheque__to|as_crispy_field}}
+                                {{myFilter.form.cheque_to|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
                                 {{myFilter.form.bill_number|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
-                                {{myFilter.form.lock_record|as_crispy_field}}
+                                {{myFilter.form.from_bill|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
-                                {{myFilter.form.edited|as_crispy_field}}
+                                {{myFilter.form.to_bill|as_crispy_field}}
+                            </div>
+                            <div class="form-group col-md-1 mb-0 ">
+                                {{myFilter.form.lock_record|as_crispy_field}}
                             </div>
                             <div class="form-group col-md-1 mb-0 ">
                                 {{myFilter.form.editedby|as_crispy_field}}
@@ -149,7 +148,9 @@
 <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
 <script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
 
-<script>$(function () {$( "#id_cheque_date__from" ).datetimepicker({format: 'd/m/Y'});});</script>
-<script>$(function () {$( "#id_cheque_date__to" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_cheque_from" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_cheque_to" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_from_bill" ).datetimepicker({format: 'd/m/Y'});});</script>
+<script>$(function () {$( "#id_to_bill" ).datetimepicker({format: 'd/m/Y'});});</script>
 
 {% endblock javascripts %}
