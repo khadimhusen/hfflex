@@ -1,4 +1,5 @@
 {% extends 'home.html' %}
+{% load extra_tag %}
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -77,6 +78,10 @@
                 <div class="form-group col-md-1 mb-0" {% if request.user.username != "SLIT-1" %} hidden {% endif %}>
                     {{ form.lot|as_crispy_field }}
                 </div>
+
+
+                {% if user|user_in_department:"can_add_downtime" %}
+
                 <div class="form-group col-md-2 mb-0">
                    {% if downtimeform %}
                     <lable>Reason</lable>
@@ -101,9 +106,36 @@
                     {{form.DELETE|as_crispy_field }}
                     {% endfor %}
                     {% endif %}
-
                 </div>
-
+                {% else %}
+                <div hidden="hidden">
+                <div class="form-group col-md-2 mb-0">
+                   {% if downtimeform %}
+                    <lable>Reason</lable>
+                    {% for form in downtimeform %}
+                    {{form.reason|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-1 mb-0">
+                    {% if downtimeform %}
+                    <lable>Time</lable>
+                    {% for form in downtimeform %}
+                    <span hidden>{{form.id}}</span>
+                    {{form.downtime|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-1 mb-0">
+                    {% if downtimeform %}
+                    <lable>Delete</lable>
+                    {% for form in downtimeform %}
+                    {{form.DELETE|as_crispy_field }}
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                </div>
+                {% endif %}
 
 
             </div> <div class="form-group col-md-1 mb-0"><input class="btn btn-primary" type="submit" value="Save"></div>
