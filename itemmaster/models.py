@@ -286,9 +286,6 @@ class StdParameter(models.Model):
     parameter = models.CharField(max_length=64)
     unit_of_measure = models.CharField(max_length=32)
 
-    class Meta:
-        db_table = 'itemmaster_stdparameter'
-
 
     def __str__(self):
         return f"{self.parameter} : {self.unit_of_measure}"
