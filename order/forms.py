@@ -134,3 +134,24 @@ class JobItemAttributeForm(forms.ModelForm):
     class Meta:
         model = JobItemAttribute
         fields = ['item_attirbuate','attri_value']
+
+
+class JobCoaForm(forms.ModelForm):
+    class Meta:
+        model = JobCoa
+        fields = ["standard_parameter", "value"]
+
+    def __init__(self, *args, **kwargs):
+        super(JobCoaForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_show_labels = False
+
+class JobColorForm(forms.ModelForm):
+    class Meta:
+        model = JobColor
+        fields = ["color", "remark"]
+
+    def __init__(self, *args, **kwargs):
+        super(JobColorForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_show_labels = False

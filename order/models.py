@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
+
+
 from itemmaster.models import (ItemMaster, RawMaterial, PouchType, LamiRubber,
                                Process, ItemProcess, Color, ItemColor, ItemImage, Machine, AttributeMaster,
                                ItemAttribute)
@@ -163,6 +165,7 @@ class Job(models.Model):
             self.pouch_per_kg = round(1000 / (self.pouch_weight), 1)
             self.totalmeter = round(
                 self.kgqty * 1000000 * ((self.waste / 100) + 1) / (self.total_gsm * self.film_size), 0)
+
         super(Job, self).save(*args, **kwargs)
 
         if flag:
@@ -215,6 +218,13 @@ class Job(models.Model):
                 JobProcess.objects.create(job=self, process=pro.process, unit=pro.unit,
                                           qty=processqty, machine=pro.machine)
 
+            from itemmaster.models import  ItemStandardParameter
+
+            jobcoas = ItemStandardParameter.objects.filter(itemmaster=self.itemmaster)
+
+            for itemtestparam in jobcoas:
+                JobCoa.objects.create(job=self, standard_parameter=itemtestparam.standard_parameter,
+                                      value=itemtestparam.value)
 
     def __str__(self):
         return f"{self.id} - {self.itemname}"
@@ -581,3 +591,10 @@ class JobItemAttribute(models.Model):
 
     def __str__(self):
         return f'{self.item_attirbuate} = {self.attri_value}'
+
+class JobCoa(models.Model):
+    from coa.models import StdParameter
+
+    job= models.ForeignKey(Job,related_name='jobcoa',on_delete=models.PROTECT)
+    standard_parameter = models.ForeignKey(StdParameter, on_delete=models.PROTECT)
+    value = models.CharField(max_length=128)

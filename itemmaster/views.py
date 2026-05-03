@@ -3,10 +3,11 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.forms import modelformset_factory, inlineformset_factory
-from .models import ItemMaster, RawMaterial, ItemImage, ItemProcess, ItemColor, ItemAttribute
+from .models import ItemMaster, RawMaterial, ItemImage, ItemProcess, ItemColor, ItemAttribute, ItemStandardParameter
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
-from .forms import ItemMasterForm, RawMaterialForm, ItemProcessForm, ItemColorForm, CylinderMovementForm
+from .forms import ItemMasterForm, RawMaterialForm, ItemProcessForm, ItemColorForm, CylinderMovementForm, \
+    ItemStandardParameterForm
 from myproject.access import accessview
 from .filters import ItemmasterFilter
 
@@ -181,6 +182,8 @@ def itemmasterdetailedit(request, id=None):
     itemcolorformset = inlineformset_factory(ItemMaster, ItemColor, form=ItemColorForm, extra=8, max_num=8)
     itemattributeformset = inlineformset_factory(ItemMaster, ItemAttribute, fields=('item_attirbuate', 'attri_value'),
                                                  extra=8, max_num=12)
+    coa_parameter_formset = inlineformset_factory(ItemMaster,ItemStandardParameter,
+                                                  ItemStandardParameterForm, extra=5)
 
     if request.method == 'POST':
         item = ItemMasterForm(request.POST, instance=itemmaster)
@@ -189,6 +192,7 @@ def itemmasterdetailedit(request, id=None):
         formset3 = itemprocessformset(request.POST, prefix='processformset', instance=itemmaster)
         formset4 = itemcolorformset(request.POST, prefix='colorformset', instance=itemmaster)
         formset5 = itemattributeformset(request.POST, prefix='attributeformset', instance=itemmaster)
+        formset6 = coa_parameter_formset(request.POST, prefix='coaformset', instance=itemmaster)
 
         context['item_form'] = item
         context['image_forms'] = formset1
@@ -196,9 +200,10 @@ def itemmasterdetailedit(request, id=None):
         context['process_forms'] = formset3
         context['color_forms'] = formset4
         context['attribute_forms'] = formset5
+        context['coa_parameter_forms'] = formset6
         if (item.is_valid() and formset1.is_valid()
                 and formset2.is_valid() and formset3.is_valid()
-                and formset4.is_valid() and formset5.is_valid()):
+                and formset4.is_valid() and formset5.is_valid() and formset6.is_valid()):
 
             item.save(commit=False)
             item.editedby = request.user
@@ -208,6 +213,7 @@ def itemmasterdetailedit(request, id=None):
             formset3.save()
             formset4.save()
             formset5.save()
+            formset6.save()
             return HttpResponseRedirect(reverse('itemmaster:itemlist'))
         else:
             print("item erro", item.errors)
@@ -216,6 +222,7 @@ def itemmasterdetailedit(request, id=None):
             print("formset errror3", formset3.errors)
             print("formset errror4", formset4.errors)
             print("formset errror5", formset5.errors)
+            print("formset errror6", formset6.errors)
             context['something'] = "something"
             return render(request, 'itemmaster/edit_itemmaster.html', context)
     else:
@@ -226,12 +233,16 @@ def itemmasterdetailedit(request, id=None):
             formset3 = itemprocessformset(instance=itemmaster, prefix='processformset')
             formset5 = itemattributeformset(prefix='attributeformset', instance=itemmaster)
             formset4 = itemcolorformset(prefix='colorformset', instance=itemmaster)
+            formset6 = coa_parameter_formset( prefix='coaformset', instance=itemmaster)
+
             context['item_form'] = item
             context['image_forms'] = formset1
             context['rawmaterial_forms'] = formset2
             context['process_forms'] = formset3
             context['color_forms'] = formset4
             context['attribute_forms'] = formset5
+            context['coa_parameter_forms'] = formset6
+
             return render(request, 'itemmaster/edit_itemmaster.html', context)
         else:
             messages.success(request,

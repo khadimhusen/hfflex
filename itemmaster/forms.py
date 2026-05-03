@@ -34,7 +34,7 @@ class RawMaterialForm(forms.ModelForm):
 class ItemProcessForm(forms.ModelForm):
     class Meta:
         model = ItemProcess
-        fields = ['process', 'unit','machine']
+        fields = ['process', 'unit', 'machine']
 
     def __init__(self, *args, **kwargs):
         super(ItemProcessForm, self).__init__(*args, **kwargs)
@@ -56,17 +56,26 @@ class ItemColorForm(forms.ModelForm):
 class CylinderMovementForm(forms.ModelForm):
     movementdate = forms.DateTimeField(input_formats=('%d/%m/%Y',))
 
-
     class Meta:
         model = CylinderMovement
-        fields = ['movementdate','location','remark','row','column']
+        fields = ['movementdate', 'location', 'remark', 'row', 'column']
 
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         itemmaster = kwargs.pop('itemmaster')
-        cust=itemmaster.itemcustomer.name
-        super(CylinderMovementForm,self).__init__(*args,**kwargs)
+        cust = itemmaster.itemcustomer.name
+        super(CylinderMovementForm, self).__init__(*args, **kwargs)
         self.fields['location'].queryset = Customer.objects.filter(name="GODOWN-1") | \
                                            Customer.objects.filter(name="GODOWN-2") | \
-                                           Customer.objects.filter(name="PRODUCTION") |\
+                                           Customer.objects.filter(name="PRODUCTION") | \
                                            Customer.objects.filter(name=cust)
 
+
+class ItemStandardParameterForm(forms.ModelForm):
+    class Meta:
+        model = ItemStandardParameter
+        fields = ["standard_parameter", "value"]
+
+    def __init__(self, *args, **kwargs):
+        super(ItemStandardParameterForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_show_labels = False

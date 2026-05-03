@@ -81,9 +81,10 @@ def index_filter(value, i):
     return value[i - 1][1]
 
 
-@register.simple_tag
-def base_url():
-    return settings.DOMAINO
+@register.simple_tag(takes_context=True)
+def base_url(context):
+    request = context["request"]
+    return f"{request.scheme}://{request.get_host()}"
 
 
 @register.inclusion_tag('purchase_approval_pending.html')

@@ -26,6 +26,12 @@
         <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#menu3">JOB IMAGES</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu5">Coa Parameter</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu6">Color</a>
+        </li>
     </ul>
     <!-- Tab panes -->
     <div class="tab-content">
@@ -294,6 +300,90 @@
 
             </fieldset>
         </div>
+        <div id="menu6" class="container tab-pane">
+            <fieldset>
+                <legend>Job process form</legend>
+                {{ subforms6.management_form }}
+                {{ subforms6.non_form_errors }}
+                <div class="form-row">
+
+                    <div class="form-group col-md-4 mb-0">
+                        Color
+                    </div>
+                    <div class="form-group col-md-6 mb-0">
+                       Remark
+                    </div>
+
+                    <div class="form-group col-md-2 mb-0">
+                        DELETE
+                    </div>
+                </div>
+                {% for subform6 in subforms6 %}
+
+                {% for hidden in subforms6.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                        {{ subform6.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-4 mb-0">
+                        {{ subform6.color|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-6 mb-0">
+                        {{ subform6.remark|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform6.DELETE }}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div id="menu5" class="container tab-pane">
+            <fieldset>
+                <legend>Job process form</legend>
+                {{ subforms5.management_form }}
+                {{ subforms5.non_form_errors }}
+                <div class="form-row">
+
+                    <div class="form-group col-md-4 mb-0">
+                        Standard Parameter
+                    </div>
+                    <div class="form-group col-md-4 mb-0">
+                        Value
+                    </div>
+
+                    <div class="form-group col-md-2 mb-0">
+                        Delete
+                    </div>
+                </div>
+
+                {% for subform5 in subforms5 %}
+
+                {% for hidden in subforms5.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                <div class="form-row">
+                    <div class="form-group col-md-1 mb-0 " hidden="hidden">
+                        {{ subform5.id|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-4 mb-0">
+                        {{ subform5.standard_parameter|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-4 mb-0">
+                        {{ subform5.value|as_crispy_field }}
+                    </div>
+
+                    <div class="form-group col-md-2 mb-0">
+                        {{ subform5.DELETE }}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+
 
         <button type="submit " class="btn btn-primary">Save Changes</button>
     </div>

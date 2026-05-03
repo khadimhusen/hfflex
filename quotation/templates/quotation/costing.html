@@ -95,7 +95,9 @@
                         </div>
                         <hr style="background-color:blue">
                         <div class="form-group row">
-
+                            <div class="col-sm-1">
+                                <button class="btn btn-primary m-1" @click="getStructure('Unprinted2ply')">Plain2py</button>
+                            </div>
                             <div class="col-sm-1">
                                 <label for="pouching">Pouching</label>
                                 <input class="form-control" type="number" name="pouching" id="pouching"
@@ -122,6 +124,7 @@
                                 <label for="no_of_repeat">Pouch/Kg.</label>
                                 <input v-model="pouchPerKg" type="number" class="form-control" id="pouchPerKg">
                             </div>
+
 
                             <div class="col-sm-1">
                                 <button class="btn btn-primary m-1" @click="getStructure('2ply')">2ply</button>

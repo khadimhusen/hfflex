@@ -10,9 +10,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import datetime
 from django.utils import timezone
 from production.models import Stockdetail, ProdInput
-from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute
+from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute, JobCoa, JobColor
 from .forms import OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetailEditForm, JobProcessForm, JobImageForm, \
-    JobItemAttributeForm
+    JobItemAttributeForm, JobCoaForm, JobColorForm
 from customer.models import Address
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
@@ -319,6 +319,8 @@ def jobdetailedit(request, id):
     subformset3 = inlineformset_factory(Job, JobImage, form=JobImageForm, extra=3, can_delete=can_delete)
     subformset4 = inlineformset_factory(Job, JobItemAttribute, form=JobItemAttributeForm, extra=3,
                                         can_delete=can_delete)
+    subformset5 = inlineformset_factory(Job, JobCoa, form=JobCoaForm, extra=3, can_delete=can_delete)
+    subformset6 = inlineformset_factory(Job, JobColor, form=JobColorForm, extra=3, can_delete=can_delete)
 
     if request.method == 'POST':
         mainform = JobDetailEditForm(request.POST, instance=job)
@@ -326,19 +328,25 @@ def jobdetailedit(request, id):
         formset2 = subformset2(request.POST, prefix='jobprocess', instance=job)
         formset3 = subformset3(request.POST, request.FILES, prefix='jobimage', instance=job)
         formset4 = subformset4(request.POST, prefix='jobattr', instance=job)
+        formset5 = subformset5(request.POST, prefix='jobcoa', instance=job)
+        formset6 = subformset6(request.POST, prefix='jobcolor', instance=job)
         context['mainform'] = mainform
         context['subforms1'] = formset1
         context['subforms2'] = formset2
         context['subforms3'] = formset3
         context['subforms4'] = formset4
+        context['subforms5'] = formset5
+        context['subforms6'] = formset6
         if formset1.is_valid() and mainform.is_valid() and formset2.is_valid() \
-                and formset3.is_valid() and formset4.is_valid():
+                and formset3.is_valid() and formset4.is_valid() and formset5.is_valid() and formset6.is_valid():
             try:
                 mainform.save()
                 formset1.save()
                 formset2.save()
                 formset3.save()
                 formset4.save()
+                formset5.save()
+                formset6.save()
 
                 return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': id}))
             except:
@@ -353,11 +361,17 @@ def jobdetailedit(request, id):
         formset2 = subformset2(prefix='jobprocess', instance=job)
         formset3 = subformset3(prefix='jobimage', instance=job)
         formset4 = subformset4(prefix='jobattr', instance=job)
+        formset5 = subformset5(prefix='jobcoa', instance=job)
+        formset6 = subformset6(prefix='jobcolor', instance=job)
+
+
         context['mainform'] = mainform
         context['subforms1'] = formset1
         context['subforms2'] = formset2
         context['subforms3'] = formset3
         context['subforms4'] = formset4
+        context['subforms5'] = formset5
+        context['subforms6'] = formset6
         return render(request, 'job/edit.html', context)
 
 

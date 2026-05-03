@@ -1,21 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 from order.models import Job
-
-
-
-class StdParameter(models.Model):
-    parameter = models.CharField(max_length=64)
-    unit_of_measure = models.CharField(max_length=32)
-
-    def __str__(self):
-        return self.parameter
+from itemmaster.models import StdParameter
 
 
 class Coa(models.Model):
     from production.models import DispatchRegister
 
-    jobname = models.ForeignKey(Job, on_delete=models.PROTECT)
+    jobname = models.ForeignKey(Job, on_delete=models.PROTECT, related_name="coas")
     work_order = models.CharField(max_length=32, null=True, blank=True)
     delivery_challan = models.ForeignKey(DispatchRegister, on_delete=models.PROTECT,
                                          null=True, blank=True, related_name="coa")
@@ -31,7 +23,7 @@ class Coa(models.Model):
     editedby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='coaedited')
 
     def __str__(self):
-        return str(self.jobname)
+        return str(self.id) + " / " + str(self.jobname.itemname)
 
 
 class TestParameter(models.Model):
