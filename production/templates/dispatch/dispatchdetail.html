@@ -29,6 +29,7 @@
         </div>
         <div class="col-8 text-center">
             <h2 class="name font-weight-bold">H F FLEX PVT. LTD.</h2>
+            <h5>Gst:- 27AADCH3462K1ZF</h5>
             <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7219530793</p>
             <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
         </div>
@@ -36,14 +37,14 @@
     <hr>
 
 
-    <div class="row">
-        <div class="col-6 border">
+    <div class="row m-0">
+        <div class="col-6 border p-0">
             <h6><strong>Buyer:- {{ dispatch.customer }}</strong></h6>
             <p>Delivery Address:- <strong>{{ dispatch.address.addname }}</strong></p>
-            <p>{{ dispatch.address.add1 }}</p>
-            <p>{{ dispatch.address.add2 }}</p>
+            <p>{{ dispatch.address.add1 }} {{ dispatch.address.add2 }} </p>
             <p>Phone:- {{ dispatch.address.phone|default:"-" }}</p>
             <p>Pincode:- {{ dispatch.address.pincode|default_if_none:"" }}</p>
+            <p>Gst:- {{ dispatch.customer.gst|default_if_none:"" }}</p>
         </div>
         <div class="col-6 border">
             <h4>Challan No:- <strong>{{ dispatch.id }}</strong></h4>
@@ -123,7 +124,7 @@
         <tbody>
             {% for item in dispatch.otherdispatchitem.all %}
             <tr>
-                <td>{{ item.item_detail }}</td>
+                <td><pre class="border-0">{{ item.item_detail }}</pre></td>
                 <td>{{ item.qty|floatformat:-2 }} {{ item.unit }}</td>
                 <td>{{ item.approxvalue|default:"" }}</td>
             </tr>
@@ -150,8 +151,11 @@
 
 
     <div class="row">
-        <div class="col-7 border border-dark" style="height:130px">
+        <div class="col-6 border border-dark" style="height:130px">
             <h5><strong>RECEIVER'S SIGNATURE</strong></h5>
+        </div>
+        <div class="col-1 border-0" style="height:130px">
+
         </div>
         <div class="col-5 border border-dark" style="height:130px">
             <h5><strong>AUTHORISED SIGNATURE</strong></h5>

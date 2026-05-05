@@ -191,9 +191,14 @@
         </div>
 
     </div>
- {% if  quote.approvedby %}
+        {% if  quote.approvedby %}
                      <a class="btn btn-danger btn-sm m-2 p-2" href="{% url 'quotation:letterheadquotepdf' quote.id %}">for letterhead Quote Pdf</a>
-                        {% endif %}
+        {% endif %}
+    <a href="{% url 'quotation:copyquote' quote.id %}"
+   class="btn btn-primary"
+   onclick="return confirm('Create a new quotation by copying this one?');">
+    <i class="fa fa-copy"></i> Copy Quote
+</a>
 </div>
 
 
