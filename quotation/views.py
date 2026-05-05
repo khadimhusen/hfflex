@@ -256,34 +256,33 @@ from django.db import transaction
 def copyquote(request, id=None):
     original_quote = get_object_or_404(Quotation, id=id)
 
+    # Server-side verification
+    if request.method != 'POST':
+        messages.warning(request, 'Invalid request method.')
+        return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': id}))
+
+    confirm_id = request.POST.get('confirm_id', '').strip()
+    if confirm_id != str(id):
+        messages.error(request, 'Quote ID confirmation did not match. Copy cancelled.')
+        return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': id}))
+
+    # ... rest of your copy logic
     try:
         with transaction.atomic():
-            # Save related items BEFORE modifying the original object
             original_items = list(original_quote.quotationitems.all())
             original_terms = list(original_quote.quote_term.all())
 
-            # Also copy AdditionTerm if it has a FK to Quotation
-            # (adjust related_name based on your AdditionTerm model)
-            original_addition_terms = list(original_quote.additionalterms.all())
-
-            # Duplicate the main quotation
             new_quote = original_quote
             new_quote.pk = None
-
-            # Reset approval/tracking fields
             new_quote.approvedby = None
             new_quote.approved = None
             new_quote.status = "Pending"
             new_quote.createdby = request.user
             new_quote.editedby = request.user
-            # 'created' and 'edited' will auto-update because of auto_now_add / auto_now
-
             new_quote.save()
 
-            # Copy ManyToMany terms
             new_quote.quote_term.set(original_terms)
 
-            # Duplicate quotation items
             for item in original_items:
                 item.pk = None
                 item.quote = new_quote
@@ -291,13 +290,7 @@ def copyquote(request, id=None):
                 item.editedby = request.user
                 item.save()
 
-            # Duplicate addition terms
-            for term in original_addition_terms:
-                term.pk = None
-                term.quote = new_quote  # adjust FK field name if different
-                term.save()
-
-        messages.success(request, 'Quotation copied successfully. You can now edit it.')
+        messages.success(request, 'Quotation copied successfully.')
         return HttpResponseRedirect(reverse('quotation:editquote', kwargs={'id': new_quote.id}))
 
     except Exception as e:

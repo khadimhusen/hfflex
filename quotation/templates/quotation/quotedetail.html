@@ -194,11 +194,16 @@
         {% if  quote.approvedby %}
                      <a class="btn btn-danger btn-sm m-2 p-2" href="{% url 'quotation:letterheadquotepdf' quote.id %}">for letterhead Quote Pdf</a>
         {% endif %}
-    <a href="{% url 'quotation:copyquote' quote.id %}"
-   class="btn btn-primary"
-   onclick="return confirm('Create a new quotation by copying this one?');">
-    <i class="fa fa-copy"></i> Copy Quote
-</a>
+
+    <form method="post" action="{% url 'quotation:copyquote' quote.id %}"
+      onsubmit="return confirm('Are you sure you want to copy this quotation?');">
+    {% csrf_token %}
+    <label>Type Quote ID <strong>{{ quote.id }}</strong> to confirm:</label>
+    <input type="text" name="confirm_id" required class="form-control col-2">
+    <button type="submit" class="btn btn-primary mt-2">
+        <i class="fa fa-copy"></i> Copy Quote
+    </button>
+</form>
 </div>
 
 
