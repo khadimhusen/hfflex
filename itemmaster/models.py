@@ -60,7 +60,7 @@ class ItemMaster(models.Model):
                 ('Not Applicable', 'Not Applicable'),
                 ('Sent For Repairing', 'Sent For Repairing'),
                 ('Returned To Customer', 'Returned To Customer'),
-                ('Not Available','Not Available')]
+                ('Not Available', 'Not Available')]
 
     itemname = models.CharField(max_length=256)
     itemcode = models.CharField(max_length=8, null=True, blank=True)
@@ -77,8 +77,8 @@ class ItemMaster(models.Model):
                                      null=True, default=0, validators=[MaxValueValidator(1300), MinValueValidator(360)])
     cylinder_status = models.CharField(max_length=126, choices=CYLINDER, default="Not Available", blank=True,
                                        null=True)
-    cylinder_manufacture=models.ForeignKey(Customer,limit_choices_to={"is_supplier": True,"active":True},
-                                           blank=True,null=True, on_delete=models.PROTECT)
+    cylinder_manufacture = models.ForeignKey(Customer, limit_choices_to={"is_supplier": True, "active": True},
+                                             blank=True, null=True, on_delete=models.PROTECT)
     printing = models.CharField(max_length=32, choices=[('Surface', 'Surface'),
                                                         ('Reverse', 'Reverse'),
                                                         ('Unprinted', 'Unprinted')], default="Reverse")
@@ -273,19 +273,30 @@ class CylinderMovement(models.Model):
     item = models.ForeignKey(ItemMaster, on_delete=models.PROTECT, related_name='cylinderMovement')
     location = models.ForeignKey(Customer, related_name='cylinderMovement', on_delete=models.PROTECT)
     remark = models.CharField(max_length=256, null=True, blank=True)
-    row = models.CharField(max_length=4,choices=row_choice)
+    row = models.CharField(max_length=4, choices=row_choice)
     column = models.PositiveSmallIntegerField()
     deleted = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='cylindercreated')
 
-
     def __str__(self):
         return f'Date:- {self.movementdate} - Location:- {self.location}( {self.row} , {self.column} )'
 
+class StdParameter(models.Model):
+    parameter = models.CharField(max_length=64)
+    unit_of_measure = models.CharField(max_length=32)
+
+
+    def __str__(self):
+        return f"{self.parameter} : {self.unit_of_measure}"
+
 
 class ItemStandardParameter(models.Model):
-    from coa.models import StdParameter
 
-    standard_parameter = models.ForeignKey(StdParameter,on_delete=models.PROTECT)
-    value = models.CharField(max_length=32)
+    itemmaster = models.ForeignKey(ItemMaster, on_delete=models.PROTECT, related_name="itemstandardparameter")
+    standard_parameter = models.ForeignKey(StdParameter, on_delete=models.PROTECT)
+    value = models.CharField(max_length=128)
+
+
+    def __str__(self):
+        return str(self.itemaster)[0:20] + " : "  + self.value +" : "+str(self.standard_parameter)

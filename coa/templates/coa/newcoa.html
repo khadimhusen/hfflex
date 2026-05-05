@@ -1,0 +1,73 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST" id="coaForm" data-address-url="{% url 'order:ajax_load_address' %}" novalidate>
+
+    <div class="card-body">
+        <h2 class="card-title">New Order Form</h2>
+
+    </div>
+    {% csrf_token %}
+
+    {{temp_data}}
+    {{customer}}
+    {{ newcoaform.management_form }}
+    <div class="form-row">
+        <div class="form-group col-md-8 mb-0">
+            {{ newcoaform.work_order|as_crispy_field }}
+        </div>
+
+
+        <div class="form-group col-md-2 mb-0">
+            {{ newcoaform.delivery_challan|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ newcoaform.invoice_no|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ newcoaform.qty|as_crispy_field }}
+        </div>
+    </div>
+
+    <button type="submit " class="btn btn-primary">Save Coa</button>
+</form>
+{{ newcoaform.errors }}
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_podate" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(),
+
+});
+    });
+
+</script>
+<script>
+    $(function () {
+      $( "#id_deliverydate" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(Date.now() + 864e5 * 20),
+
+});
+    });
+
+
+</script>
+
+{% endblock javascripts%}

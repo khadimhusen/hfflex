@@ -22,6 +22,7 @@ urlpatterns = [
                   path('purchase/', include('purchase.urls')),
                   path('manpower/', include('manpower.urls')),
                   path('quotation/', include('quotation.urls')),
+                  path('coa/', include('coa.urls')),
                   path('', views.user_login),
                   path('test/', views.test, name='test'),
                   path('test1/', views.test1, name='test1'),

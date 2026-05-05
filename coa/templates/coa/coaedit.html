@@ -1,0 +1,99 @@
+{% extends 'home.html' %}
+{% load static %}
+
+
+{% load crispy_forms_tags %}
+
+
+{% block customcss%}
+
+{% endblock customcss %}
+
+{% block content %}
+
+<form method="POST" id="coaForm" data-address-url="{% url 'order:ajax_load_address' %}" novalidate>
+
+    <div class="card-body">
+        <h3 class="card-title">Certificate Of Analysis</h3>
+        <h5 class="card-title">{{coa}}</h5>
+
+    </div>
+
+    {% if coaform.errors or testform.errors or testform.non_form_errors %}
+    <div class="alert alert-danger">
+        <strong>Please fix the following:</strong>
+
+        {{ coaform.non_field_errors }}
+        {% for field in coaform %}
+        {% if field.errors %}
+        <div>{{ field.label }}: {{ field.errors|join:", " }}</div>
+        {% endif %}
+        {% endfor %}
+
+        {{ testform.non_form_errors }}
+        {% for form in testform %}
+        {% for field in form %}
+        {% if field.errors %}
+        <div>Row {{ forloop.parentloop.counter }} — {{ field.label }}: {{ field.errors|join:", " }}</div>
+        {% endif %}
+        {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% csrf_token %}
+
+    {{customer}}
+    {{ testform.management_form }}
+    <div class="form-row">
+        <div class="form-group col-md-2 mb-0">
+
+            {{ coaform.work_order|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ coaform.delivery_challan|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ coaform.invoice_no|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ coaform.qty|as_crispy_field }}
+        </div>
+    </div>
+
+    <hr>
+    <div class="form-row">
+        <div class="form-group col-md-4 mb-0">
+            Standard Parameter
+        </div>
+        <div class="form-group col-md-4 mb-0">
+            Test Value
+        </div>
+    </div>
+
+    {% for form in testform %}
+    <div class="form-row">
+        <div class="form-group col-md-4 mb-0">
+             {{ form.id }}
+            {{ form.standard_parameter|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-4 mb-0">
+            {{ form.result|as_crispy_field }}
+        </div>
+    </div>
+    {% endfor %}
+    <hr>
+
+
+    <button type="submit " class="btn btn-primary">Save Coa</button>
+</form>
+{{ coaform.non_field.errors }}
+{{ testform.non_field.errors }}
+{% endblock content %}
+
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+
+
+{% endblock javascripts%}

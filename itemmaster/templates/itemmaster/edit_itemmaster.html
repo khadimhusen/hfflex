@@ -33,6 +33,9 @@
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#menu4">ITEM COLORS</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#menu6">COA</a>
+            </li>
 
         </ul>
         <!-- Tab panes -->
@@ -267,6 +270,41 @@
                 {{ hidden }}
                 {% endfor %}
                 {% endfor %}
+
+            </div>
+            <div id="menu6" class="container tab-pane fade"><br>
+                <h5> COA list</h5>
+                {{ coa_parameter_forms.management_form}}
+                {{ coa_parameter_forms.non_form_errors}}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        Parameter
+                    </div>
+                    <div class="form-group col-md-5 mb-0">
+                        Unit of Measure
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        To Delete
+                    </div>
+                </div>
+                {% for form in coa_parameter_forms %}
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-0">
+                        {{ form.standard_parameter|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-5 mb-0">
+                        {{ form.value|as_crispy_field }}
+                    </div>
+                    <div class="form-group col-md-1 mb-0">
+                        {{ form.DELETE|as_crispy_field }}
+                    </div>
+                </div>
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% endfor %}
+
+
 
             </div>
 
