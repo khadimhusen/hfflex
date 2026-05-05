@@ -15,6 +15,7 @@ urlpatterns = [
     path('quotepdf/<int:id>/',pdfviews.quotepdf,name='quotepdf'),
     path('letterheadquotepdf/<int:id>/',pdfviews.letterheadquotepdf,name='letterheadquotepdf'),
     path('quoteapproval/<int:id>/',views.quoteapproval,name='quoteapproval'),
+    path('copy/<int:id>/', views.copyquote, name='copyquote'),
 
 
 ]

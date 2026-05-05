@@ -246,3 +246,60 @@ def clonequote(request, id=None):
         context['quoteitemform'] = quoteitemform
         context['additiontermform'] = additiontermform
         return render(request, 'quotation/editquote.html', context)
+
+
+from django.db import transaction
+
+
+@login_required(login_url='/login/')
+@accessview
+def copyquote(request, id=None):
+    original_quote = get_object_or_404(Quotation, id=id)
+
+    try:
+        with transaction.atomic():
+            # Save related items BEFORE modifying the original object
+            original_items = list(original_quote.quotationitems.all())
+            original_terms = list(original_quote.quote_term.all())
+
+            # Also copy AdditionTerm if it has a FK to Quotation
+            # (adjust related_name based on your AdditionTerm model)
+            original_addition_terms = list(original_quote.additionalterms.all())
+
+            # Duplicate the main quotation
+            new_quote = original_quote
+            new_quote.pk = None
+
+            # Reset approval/tracking fields
+            new_quote.approvedby = None
+            new_quote.approved = None
+            new_quote.status = "Pending"
+            new_quote.createdby = request.user
+            new_quote.editedby = request.user
+            # 'created' and 'edited' will auto-update because of auto_now_add / auto_now
+
+            new_quote.save()
+
+            # Copy ManyToMany terms
+            new_quote.quote_term.set(original_terms)
+
+            # Duplicate quotation items
+            for item in original_items:
+                item.pk = None
+                item.quote = new_quote
+                item.createdby = request.user
+                item.editedby = request.user
+                item.save()
+
+            # Duplicate addition terms
+            for term in original_addition_terms:
+                term.pk = None
+                term.quote = new_quote  # adjust FK field name if different
+                term.save()
+
+        messages.success(request, 'Quotation copied successfully. You can now edit it.')
+        return HttpResponseRedirect(reverse('quotation:editquote', kwargs={'id': new_quote.id}))
+
+    except Exception as e:
+        messages.error(request, f'Error copying quotation: {str(e)}')
+        return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': id}))
