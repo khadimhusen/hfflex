@@ -14,11 +14,13 @@ from .models import Coa, TestParameter
 from order.models import JobCoa
 
 
-
 @login_required(login_url='/login/')
 @accessview
-def addcoa(request, jobid):
+def addcoa(request, jobid=None, dcid=None):
     job = get_object_or_404(Job, id=jobid)
+    if dcid:
+        dc = get_object_or_404(Job, id=dcid)
+
     context = {}
 
     if request.method == 'POST':
@@ -33,9 +35,13 @@ def addcoa(request, jobid):
         else:
             return render(request, 'coa/newcoa.html', context)
     else:
-        coaform = CoaForm()
+        if dc:
+            coaform = CoaForm(initial={'delivery_challan':dc})
+        else:
+            coaform = CoaForm()
         context['newcoaform'] = coaform
         return render(request, 'coa/newcoa.html', context)
+
 
 @login_required(login_url='/login/')
 @accessview
@@ -48,7 +54,7 @@ def coaedit(request, id):
 
     if request.method == 'POST':
         coaform = CoaForm(request.POST, instance=coa)
-        testform = TestFormSet(request.POST, instance=coa,form_kwargs={'coa':coa})
+        testform = TestFormSet(request.POST, instance=coa, form_kwargs={'coa': coa})
 
         if coaform.is_valid() and testform.is_valid():
             coa_instance = coaform.save(commit=False)
@@ -61,12 +67,10 @@ def coaedit(request, id):
             messages.error(request, "Something went wrong")
     else:
         coaform = CoaForm(instance=coa)
-        testform = TestFormSet(instance=coa,form_kwargs={'coa':coa})
+        testform = TestFormSet(instance=coa, form_kwargs={'coa': coa})
 
     context = {'coa': coa, 'coaform': coaform, 'testform': testform}
     return render(request, 'coa/coaedit.html', context)
-
-
 
 
 @login_required
@@ -119,7 +123,6 @@ def coadetail(request, pk):
         'rows': rows,
     }
     return render(request, 'coa/coadetail.html', context)
-
 
 
 @login_required

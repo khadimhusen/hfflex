@@ -403,8 +403,12 @@
                     </thead>
                     <tbody>
                     {% if not packer.grouper == 0 %}
-                    <h3><a href="{% url 'production:dispatchdetail' packer.grouper %} ">
-                        Dispatch id = {{packer.grouper}}--{{packer.grouper.dispatched_date}}</a></h3>
+                    <h3>
+                        <a href="{% url 'production:dispatchdetail' packer.grouper %} ">
+                        Dispatch id = {{packer.grouper}}--{{packer.grouper.dispatched_date}}
+                        </a>
+
+                    </h3>
                     {% else %}
                     <h3>Pending For Dispatch</h3>
                     {% endif %}
