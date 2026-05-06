@@ -69,7 +69,7 @@
             <tbody>
               <tr>
                 <th width="40%">Created By:</th>
-                <td>{{ coa.approver_name }}</td>
+                <td>{{ coa.createdby.get_full_name|default:coa.createdby.username|default:"—" }}</td>
               </tr>
               <tr>
                 <th>Created On:</th>
@@ -77,7 +77,7 @@
               </tr>
               <tr>
                 <th>Approved By:</th>
-                <td>{{ coa.approvedby.get_full_name|default:coa.approvedby.username|default:"—" }}</td>
+                <td>{{ coa.approver_name }}</td>
               </tr>
               <tr>
                 <th>Approved On:</th>
