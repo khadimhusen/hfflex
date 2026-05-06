@@ -541,7 +541,7 @@ def dispatchunlock(request, id=None):
 @accessview
 def dispatchdetailedit(request, id=None):
     disp = get_object_or_404(DispatchRegister, id=id)
-    formset=inlineformset_factory(DispatchRegister,OtherDispatchItem,OtherItemDispatchForm,can_delete=True,max_num=12)
+    formset=inlineformset_factory(DispatchRegister,OtherDispatchItem,OtherItemDispatchForm,can_delete=True,max_num=20)
     otheritemform=formset(request.POST or None,instance=disp)
     displock = disp.lock
     context = {}
