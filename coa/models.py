@@ -25,6 +25,12 @@ class Coa(models.Model):
     def __str__(self):
         return str(self.id) + " / " + str(self.jobname.itemname)
 
+    @property
+    def approver_name(self):
+        if not self.approvedby:
+            return "—"
+        return self.approvedby.get_full_name() or self.approvedby.username
+
 
 class TestParameter(models.Model):
     coa = models.ForeignKey(Coa, on_delete=models.PROTECT, related_name="testparameter")
