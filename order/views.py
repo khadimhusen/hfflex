@@ -160,6 +160,8 @@ def jobdetail(request, id):
         else:
             return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
     else:
+        jobcoacount = job.jobcoa.count()
+        context ['jobcoacount']=jobcoacount
         context['status_form']           = parentform(instance=job)
         context['accountclearance_form'] = parentform(instance=job,
                                                        initial={"jobstatus": "Unplanned",

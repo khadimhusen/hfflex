@@ -6,6 +6,7 @@ app_name = 'coa'
 
 urlpatterns = [
     path('new/<int:jobid>/', views.addcoa, name='addcoa'),
+    path('newcoadc/<int:jobid>/<int:dcid>/', views.addcoa, name='addcoadc'),
     path('coaedit/<int:id>', views.coaedit, name='coaedit'),
     path('coadetail/<int:pk>', views.coadetail, name='coaedit'),
 ]

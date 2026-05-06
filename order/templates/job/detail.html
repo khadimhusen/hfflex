@@ -383,9 +383,6 @@
             <div class="container">
                 <div class="row">
                     <div class="col-3">
-                {% for coa in job.coas.all %}
-                <a href="{% url 'coa:coaedit' coa.id %}" >{{coa}}</a>
-                {% endfor %}
                 </div>
                     <div class="col-9">
                 {% regroup finished_list by dispatched_id as packs %}
@@ -403,12 +400,23 @@
                     </thead>
                     <tbody>
                     {% if not packer.grouper == 0 %}
-                    <h3>
-                        <a href="{% url 'production:dispatchdetail' packer.grouper %} ">
+                    <div class="row">
+                        <div class="col-4">
+                        <a class= "text-left", href="{% url 'production:dispatchdetail' packer.grouper %} ">
                         Dispatch id = {{packer.grouper}}--{{packer.grouper.dispatched_date}}
                         </a>
+                        </div>
+                        <div class="col-4">
+                        </div>
+                        {% if jobcoacount %}
+                        <div class="col-4">
+                        <a class="text-right"  href="{% url 'coa:addcoadc' job.id packer.grouper %}">
+                        Add coa
+                        </a>
+                        </div>
+                        {% endif %}
 
-                    </h3>
+                    </div>
                     {% else %}
                     <h3>Pending For Dispatch</h3>
                     {% endif %}
@@ -425,7 +433,7 @@
                     {% endfor %}
 
                     </tbody>
-                    <tfoo>
+                    <tfoot>
                     <tr style="font-weight: bold;">
                         <td> Total</td>
                         <td id="grosswt{{forloop.counter}}" ></td>
@@ -435,7 +443,9 @@
                         <td id="dispatched{{forloop.counter}}" ></td>
                     </tr>
 
-                    </tfoo>
+                    </tfoot>
+
+
                 </table>
                     <script>
 

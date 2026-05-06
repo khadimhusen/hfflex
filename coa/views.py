@@ -17,30 +17,34 @@ from order.models import JobCoa
 @login_required(login_url='/login/')
 @accessview
 def addcoa(request, jobid=None, dcid=None):
-    job = get_object_or_404(Job, id=jobid)
-    if dcid:
-        dc = get_object_or_404(Job, id=dcid)
+    try:
+        coa = Coa.objects.get(jobname_id=jobid, delivery_challan_id=dcid)
+        return HttpResponseRedirect(reverse('coa:coaedit', kwargs={'id': coa.id}))
+    except:
 
-    context = {}
+        job = get_object_or_404(Job, id=jobid)
 
-    if request.method == 'POST':
-        coaform = CoaForm(request.POST)
-        context['newcoaform'] = coaform
-        if coaform.is_valid():
-            newcoa = coaform.save(commit=False)
-            newcoa.createdby = request.user
-            newcoa.jobname = job
-            newcoa.save()
-            return HttpResponseRedirect(reverse('coa:coaedit', kwargs={'id': newcoa.id}))
+        context = {}
+
+        if request.method == 'POST':
+            coaform = CoaForm(request.POST)
+            context['newcoaform'] = coaform
+            if coaform.is_valid():
+                newcoa = coaform.save(commit=False)
+                newcoa.createdby = request.user
+                newcoa.jobname = job
+                newcoa.save()
+                return HttpResponseRedirect(reverse('coa:coaedit', kwargs={'id': newcoa.id}))
+            else:
+                return render(request, 'coa/newcoa.html', context)
         else:
+            if dcid:
+                dc = get_object_or_404(Job, id=dcid)
+                coaform = CoaForm(initial={'delivery_challan': dc})
+            else:
+                coaform = CoaForm()
+            context['newcoaform'] = coaform
             return render(request, 'coa/newcoa.html', context)
-    else:
-        if dc:
-            coaform = CoaForm(initial={'delivery_challan':dc})
-        else:
-            coaform = CoaForm()
-        context['newcoaform'] = coaform
-        return render(request, 'coa/newcoa.html', context)
 
 
 @login_required(login_url='/login/')
