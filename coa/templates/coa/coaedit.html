@@ -15,7 +15,7 @@
 
     <div class="card-body">
         <h3 class="card-title">Certificate Of Analysis</h3>
-        <h5 class="card-title">{{coa}}</h5>
+        <h5 class="card-title"><a href="{% url 'coa:coadetail' coa.id %}">{{coa}}</a></h5>
 
     </div>
 
@@ -83,8 +83,13 @@
     {% endfor %}
     <hr>
 
-
+    <div class="form-row">
+        <div class="form-group col-md-12 mb-0" >
+            {{ coaform.remark|as_crispy_field }}
+        </div>
+    </div>
     <button type="submit " class="btn btn-primary">Save Coa</button>
+
 </form>
 {{ coaform.non_field.errors }}
 {{ testform.non_field.errors }}

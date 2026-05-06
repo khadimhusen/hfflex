@@ -11,7 +11,15 @@ from itemmaster.models import StdParameter, ItemStandardParameter
 class CoaForm(forms.ModelForm):
     class Meta:
         model = Coa
-        fields = ["work_order", "delivery_challan", "invoice_no", "qty"]
+        fields = ["work_order", "delivery_challan", "invoice_no", "qty","remark",]
+        widgets = {
+        "remark": forms.Textarea(attrs={'rows': 1, 'cols': 80,
+                                             'style': 'overflow: hidden',
+                                             'oninput': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                             'onfocus': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                             'list': 'itemlist'
+                                             })
+    }
 
 
 class TestParameterForm(forms.ModelForm):

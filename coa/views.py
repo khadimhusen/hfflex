@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -19,7 +21,7 @@ from order.models import JobCoa
 def addcoa(request, jobid=None, dcid=None):
     try:
         coa = Coa.objects.get(jobname_id=jobid, delivery_challan_id=dcid)
-        return HttpResponseRedirect(reverse('coa:coaedit', kwargs={'id': coa.id}))
+        return HttpResponseRedirect(reverse('coa:coadetail', kwargs={'pk': coa.id}))
     except:
 
         job = get_object_or_404(Job, id=jobid)
@@ -53,7 +55,7 @@ def coaedit(request, id):
     coa = get_object_or_404(Coa, id=id)
     TestFormSet = inlineformset_factory(
         Coa, TestParameter, form=TestParameterForm,
-        extra=1, can_delete=True
+        extra=6, can_delete=True,max_num=20
     )
 
     if request.method == 'POST':
@@ -77,7 +79,8 @@ def coaedit(request, id):
     return render(request, 'coa/coaedit.html', context)
 
 
-@login_required
+@login_required(login_url='/login/')
+@accessview
 def coadetail(request, pk):
     coa = get_object_or_404(
         Coa.objects.select_related(
@@ -129,7 +132,8 @@ def coadetail(request, pk):
     return render(request, 'coa/coadetail.html', context)
 
 
-@login_required
+@login_required(login_url='/login/')
+@accessview
 def add_test_parameter(request, coa_id):
     coa = get_object_or_404(
         Coa.objects.select_related('jobname__itemmaster'),
@@ -150,3 +154,20 @@ def add_test_parameter(request, coa_id):
         'form': form,
         'coa': coa,
     })
+
+
+@login_required(login_url='/login/')
+@accessview
+def coaapprove(request, pk):
+    coadetail = get_object_or_404(Coa, pk=pk)
+
+    # Server-side verification
+    if request.method != 'POST':
+        messages.warning(request, 'Invalid request method.')
+        return HttpResponseRedirect(reverse('coa:coadetail', kwargs={'pk': pk}))
+    else:
+        coadetail.approvedby = request.user
+        coadetail.approve_date = datetime.now()
+        coadetail.save()
+        messages.success(request, 'Coa is Approved')
+        return HttpResponseRedirect(reverse('coa:coadetail', kwargs={'pk': pk}))

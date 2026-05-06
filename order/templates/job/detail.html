@@ -408,7 +408,8 @@
                         </div>
                         <div class="col-4">
                         </div>
-                        {% if jobcoacount %}
+                        {% if jobcoacount and user|user_in_department:"can_create_coa" %}
+
                         <div class="col-4">
                         <a class="text-right"  href="{% url 'coa:addcoadc' job.id packer.grouper %}">
                         Add coa

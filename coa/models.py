@@ -13,6 +13,7 @@ class Coa(models.Model):
                                          null=True, blank=True, related_name="coa")
     invoice_no = models.CharField(max_length=64, null=True, blank=True)
     qty = models.CharField(max_length=32)
+    remark = models.TextField(max_length=1024, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='coacreated')
