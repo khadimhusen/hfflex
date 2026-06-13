@@ -1,0 +1,70 @@
+<!doctype html>
+{% load extra_tag %}
+{% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+    <!--fixed css -->
+    {% block fixedcss %}
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootadmin.min.css' %}">
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+    </style>
+    {% endblock fixedcss %}
+
+    {% block customcss %}
+    <!--addition css here-->
+    {% endblock customcss %}
+
+    <!-- fixed scripts -->
+    {% block fixedscript %}
+    <script src="{% static 'bootadmin.net/js/jquery.min.js' %}"></script>
+        <script src="https://unpkg.com/htmx.org@1.5.0"
+        integrity="sha384-oGA+prIp5Vchu6we2YkI51UtVzN9Jpx2Z7PnR1I78PnZlN8LkrCT4lqqqmDkyrvI"
+        crossorigin="anonymous"></script>
+    {% endblock fixedscript %}
+
+    {% block topscript %}
+    {% endblock topscript %}
+
+    <title>H F FLEX</title>
+</head>
+
+<body class="bg-light">
+    <div class="d-flex">
+        <div class="content p-4">
+            {% block content %}
+            {% endblock content %}
+        </div>
+    </div>
+
+
+    {% block scripts %}
+
+    <script src="{% static 'bootadmin.net/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'bootadmin.net/js/bootadmin.min.js' %}"></script>
+    <script>$(document).ready(function () { $("#sidebarhide").trigger('click'); });</script>
+    {% endblock scripts %}
+
+    {% block javascripts %}
+    {% endblock javascripts %}
+
+
+</body>
+
+</html>

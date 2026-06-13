@@ -118,7 +118,6 @@ def write_job_changes(sender, instance, created, **kwargs):
     JobChangeLog.objects.bulk_create(logs)
 
 
-
 @receiver(post_save, sender=Job)
 def sync_schedule_on_job_status(sender, instance, created, **kwargs):
     if created:
@@ -127,7 +126,6 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
     job_status = instance.jobstatus
 
     if job_status in HOLD_STATUSES:
-        # Get all pending schedules for this job
         schedules = MachineSchedule.objects.filter(
             jobprocess__job=instance,
             status='Pending',
@@ -140,18 +138,25 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
                 offset  = 1000
                 old_pos = schedule.queue_position
 
-                # Step 1 — shift rows after this position down to fill gap
+                # Step 1 — move THIS schedule to temp position first
+                MachineSchedule.objects.filter(pk=schedule.pk).update(
+                    queue_position=offset + 500
+                )
+
+                # Step 2 — close gap, skip our temp row
                 MachineSchedule.objects.filter(
                     machine=machine,
-                    queue_position__gt=old_pos
+                    queue_position__gt=old_pos,
+                    queue_position__lt=offset
                 ).update(queue_position=F('queue_position') + offset)
 
                 MachineSchedule.objects.filter(
                     machine=machine,
-                    queue_position__gt=offset
+                    queue_position__gt=offset,
+                    queue_position__lt=offset + 500
                 ).update(queue_position=F('queue_position') - offset - 1)
 
-                # Step 2 — find new end of queue
+                # Step 3 — find new end of queue
                 last = (
                     MachineSchedule.objects
                     .filter(machine=machine, queue_position__gt=0)
@@ -160,7 +165,7 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
                 )
                 new_pos = (last.queue_position + 1) if last else 1
 
-                # Step 3 — move schedule to end and set Hold
+                # Step 4 — move to end and set Hold
                 MachineSchedule.objects.filter(pk=schedule.pk).update(
                     status='Hold',
                     queue_position=new_pos,
@@ -169,7 +174,6 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
                 recalculate_timeline(machine)
 
     elif job_status in RELEASE_STATUSES:
-        # Release held schedules back to Pending — keep at current position
         schedules = MachineSchedule.objects.filter(
             jobprocess__job=instance,
             status='Hold',

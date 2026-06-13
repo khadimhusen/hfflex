@@ -137,7 +137,11 @@
                   {% if is_manager or is_supervisor %}<th></th>{% endif %}
                   <th>#</th>
                   <th>Job / Reason</th>
+
+                  {% if machine.machinename == 'PRINTING-1' %}
                   <th>Cylinder</th>
+                  <th>Approval</th>
+                  {% endif %}
                   <th>Material</th>
                   <th>Qty</th>
                   <th>Speed</th>
@@ -156,21 +160,30 @@
                 {# Completed rows #}
                 {% for s in completed %}
                 <tr class="row-completed">
-                  {% if is_manager or is_supervisor %}<td></td>{% endif %}
+                  {% if is_manager or is_supervisor %}
+                  <td></td>
+                  {% endif %}
                   <td><span class="pos-badge">&#10003;</span></td>
+
+
                   <td>
                     {% if s.schedule_type == 'Idle' %}
-                      <i class="fa fa-pause text-warning"></i> IDLE &mdash; {{ s.idle_reason }}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ s.idle_reason }} - {{ s.idle_notes|default:"&mdash;" }}
                     {% else %}
                       <a href="{% url 'order:jobdetail' s.jobprocess.job.id %}" target="_blank">{{ s.jobprocess }}</a>
                     {% endif %}
                   </td>
+
+                  {% if machine.machinename == "PRINTING-1" %}
                   <td>
-                    {% if s.schedule_type == 'Idle' %}{{ s.idle_notes|default:"&mdash;" }}
-                    {% else %}
+
                     {{ s.jobprocess.job.itemmaster.cylinder_status }}
-                    {% endif %}
+
                   </td>
+                  <td>Approved</td>
+                  {% endif %}
+
                   <td>
                     {% if s.raw_material_status == 'Available' %}
                     <span class="badge badge-success">Available</span>
@@ -179,6 +192,7 @@
                       <span class="badge badge-danger">Not Available</span>
                     {% endif %}
                   </td>
+
                   <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
                   <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
@@ -207,20 +221,22 @@
                   <td><span class="pos-badge running">&#9654;</span></td>
                   <td>
                     {% if running.schedule_type == 'Idle' %}
-                      <i class="fa fa-pause text-warning"></i> IDLE &mdash; {{ running.idle_reason }}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ running.idle_reason }} - {{ running.idle_notes|default:"&mdash;" }}
                     {% else %}
                       <a href="{% url 'order:jobdetail' running.jobprocess.job.id %}" target="_blank">
                         <strong>{{ running.jobprocess }}</strong>
                       </a>
                     {% endif %}
                   </td>
+                  {% if machine.machinename == "PRINTING-1" %}
                   <td>
-                    {% if running.schedule_type == 'Idle' %}
-                    {{ running.idle_notes|default:"&mdash;" }}
-                    {% else %}
+
                     {{ running.jobprocess.job.itemmaster.cylinder_status }}
-                    {% endif %}
+
                   </td>
+                  <td>Approved</td>
+                  {% endif %}
                   <td>
                     {% if running.raw_material_status == 'Available' %}
                     <span class="badge badge-success">Available</span>
@@ -229,6 +245,7 @@
                       <span class="badge badge-danger">Not Available</span>
                     {% endif %}
                   </td>
+
                   <td>{{ running.qty|default:"&mdash;" }} {{ running.unit }}</td>
                   <td>{{ running.speed|default:"&mdash;" }} {{ running.unit }}/Min.</td>
                   <td>{{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
@@ -290,21 +307,20 @@
                   <td class="pos-cell"><span class="pos-badge">{{ s.queue_position }}</span></td>
                   <td>
                     {% if s.schedule_type == 'Idle' %}
-                      <i class="fa fa-pause text-warning"></i> IDLE &mdash; {{ s.idle_reason }}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ s.idle_reason }} - {{ s.idle_notes|default:"&mdash;" }}
                     {% else %}
                       <a href="{% url 'order:jobdetail' s.jobprocess.job.id %}" target="_blank">{{ s.jobprocess }}</a>
                     {% endif %}
                   </td>
-                  <td>
-                    {% if s.schedule_type == 'Idle' %}
-                    {{ s.idle_notes|default:"&mdash;" }}
-                    {% else %}
 
+                  {% if machine.machinename == "PRINTING-1" %}
+                  <td>
                     {{ s.jobprocess.job.itemmaster.cylinder_status }}
 
-                    {% endif %}
                   </td>
-
+                  <td>Approved</td>
+                  {% endif %}
                   <td>
                     {% if s.raw_material_status == 'Available' %}
                     <span class="badge badge-success">Available</span>
@@ -844,6 +860,14 @@
 $(function() {
   $('#startTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
   $('#endTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
+  // Add this once — listens for modal close
+  $('#downtimeModal').on('hidden.bs.modal', function() {
+  if (downtimeChanged) {
+    downtimeChanged = false;
+    location.reload();
+  }
+});
+
 });
 
 // Helper — format date for datetimepicker display
@@ -1005,6 +1029,9 @@ function confirmComplete() {
 // Downtime                                                             //
 // ------------------------------------------------------------------ //
 function openDowntimeModal(id) {
+
+  downtimeChanged = false;  // ← reset on open
+  $('#downtimeScheduleId').val(id);
   $('#downtimeScheduleId').val(id);
   $('#downtimeReason').val('');
   $('#downtimeHours').val('');
@@ -1075,6 +1102,8 @@ function confirmAddDowntime() {
   });
 }
 
+let downtimeChanged = false;  // track if any downtime was saved
+
 function saveDowntime(downtimeId, btn) {
   const scheduleId = $('#downtimeScheduleId').val();
   const row  = $(btn).closest('tr');
@@ -1084,12 +1113,22 @@ function saveDowntime(downtimeId, btn) {
   $.ajax({
     url: buildUrl('downtime', scheduleId), method: 'POST',
     contentType: 'application/json',
-    data: JSON.stringify({ action: 'edit', downtime_id: downtimeId, reason_id: row.find('.dt-reason').val(), hours: hrs, mins: mins, notes: row.find('.dt-notes').val() }),
+    data: JSON.stringify({
+      action      : 'edit',
+      downtime_id : downtimeId,
+      reason_id   : row.find('.dt-reason').val(),
+      hours       : hrs,
+      mins        : mins,
+      notes       : row.find('.dt-notes').val(),
+    }),
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) {
       if (resp.status === 'ok') {
+        downtimeChanged = true;  // mark as changed
         $(btn).html('<i class="fa fa-check"></i>');
-        setTimeout(function() { $(btn).html('<i class="fa fa-save"></i>'); }, 1500);
+        setTimeout(function() {
+          $(btn).html('<i class="fa fa-save"></i>');
+        }, 1500);
       }
     },
     error: function() { alert('Error saving downtime.'); }

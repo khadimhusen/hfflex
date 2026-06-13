@@ -3,7 +3,6 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
-from employee.models import Department
 
 
 def user_login(request):
@@ -15,23 +14,19 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            print("user: ", user)
-            if (user in Department.objects.filter(department_name="machine")):
+
+            if user.department.filter(department_name='machine').exists():
                 messages.success(request, f'Welcome {username} ')
-                print("from machine")
                 return HttpResponseRedirect(reverse('manpower:newshift'))
 
-            if (user in Department.objects.filter(department_name="Marketing_only")):
+            if user.department.objects.filter(department_name="Marketing_only").exists():
                 messages.success(request, f'Welcome {username} ')
-                print("from marketing")
                 return HttpResponseRedirect(reverse('quotation:quotationlist'))
 
             if request.GET.get('next', None):
-                print("from page")
                 return HttpResponseRedirect(request.GET['next'])
 
             messages.success(request, f'Welcome {username} To H F FLEX PVT. LTD. ', )
-            print("from general")
             return HttpResponseRedirect(reverse('order:joblist'))
 
         else:
