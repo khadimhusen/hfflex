@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import ItemMaster, RawMaterial, PouchType, LamiRubber, ItemImage, ItemProcess, Process, CylinderMovement
 from .models import ( Color, ItemColor, Problem, Machine, AttributeMaster,
-                      ItemAttribute, ItemStandardParameter, StdParameter)
+                      ItemAttribute, ItemStandardParameter, StdParameter, MachineTask)
 
 
 class RawMaterialTabular(admin.TabularInline):
@@ -42,3 +42,4 @@ admin.site.register(ItemAttribute)
 admin.site.register(CylinderMovement)
 admin.site.register(StdParameter)
 admin.site.register(ItemStandardParameter)
+admin.site.register(MachineTask)

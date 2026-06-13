@@ -2,9 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
 
-
 from itemmaster.models import (ItemMaster, RawMaterial, PouchType, LamiRubber,
-                               Process, ItemProcess, Color, ItemColor, ItemImage, Machine, AttributeMaster,
+                               Process, ItemProcess, Color, ItemColor, ItemImage, AttributeMaster,
                                ItemAttribute)
 from customer.models import Customer, Address
 from material.models import Unit, Material, MatType, Grade
@@ -61,7 +60,7 @@ class Job(models.Model):
     waste = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True, default=12)
     jobstatus = models.CharField(max_length=32, choices=jobchoices, default="Account clearance")
     account_clearance_date = models.DateTimeField(null=True, blank=True)
-    approvedby = models.ForeignKey(User,on_delete=models.PROTECT,null=True,blank=True)
+    approvedby = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     dispatch_approval = models.BooleanField(default=False, blank=True)
     dispatch_approval_date = models.DateTimeField(null=True, blank=True)
     dispatch_remark = models.CharField(max_length=256, null=True, blank=True)
@@ -195,8 +194,7 @@ class Job(models.Model):
             jobitemattributes = ItemAttribute.objects.filter(itemmaster=self.itemmaster)
             for att in jobitemattributes:
                 JobItemAttribute.objects.create(job=self,
-                                                item_attirbuate=att.item_attirbuate,attri_value=att.attri_value)
-
+                                                item_attirbuate=att.item_attirbuate, attri_value=att.attri_value)
 
             proc = ItemProcess.objects.filter(itemmaster=self.itemmaster)
             for pro in proc:
@@ -206,19 +204,18 @@ class Job(models.Model):
                 elif prounit == "KG.":
                     processqty = self.kgqty
                 elif prounit == "MTR.":
-                    if pro.process.process=="Printing":
-                        processqty = self.totalmeter+200
+                    if pro.process.process == "Printing":
+                        processqty = self.totalmeter + 200
                     else:
                         processqty = self.totalmeter
 
                 else:
                     processqty = self.kgqty
 
-
                 JobProcess.objects.create(job=self, process=pro.process, unit=pro.unit,
-                                          qty=processqty, machine=pro.machine)
+                                          qty=processqty)
 
-            from itemmaster.models import  ItemStandardParameter
+            from itemmaster.models import ItemStandardParameter
 
             jobcoas = ItemStandardParameter.objects.filter(itemmaster=self.itemmaster)
 
@@ -479,8 +476,6 @@ class JobMaterial(models.Model):
         result = JobMaterialStatus.objects.filter(jobmaterial=self).aggregate(Sum('qty'))
         return round((result['qty__sum'] or 0), 1)
 
-
-
     def save(self, *args, **kwargs):
         if self.job.film_size != 0:
             self.gsm = round(
@@ -501,14 +496,11 @@ class JobProcessManager(models.Manager):
 
 class JobProcess(models.Model):
     job = models.ForeignKey(Job, related_name='jobprocess', on_delete=models.CASCADE)
-    srno = models.IntegerField(null=True, blank=True)
     process = models.ForeignKey(Process, related_name='jobprocess', on_delete=models.PROTECT)
-    machine = models.ForeignKey(Machine, on_delete=models.PROTECT, null=True, blank=True)
-    prod_duration = models.DurationField(null=True, blank=True)
     qty = models.DecimalField(max_digits=10, decimal_places=1, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True, on_delete=models.PROTECT)
     status = models.CharField(max_length=16, choices=processchoices, default="Pending")
-    process_count = models.PositiveSmallIntegerField(default=1,null=True, blank=True)
+    process_count = models.PositiveSmallIntegerField(default=1, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='jobprocesscreated')
@@ -517,22 +509,19 @@ class JobProcess(models.Model):
 
     objects = JobProcessManager()
 
-    class Meta:
-        unique_together = ('srno', 'machine')
 
     def __str__(self):
-        if self.process.process == "Lamination" :
-            return str(self.job) + "/" + str(self.id) + "/" + str(self.process)+ " - " + str(self.process_count + 1)+"Ply"
+        if self.process.process == "Lamination":
+            return str(self.job) + "/" + str(self.id) + "/" + str(self.process) + " - " + str(
+                self.process_count + 1) + "Ply"
         else:
             return str(self.job) + "/" + str(self.id) + "/" + str(self.process)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            super(JobProcess , self).save(*args, **kwargs)
-        else:
+        if not self.id:
             processcount = self.job.jobprocess.filter(process=self.process).count()
-            self.process_count = processcount+1
-            super(JobProcess , self).save(*args, **kwargs)
+            self.process_count = processcount + 1
+        super(JobProcess, self).save(*args, **kwargs)
 
     @property
     def jobdispatch(self):
@@ -558,10 +547,9 @@ class JobProcess(models.Model):
     @property
     def no_of_ply(self):
         if self.process.process == "Lamination":
-            return self.process.process + " " +str(self.process_count + 1) + "Ply"
+            return self.process.process + " " + str(self.process_count + 1) + "Ply"
         else:
             return self.process.process
-
 
 
 class JobColor(models.Model):
@@ -585,16 +573,42 @@ class JobImage(models.Model):
 
 
 class JobItemAttribute(models.Model):
-    item_attirbuate=models.ForeignKey(AttributeMaster,on_delete=models.PROTECT,related_name="jobitemattribute")
+    item_attirbuate = models.ForeignKey(AttributeMaster, on_delete=models.PROTECT, related_name="jobitemattribute")
     job = models.ForeignKey(Job, related_name='jobitemattribute', on_delete=models.CASCADE)
     attri_value = models.CharField(max_length=32)
 
     def __str__(self):
         return f'{self.item_attirbuate} = {self.attri_value}'
 
+
 class JobCoa(models.Model):
     from coa.models import StdParameter
 
-    job= models.ForeignKey(Job,related_name='jobcoa',on_delete=models.PROTECT)
+    job = models.ForeignKey(Job, related_name='jobcoa', on_delete=models.PROTECT)
     standard_parameter = models.ForeignKey(StdParameter, on_delete=models.PROTECT)
     value = models.CharField(max_length=128)
+
+
+# order/models.py (or a new app like `audit`)
+
+class JobChangeLog(models.Model):
+    job = models.ForeignKey(Job, related_name='change_logs', on_delete=models.CASCADE)
+    field_name = models.CharField(max_length=64)
+    old_value = models.TextField(null=True, blank=True)
+    new_value = models.TextField(null=True, blank=True)
+    changed_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    action = models.CharField(
+        max_length=8,
+        choices=[('create', 'Create'), ('update', 'Update'), ('delete', 'Delete')],
+        default='update',
+    )
+
+    class Meta:
+        ordering = ['-changed_at']
+        indexes = [
+            models.Index(fields=['job', '-changed_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.job_id} • {self.field_name} • {self.changed_at:%Y-%m-%d %H:%M}"

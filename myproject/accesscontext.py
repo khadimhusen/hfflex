@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 
 def accesslists(request):
     if request.user:
-        print(request.user)
         if str(request.user) == 'AnonymousUser':
             return {'accessname': ""}
         else:

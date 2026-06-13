@@ -401,7 +401,7 @@
 
             cylinderCost() {
 
-            if (this.repeatLength >= 10 && this.openWidth >= 10 && this.no_of_repeat >= 1 && this.no_of_ups >= 1 ){
+            if (this.repeatLength >= 10 && this.openWidth >= 10 && this.no_of_repeat > 0 && this.no_of_ups > 0 ){
 
                 return Math.max(((this.circum * this.cylinderLength * 2.4 / 100) + (500)).toFixed(), 5100)
             }

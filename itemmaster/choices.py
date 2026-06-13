@@ -26,3 +26,5 @@ row_choice = [
                 ("Z","Z"),
                 ("-","-"),
                 ]
+
+TASK_CATEGORY = [("Makeready","Makeready"),("Breakdown","Breakdown")]

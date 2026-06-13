@@ -3,8 +3,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
-from order.models import Job
-from order.templatetags.extra_tag import prejob
+from employee.models import Department
 
 
 def user_login(request):
@@ -16,19 +15,23 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            if (username in ["PRINT-1", "LAMI-1", "SLIT-1", "POUCH-1", "POUCH-2"]):
-                messages.success(request, f'Welcome {username} ', )
+            print("user: ", user)
+            if (user in Department.objects.filter(department_name="machine")):
+                messages.success(request, f'Welcome {username} ')
+                print("from machine")
                 return HttpResponseRedirect(reverse('manpower:newshift'))
 
-            if (username in ["anas", "cmshaikh", "amol", "akshay", "tayyab", "ganesh"]):
+            if (user in Department.objects.filter(department_name="Marketing_only")):
                 messages.success(request, f'Welcome {username} ')
+                print("from marketing")
                 return HttpResponseRedirect(reverse('quotation:quotationlist'))
 
-            else:
-                messages.success(request, f'Welcome {username} To H F FLEX PVT. LTD. ', )
             if request.GET.get('next', None):
+                print("from page")
                 return HttpResponseRedirect(request.GET['next'])
+
             messages.success(request, f'Welcome {username} To H F FLEX PVT. LTD. ', )
+            print("from general")
             return HttpResponseRedirect(reverse('order:joblist'))
 
         else:
@@ -38,12 +41,6 @@ def user_login(request):
         return render(request, "login.html", context)
 
 
-# @login_required(login_url="/login/")
-# def success(request):
-#     context = {}
-#     context['user'] = request.user
-#     return render(request, "auth/success.html", context)
-#
 
 def user_logout(request):
     logout(request)

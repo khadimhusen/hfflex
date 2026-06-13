@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 
-from itemmaster.choices import row_choice
+from itemmaster.choices import row_choice, TASK_CATEGORY
 from material.models import Material, MatType, Grade, Unit, Commodity
 from customer.models import Customer
 from django.contrib.auth.models import User
@@ -10,12 +10,31 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Machine(models.Model):
     machinename = models.CharField(max_length=32)
+    max_speed = models.IntegerField()
+    mode_speed = models.IntegerField()
     est_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=True)
+    user = models.OneToOneField(
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='machine'
+    )
 
     def __str__(self):
         return self.machinename
+
+
+class MachineTask(models.Model):
+    machine = models.ForeignKey(Machine, on_delete=models.PROTECT, related_name='tasks')
+    category = models.CharField(choices=TASK_CATEGORY)
+    persons_required = models.PositiveSmallIntegerField(default=2)
+    task = models.CharField(max_length=512)
+    qty_from_colors = models.BooleanField(default=True)
+    duration = models.PositiveSmallIntegerField()
+
+    def __str__(self):
+        return f'{str(self.machine)} :- {str(self.duration)} - {self.task}'
 
 
 class PouchType(models.Model):
@@ -210,6 +229,8 @@ class ItemProcess(models.Model):
     process = models.ForeignKey(Process, related_name='itemprocess', on_delete=models.PROTECT)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
     machine = models.ForeignKey(Machine, on_delete=models.PROTECT, null=True, blank=True)
+    process_count = models.PositiveSmallIntegerField(null=True, blank=True)
+    speed = models.PositiveSmallIntegerField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='itemprocesscreated')
@@ -219,6 +240,17 @@ class ItemProcess(models.Model):
 
     def __str__(self):
         return str(self.itemmaster) + str(self.process)
+
+    class Meta:
+        unique_together = ('itemmaster', 'process', 'process_count')
+
+    def save(self, *args, **kwargs):
+        if self.speed is None:  # only set if user didn't provide one
+            self.speed = self.machine.mode_speed or 10
+        if not self.process_count:
+            processcount = self.itemmaster.itemprocess.filter(process=self.process).count()
+            self.process_count = processcount + 1
+        super().save(*args, **kwargs)
 
 
 class Color(models.Model):
@@ -282,21 +314,19 @@ class CylinderMovement(models.Model):
     def __str__(self):
         return f'Date:- {self.movementdate} - Location:- {self.location}( {self.row} , {self.column} )'
 
+
 class StdParameter(models.Model):
     parameter = models.CharField(max_length=64)
     unit_of_measure = models.CharField(max_length=32)
-
 
     def __str__(self):
         return f"{self.parameter} : {self.unit_of_measure}"
 
 
 class ItemStandardParameter(models.Model):
-
     itemmaster = models.ForeignKey(ItemMaster, on_delete=models.PROTECT, related_name="itemstandardparameter")
     standard_parameter = models.ForeignKey(StdParameter, on_delete=models.PROTECT)
     value = models.CharField(max_length=128)
 
-
     def __str__(self):
-        return str(self.itemaster)[0:20] + " : "  + self.value +" : "+str(self.standard_parameter)
+        return str(self.itemaster)[0:20] + " : " + self.value + " : " + str(self.standard_parameter)

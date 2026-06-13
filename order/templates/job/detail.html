@@ -1,4 +1,5 @@
 {% extends 'home.html' %}
+{% load humanize %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% load extra_tag %}
@@ -39,7 +40,7 @@
         <form method="POST">
             {% csrf_token %}
             {{status_form.jobstatus}}
-	    <div hidden="hidden">{{status_form.account_clearance_date}}</div>
+	    <div hidden="hidden">{{status_form.account_clearance_date}} {{status_form.approvedby}}</div>
             <button class="btn btn-warning btn-sm" type="submit">save</button>
         </form>
 
@@ -75,6 +76,9 @@
         </li>
         <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#menu2">Job Process</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#menu7">Planning</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#menu3">Job Colors</a>
@@ -219,12 +223,12 @@
             </div>
             <div class="row">
                 <div class="card col-md-12 my-0">
-                    <h6><strong>Job remark:-</strong> {{job.jobremark}}</h6>
+                    <h6><strong>Job remark:-</strong> <pre>{{job.jobremark}}</pre></h6>
                 </div>
             </div>
             <div class="row">
                 <div class="card col-md-12 my-0">
-                    <h6><strong>Item remark:-</strong> {{job.itemmaster.remark}}</h6>
+                    <h6><strong>Item remark:-</strong> <pre>{{job.itemmaster.remark}}</pre></h6>
                 </div>
             </div>
             <div class="row">
@@ -529,8 +533,6 @@
             </div>
 
         </div>
-
-
         <div id="menu6" class="container tab-pane fade"><br>
             <div class="row">
                 <h2>Input</h2>
@@ -594,8 +596,9 @@
                     {% if value.qty > 0.0001 %}
                     <tr>
                         <td>{{key}}</td>
-                        <td
-                                {% if "WASTE" in key %} style="color:red" {% endif %} > {{value.qty}}</td>
+                        <td {% if 'WASTE' in key %} style='color:red' {% endif %} >
+                                {{value.qty}}
+                        </td>
                     </tr>
                     {% endif %}
                     {% endfor %}
@@ -610,7 +613,36 @@
             </div>
             <h3 align="center">Waste= {{wastepercent}}%</h3>
         </div>
+        <div id="menu7" class="container tab-pane fade">
+            <div class="table-responsive" >
+                <table class="table table-striped table-bordered zero-configuration">
+                    <thead>
+                    <tr>
+                        <th>Process</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Qty</th>
+                        <th>Speed</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for plan in plans %}
+                    <tr>
+                        <th>{{plan.jobprocess.process}}-{{plan.jobprocess.process_count|ordinal}}</th>
+                        <th>{{plan.start_time}}</th>
+                        <th>{{plan.end_time}}</th>
+                        <th>{{plan.qty}} {{plan.unit}}</th>
+                        <th>{{plan.speed}}</th>
+                        <th>{{plan.status}}</th>
 
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
 
     </div>
 

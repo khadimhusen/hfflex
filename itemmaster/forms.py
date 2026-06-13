@@ -34,7 +34,7 @@ class RawMaterialForm(forms.ModelForm):
 class ItemProcessForm(forms.ModelForm):
     class Meta:
         model = ItemProcess
-        fields = ['process', 'unit', 'machine']
+        fields = ['process', 'unit', 'machine','speed']
 
     def __init__(self, *args, **kwargs):
         super(ItemProcessForm, self).__init__(*args, **kwargs)

@@ -9,6 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import datetime
 from django.utils import timezone
+
+from planning.models import MachineSchedule
 from production.models import Stockdetail, ProdInput
 from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute, JobCoa, JobColor
 from .forms import OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetailEditForm, JobProcessForm, JobImageForm, \
@@ -67,7 +69,10 @@ def jobdetail(request, id):
             'jobprocess__jobreport__output__item_mat_type',
             'jobprocess__jobreport__output__item_grade',
             'jobcolors',
+            'jobprocess__schedules'
         ), id=id)
+    plans = MachineSchedule.objects.filter(jobprocess__job=job).order_by('start_time')
+
 
     # build inputdetail for waste breakdown table
     inputdetail = {}
@@ -120,6 +125,7 @@ def jobdetail(request, id):
 
     context = {
         'job'          : job,
+        'plans'        : plans,
         'next'         : nextjob,
         'prev'         : prevjob,
         'first'        : first,
