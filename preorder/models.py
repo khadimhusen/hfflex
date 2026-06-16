@@ -52,4 +52,4 @@ class JobName(models.Model):
     editedby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='jobnameeditedby')
 
     def __str__(self):
-        return str(self.preorder) + " - " + self.jobname + "| Qty.=" + str(self.qty) + " " + str(self.unit) + "| Rate = Rs." + str(self.rate)
+        return  self.jobname + " | " +str(self.preorder) + " - " + "| Qty.=" + str(self.qty) + " " + str(self.unit) + "| Rate = Rs." + str(self.rate)

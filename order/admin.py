@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobCoa
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobCoa,JobChangeLog
 
 
 # ── Inlines ───────────────────────────────────────────────────────────────────
@@ -74,4 +74,8 @@ class JobColorAdmin(admin.ModelAdmin):
 
 @admin.register(JobCoa)
 class JobCoaAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(JobChangeLog)
+class JobChangeLogAdmin(admin.ModelAdmin):
     pass

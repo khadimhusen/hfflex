@@ -32,5 +32,6 @@ urlpatterns = [
                   path('permisiondenid/', views.noaccess, name='noaccess'),
                   path('api-auth/', include('rest_framework.urls')),
                   path('returnable/', include('returnable.urls')),
+                  path('planning/', include('planning.urls')),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

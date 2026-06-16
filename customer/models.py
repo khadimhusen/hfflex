@@ -8,6 +8,9 @@ class Customer(models.Model):
     is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
     email = models.EmailField(null=True, blank=True)
+    # credit_period = models.PositiveSmallIntegerField(default=0)
+    # credit_cap = models.PositiveIntegerField(default=0)
+    # outstanding = models.PositiveIntegerField(default=0)
     active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='customercreated')
@@ -23,6 +26,10 @@ class Customer(models.Model):
     def save(self, *args, **kwargs):
         self.name = self.name.upper()
         super(Customer, self).save(*args, **kwargs)
+
+    # @property
+    # def can_order(self):
+    #     return self.credit_cap == 0
 
 
 class Address(models.Model):
@@ -62,5 +69,3 @@ class Person(models.Model):
 
     class Meta:
         ordering = ['customer']
-
-

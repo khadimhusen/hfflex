@@ -1,0 +1,1435 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load planning_filters %}
+
+{% block customcss %}
+<style>
+  .table { font-size: 11px; }
+  .row-running   { background-color: #d4edda !important; }
+  .row-idle      { background-color: #fff3cd !important; }
+  .row-completed { opacity: 0.55; }
+  .row-hold      { background-color: #f8d7da !important; }
+  .drag-handle   { cursor: grab; color: #aaa; }
+  .drag-handle:active { cursor: grabbing; }
+  .pos-badge {
+    display: inline-block; width: 24px; height: 24px;
+    border-radius: 50%; background: #e9ecef;
+    text-align: center; line-height: 24px;
+    font-size: 11px; font-weight: 600; color: #666;
+  }
+  .pos-badge.running { background: #d4edda; color: #155724; }
+  .ui-sortable-helper td { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .ui-sortable-placeholder {
+    background: #f8f9fa !important;
+    visibility: visible !important;
+    border: 1px dashed #ccc;
+  }
+  .unsaved-indicator { display: none; color: #856404; font-size: 12px; }
+  .unsaved-indicator .dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: #EF9F27; border-radius: 50%; margin-right: 4px;
+  }
+  .btn-xs { padding: 1px 5px; font-size: 10px; }
+  #tasksTable td input { width: 60px; padding: 2px 4px; font-size: 11px; border: 1px solid #ced4da; border-radius: 3px; }
+  .variance-delay { color: #dc3545; font-weight: 600; }
+  .variance-early { color: #28a745; font-weight: 600; }
+</style>
+{% endblock customcss %}
+
+{% block content %}
+{% if is_manager or is_supervisor %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script>
+{% endif %}
+
+<span id="urlBase"
+  data-edit-idle="{% url 'planning:edit_idle_slot' machine.id 0 %}"
+  data-delete-idle="{% url 'planning:delete_idle_slot' machine.id 0 %}"
+  data-edit-schedule="{% url 'planning:edit_schedule' machine.id 0 %}"
+  data-tasks="{% url 'planning:schedule_tasks' machine.id 0 %}"
+  data-start="{% url 'planning:start_schedule' machine.id 0 %}"
+  data-complete="{% url 'planning:complete_schedule' machine.id 0 %}"
+  data-downtime="{% url 'planning:add_downtime' machine.id 0 %}"
+  style="display:none">
+</span>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+
+        <div class="card-header d-flex align-items-center flex-wrap">
+          <h2 class="card-title mr-3 mb-0">{{ machine.machinename }} — Schedule</h2>
+
+          {# Machine switcher — manager and supervisor only #}
+          {% if is_manager or is_supervisor %}
+          <div class="mr-auto">
+            {% for m in machines %}
+              <a href="{% url 'planning:machine_schedule' m.id %}"
+                 class="btn btn-sm {% if m == machine %}btn-primary{% else %}btn-outline-secondary{% endif %} mr-1">
+                {{ m.machinename }}
+              </a>
+            {% endfor %}
+          </div>
+
+          {% else %}
+
+          <div class="mr-auto">
+            <span class="badge badge-info">{{ machine.machinename }}</span>
+          </div>
+          {% endif %}
+
+          {% if is_manager or is_supervisor %}
+          <span class="unsaved-indicator mr-2" id="unsavedIndicator">
+            <span class="dot"></span> Unsaved changes
+          </span>
+          <button class="btn btn-warning btn-sm mr-2" onclick="openIdleModal()">
+            <i class="fa fa-clock-o"></i> Add idle time
+          </button>
+          <button class="btn btn-success btn-sm" id="saveBtn" onclick="saveOrder()" disabled>
+            <i class="fa fa-save"></i> Save sequence
+          </button>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="info-box bg-success">
+                <span class="info-box-icon"><i class="fa fa-play"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Running</span>
+                  <span class="info-box-number">{% if running %}1{% else %}0{% endif %}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-primary">
+                <span class="info-box-icon"><i class="fa fa-list-ol"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Pending</span>
+                  <span class="info-box-number">{{ pending_count }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-warning">
+                <span class="info-box-icon"><i class="fa fa-pause"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Idle slots</span>
+                  <span class="info-box-number">{{ idle_count }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-secondary">
+                <span class="info-box-icon"><i class="fa fa-check"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Completed today</span>
+                  <span class="info-box-number">{{ completed_count }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered" id="scheduleTable">
+              <thead>
+                <tr>
+                  {% if is_manager or is_supervisor %}<th></th>{% endif %}
+                  <th>#</th>
+                  <th>Job / Reason</th>
+
+                  {% if machine.machinename == 'PRINTING-1' %}
+                  <th>Cylinder</th>
+                  <th>Approval</th>
+                  {% endif %}
+                  <th>Material</th>
+                  <th>Qty</th>
+                  <th>Speed</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Makeready</th>
+                  <th>Running</th>
+                  <th>Downtime</th>
+                  <th>Est. Duration</th>
+                  <th>Variance</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                {# Completed rows #}
+                {% for s in completed %}
+                <tr class="row-completed">
+                  {% if is_manager or is_supervisor %}
+                  <td></td>
+                  {% endif %}
+                  <td><span class="pos-badge">&#10003;</span></td>
+
+
+                  <td>
+                    {% if s.schedule_type == 'Idle' %}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ s.idle_reason }} - {{ s.idle_notes|default:"&mdash;" }}
+                    {% else %}
+                      <a href="{% url 'order:jobdetail' s.jobprocess.job.id %}" target="_blank">{{ s.jobprocess }}</a>
+                    {% endif %}
+                  </td>
+
+                  {% if machine.machinename == "PRINTING-1" %}
+                  <td>
+                    {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                    <span class="badge badge-success">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+                    {% endif %}
+
+                  </td>
+                  <td>Approved</td>
+                  {% endif %}
+
+                  <td>
+                    {% if s.raw_material_status == 'Available' %}
+                    <span class="badge badge-success">Available</span>
+
+                    {% else %}
+                      <span class="badge badge-danger">Not Available</span>
+                    {% endif %}
+                  </td>
+
+                  <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
+                  <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
+                  <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ s.makeready_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.running_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.downtime_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.estimated_duration }}</td>
+                  <td>
+                    {% if s.time_variance %}
+                      {% if s.time_variance_seconds >= 0 %}
+                        <span class="variance-delay">{{ s.time_variance|format_variance }}</span>
+                      {% else %}
+                        <span class="variance-early">{{ s.time_variance|format_variance }}</span>
+                      {% endif %}
+                    {% else %}&mdash;{% endif %}
+                  </td>
+                  <td><span class="badge badge-secondary">Completed</span></td>
+                </tr>
+                {% endfor %}
+
+                {# Running row #}
+                {% if running %}
+                <tr class="row-running">
+                  {% if is_manager or is_supervisor %}<td></td>{% endif %}
+                  <td><span class="pos-badge running">&#9654;</span></td>
+                  <td>
+                    {% if running.schedule_type == 'Idle' %}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ running.idle_reason }} - {{ running.idle_notes|default:"&mdash;" }}
+                    {% else %}
+                      <a href="{% url 'order:jobdetail' running.jobprocess.job.id %}" target="_blank">
+                        <strong>{{ running.jobprocess }}</strong>
+                      </a>
+                    {% endif %}
+                  </td>
+                  {% if machine.machinename == "PRINTING-1" %}
+                  <td>
+
+
+
+                     {% if running.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                      <span class="badge badge-success">
+                    {{ running.jobprocess.job.itemmaster.cylinder_status }}
+                      </span>
+                    {% else %}
+                     <span class="badge badge-danger">
+                      {{ running.jobprocess.job.itemmaster.cylinder_status }}
+                     </span>
+                    {% endif %}
+
+                  </td>
+                  <td>Approved</td>
+                  {% endif %}
+                  <td>
+                    {% if running.raw_material_status == 'Available' %}
+                    <span class="badge badge-success">Available</span>
+
+                    {% else %}
+                      <span class="badge badge-danger">Not Available</span>
+                    {% endif %}
+                  </td>
+
+                  <td>{{ running.qty|default:"&mdash;" }} {{ running.unit }}</td>
+                  <td>{{ running.speed|default:"&mdash;" }} {{ running.unit }}/Min.</td>
+                  <td>{{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ running.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ running.makeready_duration|default:"&mdash;" }}</td>
+                  <td>{{ running.running_duration|default:"&mdash;" }}</td>
+                  <td>{{ running.downtime_duration|default:"&mdash;" }}</td>
+                  <td>{{ running.estimated_duration }}</td>
+                  <td>
+                    {% if running.time_variance %}
+                      {% if running.time_variance_seconds >= 0 %}
+                        <span class="variance-delay">{{ running.time_variance|format_variance }}</span>
+                      {% else %}
+                        <span class="variance-early">{{ running.time_variance|format_variance }}</span>
+                      {% endif %}
+                    {% else %}&mdash;{% endif %}
+                  </td>
+                  <td>
+                    {# Complete — all roles #}
+                    <button class="btn btn-xs btn-success" onclick="openCompleteModal({{ running.id }})">
+                      <i class="fa fa-check"></i> Complete
+                    </button>
+                    {# Downtime — all roles #}
+                    {% if running.schedule_type == 'Production' %}
+                      <button class="btn btn-xs btn-danger ml-1" onclick="openDowntimeModal({{ running.id }})">
+                        <i class="fa fa-exclamation-triangle"></i> Downtime
+                      </button>
+                    {% endif %}
+                    {# Edit and Tasks — manager and supervisor only #}
+                    {% if is_manager or is_supervisor %}
+                      {% if running.schedule_type != 'Idle' %}
+                    <button class="btn btn-xs btn-primary ml-1"
+                    onclick="openEditModal({{ running.id }},'{{ running.speed|default:'' }}','{{ running.qty|default:'' }}','{{ running.persons_assigned|default:1 }}','{{ running.remark|default:'' }}','{{ running.raw_material_status }}',false,true)">
+                          <i class="fa fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-xs btn-info ml-1" onclick="openTasksModal({{ running.id }})">
+                          <i class="fa fa-list"></i> Tasks
+                    </button>
+                      {% endif %}
+                    {% endif %}
+                    {# Speed only — operator #}
+                    {% if is_operator %}
+                      <button class="btn btn-xs btn-primary ml-1"
+                              onclick="openSpeedModal({{ running.id }},'{{ running.speed|default:'' }}')">
+                        <i class="fa fa-tachometer"></i> Speed
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endif %}
+
+                {# Queue rows #}
+                {% for s in queue %}
+                <tr class="{% if s.schedule_type == 'Idle' %}row-idle{% elif s.status == 'Hold' %}row-hold{% endif %}"
+                    {% if is_manager or is_supervisor %}data-id="{{ s.id }}"{% endif %}>
+                  {% if is_manager or is_supervisor %}
+                    <td class="drag-handle"><i class="fa fa-bars"></i></td>
+                  {% endif %}
+                  <td class="pos-cell"><span class="pos-badge">{{ s.queue_position }}</span></td>
+                  <td>
+                    {% if s.schedule_type == 'Idle' %}
+                      <i class="fa fa-pause text-warning"></i>
+                    IDLE &mdash; {{ s.idle_reason }} - {{ s.idle_notes|default:"&mdash;" }}
+                    {% else %}
+                      <a href="{% url 'order:jobdetail' s.jobprocess.job.id %}" target="_blank">{{ s.jobprocess }}</a>
+                    {% endif %}
+                  </td>
+
+                  {% if machine.machinename == "PRINTING-1" %}
+                  <td>
+
+                    {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                    <span class="badge badge-success">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+                    {% endif %}
+
+                  </td>
+                  <td>Approved</td>
+                  {% endif %}
+                  <td>
+                    {% if s.raw_material_status == 'Available' %}
+                    <span class="badge badge-success">Available</span>
+
+                    {% else %}
+                      <span class="badge badge-danger">Not Available</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
+                  <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
+                  <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  <td>{{ s.makeready_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.running_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.downtime_duration|default:"&mdash;" }}</td>
+                  <td>{{ s.estimated_duration }}</td>
+                  <td>&mdash;</td>
+                  <td>
+                    {% if s.status == 'Hold' %}
+                      <span class="badge badge-danger">Hold</span>
+                      {% if is_manager or is_supervisor %}
+                        <button class="btn btn-xs btn-primary ml-1"
+                                onclick="openEditModal({{ s.id }},'{{ s.speed|default:'' }}','{{ s.qty|default:'' }}','{{ s.persons_assigned|default:1 }}','{{ s.remark|default:'' }}','{{ s.raw_material_status }}',true,false)">
+                          <i class="fa fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-xs btn-info ml-1" onclick="openTasksModal({{ s.id }})">
+                          <i class="fa fa-list"></i> Tasks
+                        </button>
+                      {% endif %}
+                    {% elif s.schedule_type == 'Idle' %}
+                      {% if is_manager or is_supervisor %}
+                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                          <i class="fa fa-play"></i> Start
+                        </button>
+                        <button class="btn btn-xs btn-info ml-1"
+                                onclick="viewIdle('{{ s.idle_reason }}','{{ s.idle_notes|default:'' }}','{{ s.estimated_duration }}','{{ s.created|date:'d/m/Y H:i' }}')">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                        <button class="btn btn-xs btn-warning ml-1"
+                                onclick="editIdle({{ s.id }},{{ s.idle_reason.id }},'{{ s.idle_notes|default:'' }}',{{ s.estimated_seconds }})">
+                          <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="btn btn-xs btn-danger ml-1" onclick="deleteIdle({{ s.id }})">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      {% endif %}
+                    {% else %}
+                      {# Production pending #}
+                      {% if is_manager or is_supervisor %}
+                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                          <i class="fa fa-play"></i> Start
+                        </button>
+                        <button class="btn btn-xs btn-primary ml-1"
+                                onclick="openEditModal({{ s.id }},'{{ s.speed|default:'' }}','{{ s.qty|default:'' }}','{{ s.persons_assigned|default:1 }}','{{ s.remark|default:'' }}','{{ s.raw_material_status }}',true,false)">
+                          <i class="fa fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-xs btn-info ml-1" onclick="openTasksModal({{ s.id }})">
+                          <i class="fa fa-list"></i> Tasks
+                        </button>
+                      {% elif is_operator %}
+                        {% if s.queue_position == 1 %}
+                          <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                            <i class="fa fa-play"></i> Start
+                          </button>
+                        {% endif %}
+                        <button class="btn btn-xs btn-primary ml-1"
+                                onclick="openSpeedModal({{ s.id }},'{{ s.speed|default:'' }}')">
+                          <i class="fa fa-tachometer"></i> Speed
+                        </button>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Start job                                                    #}
+{# ================================================================== #}
+<div class="modal fade" id="startModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-play"></i> Start job</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="startScheduleId">
+        <input type="hidden" id="startSchedulePosition">
+        <div class="form-group">
+        <label>Actual start time</label>
+        <input type="text" class="form-control form-control-sm" id="startTime"
+         placeholder="DD/MM/YYYY HH:MM">
+        <small class="text-muted">Pre-filled with current time. Adjust if needed.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-success btn-sm" onclick="confirmStart()">
+          <i class="fa fa-play"></i> Start
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Complete job                                                 #}
+{# ================================================================== #}
+<div class="modal fade" id="completeModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-check"></i> Complete job</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="completeScheduleId">
+
+        <div class="form-group">
+          <label>Actual end time</label>
+          <input type="text" class="form-control form-control-sm" id="endTime"
+                 placeholder="DD/MM/YYYY HH:MM">
+          <small class="text-muted">Pre-filled with current time. Adjust if needed.</small>
+        </div>
+
+<small class="text-muted">Pre-filled with current time. Adjust if needed.</small>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-success btn-sm" onclick="confirmComplete()">
+          <i class="fa fa-check"></i> Complete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Downtime                                                     #}
+{# ================================================================== #}
+<div class="modal fade" id="downtimeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-exclamation-triangle text-danger"></i> Downtime</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="downtimeScheduleId">
+        <div id="downtimeLoading" class="text-center py-2">
+          <i class="fa fa-spinner fa-spin"></i> Loading...
+        </div>
+        <div id="downtimeList" style="display:none">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>Reason</th><th>Hours</th><th>Minutes</th>
+                <th>Notes</th><th>Recorded</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="downtimeBody"></tbody>
+          </table>
+        </div>
+        <div id="downtimeEmpty" style="display:none" class="text-muted text-center py-2 mb-2">
+          No downtime recorded yet.
+        </div>
+        <hr>
+        <h6><i class="fa fa-plus"></i> Add new downtime</h6>
+        <div class="form-row mt-2">
+          <div class="form-group col-md-4">
+            <label>Reason</label>
+            <select class="form-control form-control-sm" id="downtimeReason">
+              <option value="">— select —</option>
+              {% for reason in downtime_reasons %}
+                <option value="{{ reason.id }}">{{ reason.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label>Hours</label>
+            <input type="number" class="form-control form-control-sm" id="downtimeHours" min="0" max="72" placeholder="0">
+          </div>
+          <div class="form-group col-md-2">
+            <label>Minutes</label>
+            <input type="number" class="form-control form-control-sm" id="downtimeMins" min="0" max="59" placeholder="0">
+          </div>
+          <div class="form-group col-md-4">
+            <label>Notes (optional)</label>
+            <input type="text" class="form-control form-control-sm" id="downtimeNotes" placeholder="Any details...">
+          </div>
+        </div>
+        <div class="text-right">
+          <button class="btn btn-danger btn-sm" onclick="confirmAddDowntime()">
+            <i class="fa fa-plus"></i> Add downtime
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Speed update (operator only)                                 #}
+{# ================================================================== #}
+<div class="modal fade" id="speedModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-tachometer"></i> Update speed</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="speedScheduleId">
+        <div class="form-group">
+          <label>Speed</label>
+          <input type="number" class="form-control form-control-sm" id="speedValue" min="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmSpeedUpdate()">
+          <i class="fa fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% if is_manager or is_supervisor %}
+{# ================================================================== #}
+{# MODAL: Add idle time                                                #}
+{# ================================================================== #}
+<div class="modal fade" id="idleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-clock-o"></i> Add idle time</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Idle reason</label>
+          <select class="form-control form-control-sm" id="idleReason">
+            <option value="">— select reason —</option>
+            {% for reason in idle_reasons %}
+              <option value="{{ reason.id }}">{{ reason.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Hours</label>
+            <input type="number" class="form-control form-control-sm" id="idleHours" placeholder="0" min="0" max="72">
+          </div>
+          <div class="form-group col-md-6">
+            <label>Minutes</label>
+            <input type="number" class="form-control form-control-sm" id="idleMins" placeholder="0" min="0" max="59">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Insert after</label>
+          <select class="form-control form-control-sm" id="insertAfter">
+            <option value="-1">— at end of queue —</option>
+            {% for s in queue %}
+              <option value="{{ s.queue_position }}">
+                After position {{ s.queue_position }} —
+                {% if s.schedule_type == 'Idle' %}IDLE: {{ s.idle_reason }}{% else %}{{ s.jobprocess }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <textarea class="form-control form-control-sm" id="idleNotes" rows="2" placeholder="Any additional details..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmIdle()">
+          <i class="fa fa-plus"></i> Add to queue
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Edit idle time                                               #}
+{# ================================================================== #}
+<div class="modal fade" id="editIdleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-edit"></i> Edit idle time</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdleId">
+        <div class="form-group">
+          <label>Idle reason</label>
+          <select class="form-control form-control-sm" id="editIdleReason">
+            {% for reason in idle_reasons %}
+              <option value="{{ reason.id }}">{{ reason.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Hours</label>
+            <input type="number" class="form-control form-control-sm" id="editIdleHours" min="0" max="72">
+          </div>
+          <div class="form-group col-md-6">
+            <label>Minutes</label>
+            <input type="number" class="form-control form-control-sm" id="editIdleMins" min="0" max="59">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea class="form-control form-control-sm" id="editIdleNotes" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmEditIdle()">
+          <i class="fa fa-save"></i> Save changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: View idle time details                                       #}
+{# ================================================================== #}
+<div class="modal fade" id="viewIdleModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-info-circle"></i> Idle slot details</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body p-0">
+        <table class="table table-sm table-bordered mb-0">
+          <tr><th style="width:35%">Reason</th><td id="viewReason"></td></tr>
+          <tr><th>Duration</th><td id="viewDuration"></td></tr>
+          <tr><th>Notes</th><td id="viewNotes"></td></tr>
+          <tr><th>Created</th><td id="viewCreated"></td></tr>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Edit MachineSchedule                                         #}
+{# ================================================================== #}
+<div class="modal fade" id="editScheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-edit"></i> Edit schedule</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editScheduleId">
+        <input type="hidden" id="editScheduleQty">
+        <input type="hidden" id="editScheduleIsPending">
+        <ul class="nav nav-tabs mb-3" id="editScheduleTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="tab-basic-link" data-toggle="tab" href="#tabBasic" role="tab">
+              <i class="fa fa-sliders"></i> Basic
+            </a>
+          </li>
+          <li class="nav-item" id="tabSplitLi">
+            <a class="nav-link" id="tab-split-link" data-toggle="tab" href="#tabSplit" role="tab">
+              <i class="fa fa-scissors"></i> Split process
+            </a>
+          </li>
+          <li class="nav-item" id="tabMachineLi">
+            <a class="nav-link" id="tab-machine-link" data-toggle="tab" href="#tabMachine" role="tab">
+              <i class="fa fa-exchange"></i> Change machine
+            </a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tabBasic" role="tabpanel">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label>Speed</label>
+                <input type="number" class="form-control form-control-sm" id="editSpeed" min="1">
+              </div>
+              <div class="form-group col-md-6">
+                <label>Persons assigned</label>
+                <input type="number" class="form-control form-control-sm" id="editPersons" min="1" max="20">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Raw material status</label>
+              <select class="form-control form-control-sm" id="editMaterialStatus">
+                <option value="Not Available">Not Available</option>
+                <option value="Available">Available</option>
+
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remark</label>
+              <textarea class="form-control form-control-sm" id="editRemark" rows="2"></textarea>
+            </div>
+            <div class="text-right">
+              <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+              <button class="btn btn-primary btn-sm ml-2" onclick="confirmEditBasic()">
+                <i class="fa fa-save"></i> Save changes
+              </button>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabSplit" role="tabpanel">
+            <div class="alert alert-info py-2">
+              <i class="fa fa-info-circle"></i>
+              Enter the qty to keep on this schedule. The remainder will be added as a new schedule at the bottom of the queue.
+            </div>
+            <div class="form-group">
+              <label>Current qty: <strong id="splitCurrentQty"></strong></label>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label>Keep qty (this schedule)</label>
+                <input type="number" class="form-control form-control-sm" id="splitQty" min="0.1" step="0.1" oninput="updateSplitRemainder()">
+              </div>
+              <div class="form-group col-md-6">
+                <label>Remainder (new schedule)</label>
+                <input type="number" class="form-control form-control-sm" id="splitRemainder" readonly>
+              </div>
+            </div>
+            <div class="text-right">
+              <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+              <button class="btn btn-warning btn-sm ml-2" onclick="confirmSplit()">
+                <i class="fa fa-scissors"></i> Split
+              </button>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="tabMachine" role="tabpanel">
+            <div class="alert alert-warning py-2">
+              <i class="fa fa-exclamation-triangle"></i>
+              Changing machine will delete existing makeready tasks and recalculate durations from the new machine's templates. Schedule will move to the bottom of the new machine's queue.
+            </div>
+            <div class="form-group">
+              <label>Select new machine</label>
+              <select class="form-control form-control-sm" id="newMachine">
+                <option value="">— select machine —</option>
+                {% for m in machines %}
+                  <option value="{{ m.id }}">{{ m.machinename }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="text-right">
+              <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+              <button class="btn btn-danger btn-sm ml-2" onclick="confirmChangeMachine()">
+                <i class="fa fa-exchange"></i> Change machine
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ================================================================== #}
+{# MODAL: Edit ProductionTasks                                         #}
+{# ================================================================== #}
+<div class="modal fade" id="tasksModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-list"></i> Makeready tasks</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tasksScheduleId">
+        <div id="tasksLoading" class="text-center py-3"><i class="fa fa-spinner fa-spin"></i> Loading...</div>
+        <div id="tasksContent" style="display:none">
+          <table class="table table-sm table-bordered" id="tasksTable">
+            <thead>
+              <tr>
+                <th>Task</th><th>Category</th><th>Qty</th>
+                <th>Time/task (min)</th><th>Total (min)</th>
+              </tr>
+            </thead>
+            <tbody id="tasksBody"></tbody>
+          </table>
+        </div>
+        <div id="tasksEmpty" style="display:none" class="text-muted text-center py-3">No tasks found.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmEditTasks()">
+          <i class="fa fa-save"></i> Save tasks
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock content %}
+
+
+{% block javascripts %}
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}" > </script>
+<script>
+$(function() {
+  $('#startTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
+  $('#endTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
+  // Add this once — listens for modal close
+  $('#downtimeModal').on('hidden.bs.modal', function() {
+  if (downtimeChanged) {
+    downtimeChanged = false;
+    location.reload();
+  }
+});
+
+});
+
+// Helper — format date for datetimepicker display
+function nowForPicker() {
+  const now  = new Date();
+  const dd   = String(now.getDate()).padStart(2, '0');
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const hh   = String(now.getHours()).padStart(2, '0');
+  const min  = String(now.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+}
+
+function pickerToISO(val) {
+  // val = "12/06/2026 16:28"
+  const parts = val.split(' ');
+  const dateParts = parts[0].split('/');
+  const time = parts[1] || '00:00';
+  // dd/mm/yyyy → yyyy-mm-dd
+  return `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${time}:00`;
+}
+
+const REORDER_URL  = "{% url 'planning:reorder_queue' machine.id %}";
+const ADD_IDLE_URL = "{% url 'planning:add_idle_slot' machine.id %}";
+const CSRF         = "{{ csrf_token }}";
+const IS_MANAGER_OR_SUPERVISOR = {% if is_manager or is_supervisor %}true{% else %}false{% endif %};
+
+let originalOrder = [{% for s in queue %}{{ s.id }},{% endfor %}];
+
+function buildUrl(type, id) {
+  return $('#urlBase').data(type).replace('/0/', '/' + id + '/');
+}
+
+
+// ------------------------------------------------------------------ //
+// jQuery UI sortable — manager and supervisor only                    //
+// ------------------------------------------------------------------ //
+{% if is_manager or is_supervisor %}
+var fixHelperModified = function(e, tr) {
+  var $originals = tr.children();
+  var $helper = tr.clone();
+  $helper.children().each(function(index) {
+    $(this).width($originals.eq(index).width());
+  });
+  return $helper;
+};
+
+$('#scheduleTable tbody').sortable({
+  helper     : fixHelperModified,
+  handle     : '.drag-handle',
+  scroll     : true,
+  placeholder: 'ui-sortable-placeholder',
+  items      : 'tr[data-id]',
+  stop: function(e, ui) {
+    updateBadges();
+    const changed = getCurrentOrder().some((id, i) => id !== originalOrder[i]);
+    setSaveState(changed);
+  }
+}).disableSelection();
+{% endif %}
+
+function getCurrentOrder() {
+  return $('#scheduleTable tbody tr[data-id]')
+    .map(function() { return parseInt($(this).data('id')); }).get();
+}
+
+function updateBadges() {
+  $('#scheduleTable tbody tr[data-id]').each(function(i) {
+    $(this).find('.pos-cell .pos-badge').text(i + 1);
+  });
+}
+
+function setSaveState(changed) {
+  $('#saveBtn').prop('disabled', !changed);
+  $('#unsavedIndicator').toggle(changed);
+}
+
+// ------------------------------------------------------------------ //
+// Save sequence                                                        //
+// ------------------------------------------------------------------ //
+function saveOrder() {
+  const data = getCurrentOrder().map((id, i) => ({ id: id, queue_position: i + 1 }));
+  $.ajax({
+    url: REORDER_URL, method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') {
+        originalOrder = getCurrentOrder();
+        setSaveState(false);
+        $('#saveBtn').html('<i class="fa fa-check"></i> Saved');
+        setTimeout(function() { $('#saveBtn').html('<i class="fa fa-save"></i> Save sequence'); }, 1800);
+      }
+    },
+    error: function() { alert('Error saving sequence. Please try again.'); }
+  });
+}
+
+// ------------------------------------------------------------------ //
+// Start job                                                            //
+// ------------------------------------------------------------------ //
+
+function openStartModal(id, position) {
+  if (position !== 1) { alert('Only the first job in queue can be started.'); return; }
+  $('#startScheduleId').val(id);
+  $('#startSchedulePosition').val(position);
+  $('#startTime').val(nowForPicker());
+  $('#startModal').modal('show');
+}
+
+
+function confirmStart() {
+  const id      = $('#startScheduleId').val();
+  const timeVal = $('#startTime').val();
+  if (!timeVal) { alert('Please enter a start time.'); return; }
+  if (!confirm('Start this job? The currently running job will be marked as completed.')) return;
+  $.ajax({
+    url: buildUrl('start', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ start_time: pickerToISO(timeVal) }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#startModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) {
+      alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error starting job.');
+    }
+  });
+}
+
+// ------------------------------------------------------------------ //
+// Complete job                                                         //
+// ------------------------------------------------------------------ //
+function openCompleteModal(id) {
+  $('#completeScheduleId').val(id);
+  $('#endTime').val(nowForPicker());
+  $('#completeModal').modal('show');
+}
+
+function confirmComplete() {
+  const id      = $('#completeScheduleId').val();
+  const timeVal = $('#endTime').val();
+  if (!timeVal) { alert('Please enter an end time.'); return; }
+  if (!confirm('Mark this job as completed?')) return;
+  $.ajax({
+    url: buildUrl('complete', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ end_time: pickerToISO(timeVal) }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#completeModal').modal('hide'); location.reload(); }
+    },
+    error: function() { alert('Error completing job. Please try again.'); }
+  });
+}
+
+// ------------------------------------------------------------------ //
+// Downtime                                                             //
+// ------------------------------------------------------------------ //
+function openDowntimeModal(id) {
+
+  downtimeChanged = false;  // ← reset on open
+  $('#downtimeScheduleId').val(id);
+  $('#downtimeScheduleId').val(id);
+  $('#downtimeReason').val('');
+  $('#downtimeHours').val('');
+  $('#downtimeMins').val('');
+  $('#downtimeNotes').val('');
+  $('#downtimeLoading').show();
+  $('#downtimeList').hide();
+  $('#downtimeEmpty').hide();
+  $('#downtimeModal').modal('show');
+  loadDowntimes(id);
+}
+
+function loadDowntimes(id) {
+  $.ajax({
+    url: buildUrl('downtime', id), method: 'GET',
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      $('#downtimeLoading').hide();
+      if (!resp.downtimes || resp.downtimes.length === 0) {
+        $('#downtimeEmpty').show(); return;
+      }
+      const tbody        = $('#downtimeBody').empty();
+      const reasonOptions = $('#downtimeReason').html();
+      resp.downtimes.forEach(function(d) {
+        tbody.append(
+          '<tr data-downtime-id="' + d.id + '">' +
+          '<td><select class="form-control form-control-sm dt-reason">' + reasonOptions + '</select></td>' +
+          '<td><input type="number" class="form-control form-control-sm dt-hours" value="' + d.hours + '" min="0" max="72" style="width:65px"></td>' +
+          '<td><input type="number" class="form-control form-control-sm dt-mins" value="' + d.mins + '" min="0" max="59" style="width:65px"></td>' +
+          '<td><input type="text" class="form-control form-control-sm dt-notes" value="' + d.notes + '"></td>' +
+          '<td><small class="text-muted">' + d.created + '</small></td>' +
+          '<td>' +
+          '<button class="btn btn-xs btn-primary mr-1" onclick="saveDowntime(' + d.id + ', this)"><i class="fa fa-save"></i></button>' +
+          '<button class="btn btn-xs btn-danger" onclick="deleteDowntime(' + d.id + ', this)"><i class="fa fa-trash"></i></button>' +
+          '</td></tr>'
+        );
+        tbody.find('tr[data-downtime-id="' + d.id + '"] .dt-reason').val(d.reason_id);
+      });
+      $('#downtimeList').show();
+    },
+    error: function() {
+      $('#downtimeLoading').hide();
+      $('#downtimeEmpty').text('Error loading downtimes.').show();
+    }
+  });
+}
+
+function confirmAddDowntime() {
+  const id     = $('#downtimeScheduleId').val();
+  const reason = $('#downtimeReason').val();
+  if (!reason) { $('#downtimeReason').focus(); return; }
+  const hrs  = parseInt($('#downtimeHours').val()) || 0;
+  const mins = parseInt($('#downtimeMins').val())  || 0;
+  if (!hrs && !mins) { $('#downtimeHours').focus(); return; }
+  $.ajax({
+    url: buildUrl('downtime', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'add', reason_id: reason, hours: hrs, mins: mins, notes: $('#downtimeNotes').val() }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') {
+        $('#downtimeReason, #downtimeHours, #downtimeMins, #downtimeNotes').val('');
+        $('#downtimeList').hide(); $('#downtimeEmpty').hide(); $('#downtimeLoading').show();
+        loadDowntimes(id);
+      }
+    },
+    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error adding downtime.'); }
+  });
+}
+
+let downtimeChanged = false;  // track if any downtime was saved
+
+function saveDowntime(downtimeId, btn) {
+  const scheduleId = $('#downtimeScheduleId').val();
+  const row  = $(btn).closest('tr');
+  const hrs  = parseInt(row.find('.dt-hours').val()) || 0;
+  const mins = parseInt(row.find('.dt-mins').val())  || 0;
+  if (!hrs && !mins) { alert('Duration required.'); return; }
+  $.ajax({
+    url: buildUrl('downtime', scheduleId), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+      action      : 'edit',
+      downtime_id : downtimeId,
+      reason_id   : row.find('.dt-reason').val(),
+      hours       : hrs,
+      mins        : mins,
+      notes       : row.find('.dt-notes').val(),
+    }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') {
+        downtimeChanged = true;  // mark as changed
+        $(btn).html('<i class="fa fa-check"></i>');
+        setTimeout(function() {
+          $(btn).html('<i class="fa fa-save"></i>');
+        }, 1500);
+      }
+    },
+    error: function() { alert('Error saving downtime.'); }
+  });
+}
+
+function deleteDowntime(downtimeId, btn) {
+  if (!confirm('Delete this downtime record?')) return;
+  const scheduleId = $('#downtimeScheduleId').val();
+  $.ajax({
+    url: buildUrl('downtime', scheduleId), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'delete', downtime_id: downtimeId }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') {
+        $(btn).closest('tr').fadeOut(300, function() {
+          $(this).remove();
+          if ($('#downtimeBody tr:visible').length === 0) { $('#downtimeList').hide(); $('#downtimeEmpty').show(); }
+        });
+      }
+    },
+    error: function() { alert('Error deleting downtime.'); }
+  });
+}
+
+// ------------------------------------------------------------------ //
+// Speed modal — operator only                                          //
+// ------------------------------------------------------------------ //
+function openSpeedModal(id, speed) {
+  $('#speedScheduleId').val(id);
+  $('#speedValue').val(speed);
+  $('#speedModal').modal('show');
+}
+
+function confirmSpeedUpdate() {
+  const id = $('#speedScheduleId').val();
+  $.ajax({
+    url: buildUrl('edit-schedule', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'basic', speed: $('#speedValue').val() }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#speedModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error updating speed.'); }
+  });
+}
+
+{% if is_manager or is_supervisor %}
+// ------------------------------------------------------------------ //
+// Add idle                                                             //
+// ------------------------------------------------------------------ //
+function openIdleModal() {
+  $('#idleReason, #idleHours, #idleMins, #idleNotes').val('');
+  $('#idleModal').modal('show');
+}
+
+function confirmIdle() {
+  const reasonId = $('#idleReason').val();
+  if (!reasonId) { $('#idleReason').focus(); return; }
+  const hrs  = parseInt($('#idleHours').val()) || 0;
+  const mins = parseInt($('#idleMins').val())  || 0;
+  if (!hrs && !mins) { $('#idleHours').focus(); return; }
+  $.ajax({
+    url: ADD_IDLE_URL, method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ idle_reason_id: reasonId, hours: hrs, mins: mins, notes: $('#idleNotes').val(), insert_after: parseInt($('#insertAfter').val()) }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#idleModal').modal('hide'); location.reload(); }
+    },
+    error: function() { alert('Error adding idle slot. Please try again.'); }
+  });
+}
+
+function viewIdle(reason, notes, duration, created) {
+  $('#viewReason').text(reason); $('#viewDuration').text(duration);
+  $('#viewNotes').text(notes || '—'); $('#viewCreated').text(created);
+  $('#viewIdleModal').modal('show');
+}
+
+function editIdle(id, reasonId, notes, totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins  = Math.floor((totalSeconds % 3600) / 60);
+  $('#editIdleId').val(id); $('#editIdleReason').val(reasonId);
+  $('#editIdleHours').val(hours); $('#editIdleMins').val(mins);
+  $('#editIdleNotes').val(notes);
+  $('#editIdleModal').modal('show');
+}
+
+function confirmEditIdle() {
+  const id   = $('#editIdleId').val();
+  const hrs  = parseInt($('#editIdleHours').val()) || 0;
+  const mins = parseInt($('#editIdleMins').val())  || 0;
+  if (!hrs && !mins) { $('#editIdleHours').focus(); return; }
+  $.ajax({
+    url: buildUrl('edit-idle', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ idle_reason_id: $('#editIdleReason').val(), hours: hrs, mins: mins, notes: $('#editIdleNotes').val() }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#editIdleModal').modal('hide'); location.reload(); }
+    },
+    error: function() { alert('Error updating idle slot. Please try again.'); }
+  });
+}
+
+function deleteIdle(id) {
+  if (!confirm('Remove this idle slot from the queue?')) return;
+  $.ajax({
+    url: buildUrl('delete-idle', id), method: 'POST',
+    contentType: 'application/json', data: JSON.stringify({}),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) { if (resp.status === 'ok') { location.reload(); } },
+    error: function() { alert('Error deleting idle slot. Please try again.'); }
+  });
+}
+
+function openEditModal(id, speed, qty, persons, remark, materialStatus ,isPending, isRunning) {
+  $('#editScheduleId').val(id);
+  $('#editScheduleQty').val(qty);
+  $('#editSpeed').val(speed);
+  $('#editPersons').val(persons);
+  $('#editRemark').val(remark);
+  $('#editMaterialStatus').val(materialStatus);
+  if (isPending || isRunning) {
+    $('#tabSplitLi').show(); $('#splitCurrentQty').text(qty);
+    $('#splitQty').val(''); $('#splitRemainder').val('');
+  } else { $('#tabSplitLi').hide(); }
+  if (isPending) { $('#tabMachineLi').show(); $('#newMachine').val(''); }
+  else { $('#tabMachineLi').hide(); }
+  $('#tab-basic-link').tab('show');
+  $('#editScheduleModal').modal('show');
+}
+
+function confirmEditBasic() {
+  const id = $('#editScheduleId').val();
+  $.ajax({
+    url: buildUrl('edit-schedule', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'basic',
+     speed: $('#editSpeed').val(),
+     persons_assigned: $('#editPersons').val(),
+     remark: $('#editRemark').val(),
+     material_status  : $('#editMaterialStatus').val(),
+      }),
+
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#editScheduleModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error saving.'); }
+  });
+}
+
+function updateSplitRemainder() {
+  const total    = parseFloat($('#editScheduleQty').val()) || 0;
+  const splitQty = parseFloat($('#splitQty').val())        || 0;
+  const remainder = Math.round((total - splitQty) * 10) / 10;
+  $('#splitRemainder').val(remainder > 0 ? remainder : '');
+}
+
+function confirmSplit() {
+  const id       = $('#editScheduleId').val();
+  const splitQty = parseFloat($('#splitQty').val()) || 0;
+  const total    = parseFloat($('#editScheduleQty').val()) || 0;
+  if (!splitQty || splitQty <= 0) { alert('Enter a valid split qty.'); $('#splitQty').focus(); return; }
+  if (splitQty >= total) { alert('Split qty must be less than current qty (' + total + ').'); return; }
+  if (!confirm('Split this schedule? A new schedule with ' + (total - splitQty) + ' qty will be added to the bottom of the queue.')) return;
+  $.ajax({
+    url: buildUrl('edit-schedule', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'split', split_qty: splitQty }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#editScheduleModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error splitting.'); }
+  });
+}
+
+function confirmChangeMachine() {
+  const id         = $('#editScheduleId').val();
+  const newMachine = $('#newMachine').val();
+  if (!newMachine) { alert('Please select a machine.'); return; }
+  if (!confirm('Change machine? Existing makeready tasks will be deleted and recalculated. Schedule moves to bottom of new machine queue.')) return;
+  $.ajax({
+    url: buildUrl('edit-schedule', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ action: 'change_machine', new_machine_id: newMachine }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#editScheduleModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error changing machine.'); }
+  });
+}
+
+function openTasksModal(id) {
+  $('#tasksScheduleId').val(id);
+  $('#tasksLoading').show(); $('#tasksContent').hide(); $('#tasksEmpty').hide();
+  $('#tasksModal').modal('show');
+  $.ajax({
+    url: buildUrl('tasks', id), method: 'GET',
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      $('#tasksLoading').hide();
+      if (!resp.tasks || resp.tasks.length === 0) { $('#tasksEmpty').show(); return; }
+      const tbody = $('#tasksBody').empty();
+      resp.tasks.forEach(function(t) {
+        tbody.append(
+          '<tr data-task-id="' + t.id + '">' +
+          '<td>' + t.task + '</td>' +
+          '<td><span class="badge badge-' + (t.category === 'Makeready' ? 'warning' : 'secondary') + '">' + t.category + '</span></td>' +
+          '<td><input type="number" class="task-qty" value="' + t.qty + '" min="0"></td>' +
+          '<td><input type="number" class="task-time" value="' + t.time_per_task + '" min="0"></td>' +
+          '<td class="task-total">' + t.total_time + '</td></tr>'
+        );
+      });
+      $('#tasksBody').off('input').on('input', 'input', function() {
+        const row = $(this).closest('tr');
+        row.find('.task-total').text((parseInt(row.find('.task-qty').val()) || 0) * (parseInt(row.find('.task-time').val()) || 0));
+      });
+      $('#tasksContent').show();
+    },
+    error: function() { $('#tasksLoading').hide(); $('#tasksEmpty').text('Error loading tasks.').show(); }
+  });
+}
+
+function confirmEditTasks() {
+  const scheduleId = $('#tasksScheduleId').val();
+  const tasks = [];
+  $('#tasksBody tr').each(function() {
+    tasks.push({ id: parseInt($(this).data('task-id')), qty: parseInt($(this).find('.task-qty').val()) || 0, time_per_task: parseInt($(this).find('.task-time').val()) || 0 });
+  });
+  $.ajax({
+    url: buildUrl('tasks', scheduleId), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ tasks: tasks }),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#tasksModal').modal('hide'); location.reload(); }
+    },
+    error: function() { alert('Error saving tasks. Please try again.'); }
+  });
+}
+
+// Global session expiry handler
+$(document).ajaxError(function(event, xhr, settings, error) {
+  if (xhr.status === 401) {
+    var resp = xhr.responseJSON;
+    if (resp && resp.code === 'session_expired') {
+      alert('Your session has expired. You will be redirected to the login page.');
+      window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+    }
+  }
+});
+
+// Warn 5 minutes before session expires
+var WARNING_MS = ({{ session_idle_timeout|default:3300 }}) * 1000; // 55 min default
+
+setTimeout(function() {
+  if (confirm('Your session will expire in 5 minutes due to inactivity. Click OK to stay logged in.')) {
+    $.get('/ping/');  // refreshes session
+  }
+}, WARNING_MS);
+
+
+{% endif %}
+</script>
+{% endblock javascripts %}

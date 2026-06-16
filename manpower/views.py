@@ -45,7 +45,7 @@ def newshift(request):
         print(main_form)
 
         if main_form.is_valid():
-            machineinstance = Machine.objects.filter(machinename=request.user.username).first() or None
+            machineinstance = Machine.objects.filter(machinename=user.username).first() or None
             proddate = request.POST['production_date'].split("/")
             if machineinstance:
                 proddate = datetime.date(int(proddate[2]), int(proddate[1]), int(proddate[0]))
@@ -56,7 +56,7 @@ def newshift(request):
                     production_date=proddate,
                 )
                 if created:
-                    Shift.objects.filter(id=obj.id).update(createdby=request.user)
+                    Shift.objects.filter(id=obj.id).update(createdby=user)
 
                 return redirect('manpower:shiftdetail', id=obj.id)
             else:

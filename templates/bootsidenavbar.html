@@ -94,14 +94,12 @@
         <li>
             <a href="#Planning" data-toggle="collapse"><strong style="color:lightgreen">P</strong>laninng</a>
             <ul id="Planning" class="list-unstyled collapse">
-                <li><a href="{% url 'order:planninglist' 'All' %}">All</a></li>
-                <li><a href="{% url 'order:planninglist' 'PRINT-1' %}">PRINT-1</a></li>
-                <li><a href="{% url 'order:planninglist' 'LAMI-1' %}">LAMI-1</a></li>
-                <li><a href="{% url 'order:planninglist' 'SLIT-1' %}">SLIT-1</a></li>
-                <li><a href="{% url 'order:planninglist' 'POUCH-1' %}">POUCH-1</a></li>
-                <li><a href="{% url 'order:planninglist' 'POUCH-2' %}">POUCH-2</a></li>
-
-            </ul>
+                <li><a href="{% url 'planning:machine_schedule' 1 %}">PRINT-1</a></li>
+                <li><a href="{% url 'planning:machine_schedule' 2 %}">LAMI-1</a></li>
+                <li><a href="{% url 'planning:machine_schedule' 3 %}">SLIT-1</a></li>
+                <li><a href="{% url 'planning:machine_schedule' 4 %}">POUCH-1</a></li>
+                <li><a href="{% url 'planning:machine_schedule' 5 %}">POUCH-2</a></li>
+              </ul>
         </li>
         {% endif %}
 
