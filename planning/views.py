@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from .utils import recalculate_timeline, planning_access_required
@@ -890,3 +890,20 @@ def add_downtime(request, machine_id, schedule_id):
         except Exception as e:
             print(f"add_downtime error: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+from .pdfs import generate_schedule_pdf
+
+@login_required(login_url='/login/')
+def schedule_pdf(request):
+    role = get_planning_role(request.user)
+    if role not in ('manager', 'supervisor'):
+        return HttpResponseForbidden("Permission denied.")
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        f'attachment; filename="machine_schedule_'
+        f'{datetime.now().strftime("%Y%m%d_%H%M")}.pdf"'
+    )
+    generate_schedule_pdf(response)
+    return response

@@ -67,6 +67,13 @@
                 {{ m.machinename }}
               </a>
             {% endfor %}
+
+
+            <a href="{% url 'planning:schedule_pdf' %}" target="_blank"
+             class="btn btn-secondary btn-sm mr-2">
+            <i class="fa fa-file-pdf-o"></i> Download PDF
+            </a>
+
           </div>
 
           {% else %}

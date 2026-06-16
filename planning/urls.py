@@ -33,5 +33,7 @@ urlpatterns = [
 
     path('machine/<int:machine_id>/schedule/<int:schedule_id>/downtime/',
          views.add_downtime, name='add_downtime'),
+
+    path('schedule/pdf/', views.schedule_pdf, name='schedule_pdf'),
     
 ]
