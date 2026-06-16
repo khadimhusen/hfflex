@@ -357,7 +357,8 @@ def jobdetailedit(request, id):
                 formset6.save()
 
                 return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': id}))
-            except:
+            except Exception  as e:
+                print ('error : ', e)
                 messages.warning(request, 'something gone wrong')
 
                 return render(request, 'job/edit.html', context)
