@@ -70,7 +70,9 @@
               </a>
             {% endfor %}
           </div>
+
           {% else %}
+
           <div class="mr-auto">
             <span class="badge badge-info">{{ machine.machinename }}</span>
           </div>
@@ -177,8 +179,17 @@
 
                   {% if machine.machinename == "PRINTING-1" %}
                   <td>
-
+                    {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                    <span class="badge badge-success">
                     {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+                    {% endif %}
 
                   </td>
                   <td>Approved</td>
@@ -232,7 +243,17 @@
                   {% if machine.machinename == "PRINTING-1" %}
                   <td>
 
+
+
+                     {% if running.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                      <span class="badge badge-success">
                     {{ running.jobprocess.job.itemmaster.cylinder_status }}
+                      </span>
+                    {% else %}
+                     <span class="badge badge-danger">
+                      {{ running.jobprocess.job.itemmaster.cylinder_status }}
+                     </span>
+                    {% endif %}
 
                   </td>
                   <td>Approved</td>
@@ -316,7 +337,18 @@
 
                   {% if machine.machinename == "PRINTING-1" %}
                   <td>
+
+                    {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}
+                    <span class="badge badge-success">
                     {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge badge-danger">
+                    {{ s.jobprocess.job.itemmaster.cylinder_status }}
+                    </span>
+                    {% endif %}
 
                   </td>
                   <td>Approved</td>

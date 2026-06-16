@@ -17,9 +17,9 @@ def user_login(request):
 
             if user.department.filter(department_name='machine').exists():
                 messages.success(request, f'Welcome {username} ')
-                return HttpResponseRedirect(reverse('manpower:newshift'))
+                return HttpResponseRedirect(reverse('planning:machine_schedule',kwargs={'machine_id':1}))
 
-            if user.department.objects.filter(department_name="Marketing_only").exists():
+            if user.department.filter(department_name="Marketing_only").exists():
                 messages.success(request, f'Welcome {username} ')
                 return HttpResponseRedirect(reverse('quotation:quotationlist'))
 
