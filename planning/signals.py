@@ -48,7 +48,7 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     color_count      = instance.job.itemmaster.itemcolors.count() or 1
 
     # Determine initial status based on job status
-    from planning.constants import HOLD_STATUSES
+    from planning.choices import HOLD_STATUSES, RELEASE_STATUSES
     job_status     = instance.job.jobstatus
     initial_status = 'Hold' if job_status in HOLD_STATUSES else 'Pending'
 
