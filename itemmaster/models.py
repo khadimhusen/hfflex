@@ -140,6 +140,14 @@ class ItemMaster(models.Model):
             self.pouch_per_kg = 0
         else:
             self.pouch_per_kg = round(1000 / self.pouch_weight, 2)
+
+
+        if self.speed is None and self.machine:  # ← only if machine exists
+            self.speed = self.machine.mode_speed or 10
+        if not self.process_count:
+            processcount = self.itemmaster.itemprocess.filter(process=self.process).count()
+            self.process_count = processcount + 1
+
         super(ItemMaster, self).save(*args, **kwargs)
 
     @property
