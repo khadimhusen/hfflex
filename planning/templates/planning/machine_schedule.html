@@ -18,12 +18,10 @@
     font-size: 11px; font-weight: 600; color: #666;
   }
   .pos-badge.running { background: #d4edda; color: #155724; }
-  .ui-sortable-helper td { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-  .ui-sortable-placeholder {
-    background: #f8f9fa !important;
-    visibility: visible !important;
-    border: 1px dashed #ccc;
-  }
+  .sortable-ghost  { opacity: 0.3; background: #f8f9fa; }
+  .sortable-chosen { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+
   .unsaved-indicator { display: none; color: #856404; font-size: 12px; }
   .unsaved-indicator .dot {
     display: inline-block; width: 8px; height: 8px;
@@ -38,7 +36,7 @@
 
 {% block content %}
 {% if is_manager or is_supervisor %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 {% endif %}
 
 <span id="urlBase"
@@ -489,7 +487,6 @@
           <small class="text-muted">Pre-filled with current time. Adjust if needed.</small>
         </div>
 
-<small class="text-muted">Pre-filled with current time. Adjust if needed.</small>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
@@ -887,18 +884,36 @@
 {% block javascripts %}
 
 <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
-<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}" > </script>
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}" ></script>
 <script>
 $(function() {
   $('#startTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
   $('#endTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
-  // Add this once — listens for modal close
+
   $('#downtimeModal').on('hidden.bs.modal', function() {
-  if (downtimeChanged) {
-    downtimeChanged = false;
-    location.reload();
-  }
-});
+    if (downtimeChanged) {
+      downtimeChanged = false;
+      location.reload();
+    }
+  });
+
+  {% if is_manager or is_supervisor %}
+  var sortable = Sortable.create(document.querySelector('#scheduleTable tbody'), {
+    animation        : 150,
+    handle           : '.drag-handle',
+    ghostClass       : 'sortable-ghost',
+    chosenClass      : 'sortable-chosen',
+    scroll           : true,
+    scrollSensitivity: 50,
+    scrollSpeed      : 10,
+    filter           : 'tr:not([data-id])',
+    onEnd: function(evt) {
+      updateBadges();
+      const changed = getCurrentOrder().some((id, i) => id !== originalOrder[i]);
+      setSaveState(changed);
+    }
+  });
+  {% endif %}
 
 });
 
@@ -934,32 +949,7 @@ function buildUrl(type, id) {
 }
 
 
-// ------------------------------------------------------------------ //
-// jQuery UI sortable — manager and supervisor only                    //
-// ------------------------------------------------------------------ //
-{% if is_manager or is_supervisor %}
-var fixHelperModified = function(e, tr) {
-  var $originals = tr.children();
-  var $helper = tr.clone();
-  $helper.children().each(function(index) {
-    $(this).width($originals.eq(index).width());
-  });
-  return $helper;
-};
 
-$('#scheduleTable tbody').sortable({
-  helper     : fixHelperModified,
-  handle     : '.drag-handle',
-  scroll     : true,
-  placeholder: 'ui-sortable-placeholder',
-  items      : 'tr[data-id]',
-  stop: function(e, ui) {
-    updateBadges();
-    const changed = getCurrentOrder().some((id, i) => id !== originalOrder[i]);
-    setSaveState(changed);
-  }
-}).disableSelection();
-{% endif %}
 
 function getCurrentOrder() {
   return $('#scheduleTable tbody tr[data-id]')
@@ -1063,7 +1053,6 @@ function confirmComplete() {
 function openDowntimeModal(id) {
 
   downtimeChanged = false;  // ← reset on open
-  $('#downtimeScheduleId').val(id);
   $('#downtimeScheduleId').val(id);
   $('#downtimeReason').val('');
   $('#downtimeHours').val('');
@@ -1409,6 +1398,8 @@ function confirmEditTasks() {
   });
 }
 
+{% endif %}
+
 // Global session expiry handler
 $(document).ajaxError(function(event, xhr, settings, error) {
   if (xhr.status === 401) {
@@ -1428,8 +1419,5 @@ setTimeout(function() {
     $.get('/ping/');  // refreshes session
   }
 }, WARNING_MS);
-
-
-{% endif %}
 </script>
 {% endblock javascripts %}
