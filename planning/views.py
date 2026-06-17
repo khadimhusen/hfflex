@@ -61,6 +61,18 @@ def machine_schedule(request, machine_id):
 
     idle_reasons = IdleTime.objects.filter(is_active=True)
     downtime_reasons = IdleTime.objects.filter(category='Unplanned', is_active=True)
+    last_completed = (
+        MachineSchedule.objects
+        .filter(machine=machine, queue_position=-1)
+        .exclude(end_time=None)
+        .order_by('-end_time')
+        .first()
+    )
+    last_end_time = (
+        last_completed.end_time.strftime('%d/%m/%Y %H:%M')
+        if last_completed and last_completed.end_time
+        else None
+    )
 
     context = {
         'machine': machine,
@@ -77,7 +89,8 @@ def machine_schedule(request, machine_id):
         'is_manager': role == 'manager',
         'is_supervisor': role == 'supervisor',
         'is_operator': role == 'operator',
-    }
+        'last_end_time': last_end_time,
+            }
     return render(request, 'planning/machine_schedule.html', context)
 
 

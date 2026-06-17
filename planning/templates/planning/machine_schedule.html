@@ -418,7 +418,7 @@
                     {% else %}
                       {# Production pending #}
                       {% if is_manager or is_supervisor %}
-                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }},'{{ last_end_time|default:'' }}')">
                           <i class="fa fa-play"></i> Start
                         </button>
                         <button class="btn btn-xs btn-primary ml-1"
@@ -430,7 +430,7 @@
                         </button>
                       {% elif is_operator %}
                         {% if s.queue_position == 1 %}
-                          <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                          <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }},'{{ last_end_time|default:'' }}')">
                             <i class="fa fa-play"></i> Start
                           </button>
                         {% endif %}
@@ -1011,11 +1011,11 @@ function saveOrder() {
 // Start job                                                            //
 // ------------------------------------------------------------------ //
 
-function openStartModal(id, position) {
+function openStartModal(id, position,lastEndTime) {
   if (position !== 1) { alert('Only the first job in queue can be started.'); return; }
   $('#startScheduleId').val(id);
   $('#startSchedulePosition').val(position);
-  $('#startTime').val(nowForPicker());
+  $('#startTime').val(lastEndTime || nowForPicker());
   $('#startModal').modal('show');
 }
 

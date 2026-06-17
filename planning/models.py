@@ -196,7 +196,7 @@ class ProductionTask(models.Model):
 
 
 class MachineDowntime(models.Model):
-    machine_schedule = models.ForeignKey(MachineSchedule, on_delete=models.PROTECT, related_name='downtimes')
+    machine_schedule = models.ForeignKey(MachineSchedule, on_delete=models.CASCADE, related_name='downtimes')
     reason = models.ForeignKey(IdleTime, on_delete=models.PROTECT,
                                limit_choices_to={'category': 'Unplanned'},
                                related_name="machinedowntimes")
