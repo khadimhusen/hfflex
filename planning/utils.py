@@ -156,10 +156,8 @@ def recalculate_timeline(machine):
     if running:
         if not running.start_time or not running.estimated_duration:
             return
-        if running.end_time:
-            chain_end = running.end_time
-        else:
-            chain_end = running.start_time + running.estimated_duration
+
+        chain_end = running.start_time + running.estimated_duration
         MachineSchedule.objects.filter(pk=running.pk).update(
             end_time=chain_end
         )
