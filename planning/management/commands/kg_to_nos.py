@@ -1,10 +1,12 @@
 from django.core.management.base import BaseCommand
 from planning.models import MachineSchedule
 from material.models import Unit
+
+
 class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
-    # Get NOS unit
+        # Get NOS unit
         try:
             nos_unit = Unit.objects.get(unit='NOS.')
         except Unit.DoesNotExist:
