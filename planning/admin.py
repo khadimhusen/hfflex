@@ -1,9 +1,8 @@
 from django.contrib import admin, messages
 from django.db import transaction
 from django.db.models import F
-from .models import MachineSchedule, ProductionTask, IdleTime
+from .models import MachineSchedule, ProductionTask, IdleTime, MachineDowntime
 from .utils import recalculate_timeline
-
 
 
 class ProductionTaskInline(admin.TabularInline):
@@ -20,7 +19,6 @@ class IdleTimeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-
 @admin.register(ProductionTask)
 class ProductionTaskAdmin(admin.ModelAdmin):
     list_display = [
@@ -34,7 +32,6 @@ class ProductionTaskAdmin(admin.ModelAdmin):
     @admin.display(description='Category')
     def get_category(self, obj):
         return obj.task.category
-
 
 
 @admin.action(description='Reopen selected schedules — set to Pending (move to end of queue)')
@@ -102,3 +99,9 @@ class MachineScheduleAdmin(admin.ModelAdmin):
         'downtime_duration', 'estimated_duration',
         'created', 'edited',
     ]
+
+
+@admin.register(MachineDowntime)
+class MachineDownTimeAdmin(admin.ModelAdmin):
+    list_display = [
+        'machine_schedule', 'reason']
