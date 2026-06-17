@@ -176,7 +176,7 @@ class MachineSchedule(models.Model):
 
 
 class ProductionTask(models.Model):
-    machine_schedule = models.ForeignKey(MachineSchedule, on_delete=models.PROTECT, related_name='productiontasks')
+    machine_schedule = models.ForeignKey(MachineSchedule, on_delete=models.CASCADE, related_name='productiontasks')
     qty = models.PositiveSmallIntegerField(default=0)
     task = models.ForeignKey(MachineTask, on_delete=models.PROTECT, related_name='productiontasks')
     time_per_task = models.PositiveSmallIntegerField(default=0)
