@@ -93,7 +93,7 @@ class MachineScheduleAdmin(admin.ModelAdmin):
         'downtime_duration', 'estimated_duration',
     ]
     list_filter = ['machine', 'schedule_type', 'status']
-    search_fields = ['jobprocess__job__id', 'machine__machinename']
+    search_fields = ['jobprocess__job__id', 'machine__machinename','jobprocess__job__itemname']
     readonly_fields = [
         'makeready_duration', 'running_duration',
         'downtime_duration', 'estimated_duration',
