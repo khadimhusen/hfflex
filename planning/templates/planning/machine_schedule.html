@@ -5,6 +5,10 @@
 {% block customcss %}
 <style>
   .table { font-size: 11px; }
+  .row-running td {
+  font-size: 15px !important;
+  font-weight: 400;
+  }
   .row-running   { background-color: #d4edda !important; }
   .row-idle      { background-color: #fff3cd !important; }
   .row-completed { opacity: 0.55; }
@@ -16,6 +20,7 @@
     border-radius: 50%; background: #e9ecef;
     text-align: center; line-height: 24px;
     font-size: 11px; font-weight: 600; color: #666;
+
   }
   .pos-badge.running { background: #d4edda; color: #155724; }
   .sortable-ghost  { opacity: 0.3; background: #f8f9fa; }
@@ -32,6 +37,8 @@
   .variance-delay { color: #dc3545; font-weight: 600; }
   .variance-early { color: #28a745; font-weight: 600; }
 </style>
+
+
 {% endblock customcss %}
 
 {% block content %}
@@ -151,6 +158,7 @@
                   {% endif %}
                   <th>Material</th>
                   <th>Qty</th>
+                  <th>Size</th>
                   <th>Speed</th>
                   <th>Start</th>
                   <th>End</th>
@@ -210,6 +218,7 @@
                   </td>
 
                   <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
+                  <td>{{ s.jobprocess.job.film_size }}mm</td>
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
                   <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
@@ -273,6 +282,7 @@
                   </td>
 
                   <td>{{ running.qty|default:"&mdash;" }} {{ running.unit }}</td>
+                  <td>{{ running.jobprocess.job.film_size }}mm</td>
                   <td>{{ running.speed|default:"&mdash;" }} {{ running.unit }}/Min.</td>
                   <td>{{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ running.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
@@ -367,6 +377,7 @@
                     {% endif %}
                   </td>
                   <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
+                  <td>{{ s.jobprocess.job.film_size }}mm</td>
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
                   <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
