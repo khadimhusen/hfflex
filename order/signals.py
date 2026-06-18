@@ -88,7 +88,7 @@ def capture_job_changes(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Job)
 def write_job_changes(sender, instance, created, **kwargs):
-    user = getattr(instance, '_change_user', None)  # set this in your view
+
 
     if created:
         JobChangeLog.objects.create(
@@ -96,7 +96,7 @@ def write_job_changes(sender, instance, created, **kwargs):
             field_name='__created__',
             old_value=None,
             new_value=None,
-            changed_by=user,
+            changed_by=instance.editedby,
             action='create',
         )
         return
@@ -111,7 +111,7 @@ def write_job_changes(sender, instance, created, **kwargs):
             field_name=c['field'],
             old_value=c['old'],
             new_value=c['new'],
-            changed_by=user,
+            changed_by=instance.editedby,
             action='update',
         ) for c in changes
     ]
@@ -159,6 +159,7 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
                 # Step 3 — find new end of queue
                 last = (
                     MachineSchedule.objects
+                    .select_for_update()
                     .filter(machine=machine, queue_position__gt=0)
                     .order_by('-queue_position')
                     .first()

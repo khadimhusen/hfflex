@@ -327,7 +327,7 @@ def edit_schedule(request, machine_id, schedule_id):
 
                 makeready_mins = sum(
 
-                    t.duration * t.persons_required * (color_count if t.qty_from_colors else 1)
+                    t.duration * t.persons_required * (t.default_qty if t.default_qty is not None else color_count)
 
                     for t in new_tasks if t.category == 'Makeready'
 
@@ -335,7 +335,7 @@ def edit_schedule(request, machine_id, schedule_id):
 
                 downtime_mins = sum(
 
-                    t.duration * t.persons_required * (color_count if t.qty_from_colors else 1)
+                    t.duration * t.persons_required * (t.default_qty if t.default_qty is not None else color_count)
 
                     for t in new_tasks if t.category == 'Breakdown'
 
@@ -437,7 +437,7 @@ def edit_schedule(request, machine_id, schedule_id):
 
                         time_per_task=t.duration,
 
-                        qty=color_count if t.qty_from_colors else 1,
+                        qty=t.default_qty if t.default_qty is not None else color_count,
 
                     )
 

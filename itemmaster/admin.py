@@ -2,13 +2,15 @@ from django.contrib import admin
 from .models import ItemMaster, RawMaterial, PouchType, LamiRubber, ItemImage, ItemProcess, Process, CylinderMovement
 from .models import ( Color, ItemColor, Problem, Machine, AttributeMaster,
                       ItemAttribute, ItemStandardParameter, StdParameter, MachineTask)
-
+from myproject.admin_mixins import AutocompleteMixin
 
 class RawMaterialTabular(admin.TabularInline):
     model = RawMaterial
 
 
-class ItemProcessAdmin(admin.ModelAdmin):
+@admin.register(Process)
+class ProcessAdmin(AutocompleteMixin,admin.ModelAdmin):
+    search_fields = ['process']
     list_display = ['process']
     ordering = ['process']
 
@@ -20,7 +22,13 @@ class ItemImage(admin.TabularInline):
     model = ItemImage
 
 
-class ItemMasterAdmin(admin.ModelAdmin):
+@admin.register(Color)  # check which app has Color model
+class ColorAdmin(AutocompleteMixin,admin.ModelAdmin):
+    search_fields = ['colorname', 'pantonecolor']
+
+
+class ItemMasterAdmin(AutocompleteMixin,admin.ModelAdmin):
+    search_fields = ['name', 'id']
     inlines = [ItemImage, RawMaterialTabular, ItemProcessTabular]
 
     class Meta:
@@ -31,9 +39,9 @@ admin.site.register(ItemMaster, ItemMasterAdmin)
 admin.site.register(RawMaterial)
 admin.site.register(PouchType)
 admin.site.register(LamiRubber)
-admin.site.register(ItemProcess, ItemProcessAdmin)
-admin.site.register(Process)
-admin.site.register(Color)
+admin.site.register(ItemProcess)
+
+
 admin.site.register(ItemColor)
 admin.site.register(Problem)
 admin.site.register(Machine)

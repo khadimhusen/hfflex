@@ -53,11 +53,11 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     initial_status = 'Hold' if job_status in HOLD_STATUSES else 'Pending'
 
     makeready_mins = sum(
-        t.duration * t.persons_required * (color_count if t.qty_from_colors else 1)
+        t.duration * t.persons_required * (t.default_qty if t.default_qty is not None else color_count)
         for t in tasks if t.category == 'Makeready'
     )
     breakdown_mins = sum(
-        t.duration * t.persons_required * (color_count if t.qty_from_colors else 1)
+        t.duration * t.persons_required * (t.default_qty if t.default_qty is not None else color_count)
         for t in tasks if t.category == 'Breakdown'
     )
 
@@ -65,16 +65,17 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     downtime_duration = timedelta(minutes=breakdown_mins)
     estimated_duration = makeready_duration + running_duration + downtime_duration
 
-    last = (
-        MachineSchedule.objects
-        .for_machine(machine)
-        .pending()
-        .order_by('-queue_position')
-        .first()
-    )
-    next_position = (last.queue_position + 1) if last else 1
+    with transaction.atomic():
+        last = (
+            MachineSchedule.objects
+            .for_machine(machine)
+            .pending()
+            .order_by('-queue_position')
+            .first()
+        )
+        next_position = (last.queue_position + 1) if last else 1
 
-    schedule = MachineSchedule.objects.create(
+        schedule = MachineSchedule.objects.create(
         schedule_type      = 'Production',
         jobprocess         = instance,
         machine            = machine,
@@ -88,14 +89,14 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
         estimated_duration = estimated_duration,
         queue_position     = next_position,
         createdby          = instance.createdby,
-    )
+        )
 
     production_tasks = [
         ProductionTask(
             machine_schedule = schedule,
             task             = t,
             time_per_task    = t.duration,
-            qty              = color_count if t.qty_from_colors else 1,
+            qty              = t.default_qty if t.default_qty is not None else color_count,
         )
         for t in tasks
     ]

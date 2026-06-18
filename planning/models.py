@@ -86,6 +86,7 @@ class MachineSchedule(models.Model):
                 fields=['machine', 'queue_position'],
                 condition=models.Q(queue_position__gt=0),
                 name='unique_pending_position',
+
             ),
             # Status must match queue_position
             models.CheckConstraint(

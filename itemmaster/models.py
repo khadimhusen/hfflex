@@ -31,6 +31,9 @@ class MachineTask(models.Model):
     persons_required = models.PositiveSmallIntegerField(default=2)
     task = models.CharField(max_length=512)
     qty_from_colors = models.BooleanField(default=True)
+    default_qty = models.PositiveSmallIntegerField(default=0,
+        null=True, blank=True)
+
     duration = models.PositiveSmallIntegerField()
 
     def __str__(self):

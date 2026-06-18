@@ -154,12 +154,15 @@ def jobdetail(request, id):
         context['accountclearance_form'] = accountclearance_form
 
         if status_form.is_valid():
-            status_form.save()
+            st=status_form.save(commit = False)
+            st.editedby=request.user
+            st.save()
             messages.success(request, 'status save sucessfully.')
             return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
         elif accountclearance_form.is_valid():
             a = accountclearance_form.save(commit=False)
             a.account_clearance_date = timezone.now()
+            a.editedby=request.user
             a.save()
             messages.success(request, 'order save sucessfully.')
             return redirect('/order/joblist/?q=Account clearance')
@@ -348,7 +351,9 @@ def jobdetailedit(request, id):
         if formset1.is_valid() and mainform.is_valid() and formset2.is_valid() \
                 and formset3.is_valid() and formset4.is_valid() and formset5.is_valid() and formset6.is_valid():
             try:
-                mainform.save()
+                j=mainform.save(commit=False)
+                j.editedby=request.user
+                j.save()
                 formset1.save()
                 formset2.save()
                 formset3.save()

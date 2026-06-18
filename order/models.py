@@ -509,7 +509,6 @@ class JobProcess(models.Model):
 
     objects = JobProcessManager()
 
-
     def __str__(self):
         if self.process.process == "Lamination":
             return str(self.job) + "/" + str(self.id) + "/" + str(self.process) + " - " + str(
@@ -612,3 +611,5 @@ class JobChangeLog(models.Model):
 
     def __str__(self):
         return f"{self.job_id} • {self.field_name} • {self.changed_at:%Y-%m-%d %H:%M}"
+
+

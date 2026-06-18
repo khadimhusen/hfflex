@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Material, MatType, Grade, Unit, Commodity
 
 class MaterialAdmin(admin.ModelAdmin):
+    search_fields = ['name']
     list_display = ('name', 'density', 'solid', 'weightgain', 'state')
     list_editable = ('density', 'solid', 'weightgain', 'state')
     ordering = ['id']
@@ -16,6 +17,8 @@ class GradeAdmin(admin.ModelAdmin):
     ordering = ['id']
 
 class UnitAdmin(admin.ModelAdmin):
+
+    search_fields = ['unit']
     list_display = ('unit',)
     ordering = ['id']
 
