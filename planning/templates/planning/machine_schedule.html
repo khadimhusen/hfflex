@@ -100,6 +100,9 @@
           <button class="btn btn-success btn-sm" id="saveBtn" onclick="saveOrder()" disabled>
             <i class="fa fa-save"></i> Save sequence
           </button>
+          <button class="btn btn-outline-primary btn-sm ml-2" onclick="applySequenceNumbers()">
+            <i class="fa fa-sort-numeric-asc"></i> Apply numbers
+          </button>
           {% endif %}
         </div>
 
@@ -148,7 +151,9 @@
             <table class="table table-sm table-striped table-bordered" id="scheduleTable">
               <thead>
                 <tr>
-                  {% if is_manager or is_supervisor %}<th></th>{% endif %}
+                  {% if is_manager or is_supervisor %}
+                  <th></th>
+                  {% endif %}
                   <th>#</th>
                   <th>Job / Reason</th>
 
@@ -242,7 +247,9 @@
                 {# Running row #}
                 {% if running %}
                 <tr class="row-running">
-                  {% if is_manager or is_supervisor %}<td></td>{% endif %}
+                  {% if is_manager or is_supervisor %}
+                  <td></td>
+                  {% endif %}
                   <td><span class="pos-badge running">&#9654;</span></td>
                   <td>
                     {% if running.schedule_type == 'Idle' %}
@@ -351,7 +358,14 @@
                   {% if is_manager or is_supervisor %}
                     <td class="drag-handle"><i class="fa fa-bars"></i></td>
                   {% endif %}
-                  <td class="pos-cell"><span class="pos-badge">{{ s.queue_position }}</span></td>
+                  <td class="pos-cell">
+                    {% if is_manager or is_supervisor %}
+                    <input type="number" class="form-control form-control-sm seq-input"
+                           style="width:50px" min="1" placeholder="{{ s.queue_position }}">
+                    {% else %}
+                    <span class="pos-badge">{{ s.queue_position }}</span>
+                    {% endif %}
+                  </td>
                   <td>
                     {% if s.schedule_type == 'Idle' %}
                       <i class="fa fa-pause text-warning"></i>
@@ -411,9 +425,11 @@
                       {% endif %}
                     {% elif s.schedule_type == 'Idle' %}
                       {% if is_manager or is_supervisor %}
-                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }})">
+                        {% if s.queue_position == 1 %}
+                        <button class="btn btn-xs btn-success start-btn" onclick="openStartModal({{ s.id }}, this)">
                           <i class="fa fa-play"></i> Start
                         </button>
+                        {% endif %}
                         <button class="btn btn-xs btn-info ml-1"
                                 onclick="viewIdle('{{ s.idle_reason }}','{{ s.idle_notes|default:'' }}','{{ s.estimated_duration }}','{{ s.created|date:'d/m/Y H:i' }}')">
                           <i class="fa fa-eye"></i>
@@ -429,9 +445,11 @@
                     {% else %}
                       {# Production pending #}
                       {% if is_manager or is_supervisor %}
-                        <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }},'{{ last_end_time|default:'' }}')">
+                        {% if s.queue_position == 1 %}
+                        <button class="btn btn-xs btn-success start-btn" onclick="openStartModal({{ s.id }}, this)">
                           <i class="fa fa-play"></i> Start
                         </button>
+                        {% endif %}
                         <button class="btn btn-xs btn-primary ml-1"
                                 onclick="openEditModal({{ s.id }},'{{ s.speed|default:'' }}','{{ s.qty|default:'' }}','{{ s.persons_assigned|default:1 }}','{{ s.remark|default:'' }}','{{ s.raw_material_status }}',true,false)">
                           <i class="fa fa-edit"></i> Edit
@@ -441,7 +459,7 @@
                         </button>
                       {% elif is_operator %}
                         {% if s.queue_position == 1 %}
-                          <button class="btn btn-xs btn-success" onclick="openStartModal({{ s.id }}, {{ s.queue_position }},'{{ last_end_time|default:'' }}')">
+                          <button class="btn btn-xs btn-success start-btn" onclick="openStartModal({{ s.id }}, this)">
                             <i class="fa fa-play"></i> Start
                           </button>
                         {% endif %}
@@ -987,7 +1005,15 @@ function getCurrentOrder() {
 
 function updateBadges() {
   $('#scheduleTable tbody tr[data-id]').each(function(i) {
-    $(this).find('.pos-cell .pos-badge').text(i + 1);
+    const position = i + 1;
+    $(this).find('.pos-cell .pos-badge').text(position);
+    $(this).find('.seq-input').attr('placeholder', position);
+
+    // Show Start button only on the row that is now truly first in queue
+    const startBtn = $(this).find('.start-btn');
+    if (startBtn.length) {
+      startBtn.toggle(position === 1);
+    }
   });
 }
 
@@ -995,6 +1021,48 @@ function setSaveState(changed) {
   $('#saveBtn').prop('disabled', !changed);
   $('#unsavedIndicator').toggle(changed);
 }
+
+// ------------------------------------------------------------------ //
+// Apply sequence numbers                                               //
+// ------------------------------------------------------------------ //
+{% if is_manager or is_supervisor %}
+function applySequenceNumbers() {
+  const tbody = $('#scheduleTable tbody');
+  const rows  = tbody.find('tr[data-id]').toArray();
+
+  // Build list of {id, seq, originalIndex} — blank input falls back to
+  // the row's current visual position so untouched rows don't all
+  // collapse to the same number.
+  const items = rows.map(function(row, index) {
+    const $row  = $(row);
+    const id    = parseInt($row.data('id'));
+    const input = $row.find('.seq-input');
+    const typed = input.length ? input.val().trim() : '';
+    const seq   = typed !== '' ? parseFloat(typed) : (index + 1);
+    return { id: id, seq: seq, originalIndex: index };
+  });
+
+  // Stable sort ascending by seq — ties keep upper-row-first (original) order
+  items.sort(function(a, b) {
+    if (a.seq !== b.seq) return a.seq - b.seq;
+    return a.originalIndex - b.originalIndex;
+  });
+
+  // Reorder DOM rows to match
+  items.forEach(function(item) {
+    const row = tbody.find('tr[data-id="' + item.id + '"]');
+    tbody.append(row);
+  });
+
+  // Clear the seq inputs so they show fresh placeholders next time
+  tbody.find('.seq-input').val('');
+
+  updateBadges();
+
+  const changed = getCurrentOrder().some((id, i) => id !== originalOrder[i]);
+  setSaveState(changed);
+}
+{% endif %}
 
 // ------------------------------------------------------------------ //
 // Save sequence                                                        //
@@ -1008,10 +1076,9 @@ function saveOrder() {
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) {
       if (resp.status === 'ok') {
-        originalOrder = getCurrentOrder();
-        setSaveState(false);
-        $('#saveBtn').html('<i class="fa fa-check"></i> Saved');
-        setTimeout(function() { $('#saveBtn').html('<i class="fa fa-save"></i> Save sequence'); }, 1800);
+        // Reload so Start button placement (only on true position-1 row)
+        // and all other server-derived values are fully in sync.
+        location.reload();
       }
     },
     error: function() { alert('Error saving sequence. Please try again.'); }
@@ -1022,11 +1089,22 @@ function saveOrder() {
 // Start job                                                            //
 // ------------------------------------------------------------------ //
 
-function openStartModal(id, position,lastEndTime) {
-  if (position !== 1) { alert('Only the first job in queue can be started.'); return; }
+function openStartModal(id, btnEl) {
+  // Always check the CURRENT live position in the DOM, not a stale value
+  // baked in at page load — this fixes the bug where reordering + saving
+  // without a full page reload left old position numbers in onclick attrs.
+  const row = $(btnEl).closest('tr');
+  const allRows = $('#scheduleTable tbody tr[data-id]').toArray();
+  const livePosition = row.length ? (allRows.indexOf(row[0]) + 1) : null;
+
+  if (livePosition !== 1) {
+    alert('Only the first job in queue can be started.');
+    return;
+  }
+
   $('#startScheduleId').val(id);
-  $('#startSchedulePosition').val(position);
-  $('#startTime').val(lastEndTime || nowForPicker());
+  $('#startSchedulePosition').val(1);
+  $('#startTime').val('{{ last_end_time|default:"" }}' || nowForPicker());
   $('#startModal').modal('show');
 }
 
