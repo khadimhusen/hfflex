@@ -47,6 +47,12 @@ def machine_schedule(request, machine_id):
         .select_related('jobprocess__job', 'idle_reason')
         .first()
     )
+
+    if running:
+        running.estimated_seconds = int(
+            running.estimated_duration.total_seconds()
+        ) if running.estimated_duration else 0
+
     queue = (
         MachineSchedule.objects
         .filter(machine=machine, queue_position__gt=0)

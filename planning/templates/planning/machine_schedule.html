@@ -257,8 +257,6 @@
                   {% if machine.machinename == "PRINTING-1" %}
                   <td>
 
-
-
                      {% if running.jobprocess.job.itemmaster.cylinder_status == "Available" %}
                       <span class="badge badge-success">
                     {{ running.jobprocess.job.itemmaster.cylinder_status }}
@@ -312,6 +310,7 @@
                     {% endif %}
                     {# Edit and Tasks — manager and supervisor only #}
                     {% if is_manager or is_supervisor %}
+
                       {% if running.schedule_type != 'Idle' %}
                     <button class="btn btn-xs btn-primary ml-1"
                     onclick="openEditModal({{ running.id }},'{{ running.speed|default:'' }}','{{ running.qty|default:'' }}','{{ running.persons_assigned|default:1 }}','{{ running.remark|default:'' }}','{{ running.raw_material_status }}',false,true)">
@@ -320,7 +319,19 @@
                     <button class="btn btn-xs btn-info ml-1" onclick="openTasksModal({{ running.id }})">
                           <i class="fa fa-list"></i> Tasks
                     </button>
-                      {% endif %}
+                      {% else %}
+
+                          <button class="btn btn-xs btn-info ml-1"
+                                  onclick="viewIdle('{{ running.idle_reason }}','{{ running.idle_notes|default:'' }}','{{ running.estimated_duration }}','{{ running.created|date:'d/m/Y H:i' }}')">
+                            <i class="fa fa-eye"></i>
+                          </button>
+                          <button class="btn btn-xs btn-warning ml-1"
+                                  onclick="editIdle({{ running.id }},{{ running.idle_reason.id }},'{{ running.idle_notes|default:'' }}',{{ running.estimated_seconds|default:0 }})">
+                            <i class="fa fa-edit"></i>
+                          </button>
+
+
+                    {% endif %}
                     {% endif %}
                     {# Speed only — operator #}
                     {% if is_operator %}
@@ -333,7 +344,7 @@
                 </tr>
                 {% endif %}
 
-                {# Queue rows #}
+                {# Queue pending rows #}
                 {% for s in queue %}
                 <tr class="{% if s.schedule_type == 'Idle' %}row-idle{% elif s.status == 'Hold' %}row-hold{% endif %}"
                     {% if is_manager or is_supervisor %}data-id="{{ s.id }}"{% endif %}>
