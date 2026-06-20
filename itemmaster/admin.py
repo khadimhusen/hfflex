@@ -22,6 +22,11 @@ class ItemImage(admin.TabularInline):
     model = ItemImage
 
 
+@admin.register(MachineTask)  # check which app has Color model
+class MachineTaskAdmin(AutocompleteMixin,admin.ModelAdmin):
+    search_fields = [ 'task','machine__machinename']
+
+
 @admin.register(Color)  # check which app has Color model
 class ColorAdmin(AutocompleteMixin,admin.ModelAdmin):
     search_fields = ['colorname', 'pantonecolor']
@@ -50,4 +55,4 @@ admin.site.register(ItemAttribute)
 admin.site.register(CylinderMovement)
 admin.site.register(StdParameter)
 admin.site.register(ItemStandardParameter)
-admin.site.register(MachineTask)
+
