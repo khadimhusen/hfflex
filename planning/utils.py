@@ -19,6 +19,8 @@ def get_planning_role(user):
                 return 'operator'
         except Exception:
             pass
+    if 'viewplanning' in departments:
+        return 'viewer'
 
     return None
 

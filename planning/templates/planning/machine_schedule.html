@@ -4,12 +4,13 @@
 
 {% block customcss %}
 <style>
-  .table { font-size: 11px; }
+{% if is_viewer %}
+  .table { font-size: 15px; }{% else %}.table { font-size: 12px; } {% endif %}
   .row-running td {
   font-size: 15px !important;
   font-weight: 400;
   }
-  .row-running   { background-color: #d4edda !important; }
+  .row-running   { background-color: #eeed00 !important; }
   .row-idle      { background-color: #fff3cd !important; }
   .row-completed { opacity: 0.55; }
   .row-hold      { background-color: #f8d7da !important; }
@@ -37,8 +38,6 @@
   .variance-delay { color: #dc3545; font-weight: 600; }
   .variance-early { color: #28a745; font-weight: 600; }
 </style>
-
-
 {% endblock customcss %}
 
 {% block content %}
@@ -74,8 +73,6 @@
                 {{ m.machinename }}
               </a>
             {% endfor %}
-
-
             <a href="{% url 'planning:schedule_pdf' %}" target="_blank"
              class="btn btn-secondary btn-sm mr-2">
             <i class="fa fa-file-pdf-o"></i> Download PDF
@@ -109,39 +106,12 @@
         <div class="card-body">
 
           <div class="row mb-3">
-            <div class="col-md-3">
-              <div class="info-box bg-success">
-                <span class="info-box-icon"><i class="fa fa-play"></i></span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Running</span>
-                  <span class="info-box-number">{% if running %}1{% else %}0{% endif %}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="info-box bg-primary">
-                <span class="info-box-icon"><i class="fa fa-list-ol"></i></span>
+             <div class="col-md-2">
+              <div class="info-box bg-warning">
+
                 <div class="info-box-content">
                   <span class="info-box-text">Pending</span>
                   <span class="info-box-number">{{ pending_count }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="info-box bg-warning">
-                <span class="info-box-icon"><i class="fa fa-pause"></i></span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Idle slots</span>
-                  <span class="info-box-number">{{ idle_count }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="info-box bg-secondary">
-                <span class="info-box-icon"><i class="fa fa-check"></i></span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Completed today</span>
-                  <span class="info-box-number">{{ completed_count }}</span>
                 </div>
               </div>
             </div>
@@ -154,28 +124,34 @@
                   {% if is_manager or is_supervisor %}
                   <th></th>
                   {% endif %}
+
+
                   <th>#</th>
                   <th>Job / Reason</th>
-
                   {% if machine.machinename == 'PRINTING-1' %}
                   <th>Cylinder</th>
                   <th>Approval</th>
                   {% endif %}
+
                   <th>Material</th>
                   <th>Qty</th>
                   <th>Size</th>
                   <th>Speed</th>
                   <th>Start</th>
                   <th>End</th>
+
+                  {% if not is_viewer %}
                   <th>Makeready</th>
                   <th>Running</th>
                   <th>Downtime</th>
                   <th>Est. Duration</th>
                   <th>Variance</th>
                   <th>Actions</th>
+                  {% endif %}
+
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="staticRows">
 
                 {# Completed rows #}
                 {% for s in completed %}
@@ -227,10 +203,14 @@
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
                   <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ s.makeready_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.running_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.downtime_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.estimated_duration }}</td>
+
+                  {% if not is_viewer %}
+
+                  <td>{{ s.makeready_duration|format_duration }}</td>
+                  <td>{{ s.running_duration|format_duration }}</td>
+
+                  <td class="downtime-cell">{{ s.downtime_duration|format_duration }}</td>
+                  <td class="estimated-cell">{{ s.estimated_duration|format_duration }}</td>
                   <td>
                     {% if s.time_variance %}
                       {% if s.time_variance_seconds >= 0 %}
@@ -238,15 +218,18 @@
                       {% else %}
                         <span class="variance-early">{{ s.time_variance|format_variance }}</span>
                       {% endif %}
-                    {% else %}&mdash;{% endif %}
+                    {% else %}&mdash;
+                    {% endif %}
                   </td>
                   <td><span class="badge badge-secondary">Completed</span></td>
+                  {% endif %}
+
                 </tr>
                 {% endfor %}
 
                 {# Running row #}
                 {% if running %}
-                <tr class="row-running">
+                <tr class="row-running" data-id="{{ running.id }}">
                   {% if is_manager or is_supervisor %}
                   <td></td>
                   {% endif %}
@@ -291,10 +274,13 @@
                   <td>{{ running.speed|default:"&mdash;" }} {{ running.unit }}/Min.</td>
                   <td>{{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ running.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ running.makeready_duration|default:"&mdash;" }}</td>
-                  <td>{{ running.running_duration|default:"&mdash;" }}</td>
-                  <td>{{ running.downtime_duration|default:"&mdash;" }}</td>
-                  <td>{{ running.estimated_duration }}</td>
+                  {% if not is_viewer %}
+
+                  <td>{{ running.makeready_duration|format_duration }}</td>
+                  <td>{{ running.running_duration|format_duration }}</td>
+
+                  <td class="downtime-cell">{{ running.downtime_duration|format_duration }}</td>
+                  <td class="estimated-cell">{{ running.estimated_duration|format_duration }}</td>
                   <td>
                     {% if running.time_variance %}
                       {% if running.time_variance_seconds >= 0 %}
@@ -348,9 +334,11 @@
                       </button>
                     {% endif %}
                   </td>
+                  {% endif %}
                 </tr>
                 {% endif %}
-
+              </tbody>
+              <tbody id="queueRows">
                 {# Queue pending rows #}
                 {% for s in queue %}
                 <tr class="{% if s.schedule_type == 'Idle' %}row-idle{% elif s.status == 'Hold' %}row-hold{% endif %}"
@@ -406,10 +394,13 @@
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
                   <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
                   <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ s.makeready_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.running_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.downtime_duration|default:"&mdash;" }}</td>
-                  <td>{{ s.estimated_duration }}</td>
+                  {% if not is_viewer %}
+
+                  <td>{{ s.makeready_duration|format_duration }}</td>
+                  <td>{{ s.running_duration|format_duration }}</td>
+
+                  <td class="downtime-cell">{{ s.downtime_duration|format_duration }}</td>
+                  <td class="estimated-cell">{{ s.estimated_duration|format_duration }}</td>
                   <td>&mdash;</td>
                   <td>
                     {% if s.status == 'Hold' %}
@@ -470,6 +461,8 @@
                       {% endif %}
                     {% endif %}
                   </td>
+
+                  {% endif %}
                 </tr>
                 {% endfor %}
 
@@ -482,7 +475,7 @@
   </div>
 </div>
 
-
+{% if not is_viewer %}
 {# ================================================================== #}
 {# MODAL: Start job                                                    #}
 {# ================================================================== #}
@@ -923,13 +916,16 @@
     </div>
   </div>
 </div>
+
 {% endif %}
+{% endif %}
+
 
 {% endblock content %}
 
 
 {% block javascripts %}
-
+{% if not is_viewer %}
 <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
 <script src="{% static 'js/jquery.datetimepicker.full.min.js' %}" ></script>
 <script>
@@ -937,15 +933,9 @@ $(function() {
   $('#startTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
   $('#endTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
 
-  $('#downtimeModal').on('hidden.bs.modal', function() {
-    if (downtimeChanged) {
-      downtimeChanged = false;
-      location.reload();
-    }
-  });
 
   {% if is_manager or is_supervisor %}
-  var sortable = Sortable.create(document.querySelector('#scheduleTable tbody'), {
+  var sortable = Sortable.create(document.querySelector('#queueRows'), {
     animation        : 150,
     handle           : '.drag-handle',
     ghostClass       : 'sortable-ghost',
@@ -999,12 +989,12 @@ function buildUrl(type, id) {
 
 
 function getCurrentOrder() {
-  return $('#scheduleTable tbody tr[data-id]')
+  return $('#queueRows tr[data-id]')
     .map(function() { return parseInt($(this).data('id')); }).get();
 }
 
 function updateBadges() {
-  $('#scheduleTable tbody tr[data-id]').each(function(i) {
+  $('#queueRows tr[data-id]').each(function(i) {
     const position = i + 1;
     $(this).find('.pos-cell .pos-badge').text(position);
     $(this).find('.seq-input').attr('placeholder', position);
@@ -1027,7 +1017,7 @@ function setSaveState(changed) {
 // ------------------------------------------------------------------ //
 {% if is_manager or is_supervisor %}
 function applySequenceNumbers() {
-  const tbody = $('#scheduleTable tbody');
+  const tbody = $('#queueRows');
   const rows  = tbody.find('tr[data-id]').toArray();
 
   // Build list of {id, seq, originalIndex} — blank input falls back to
@@ -1094,7 +1084,7 @@ function openStartModal(id, btnEl) {
   // baked in at page load — this fixes the bug where reordering + saving
   // without a full page reload left old position numbers in onclick attrs.
   const row = $(btnEl).closest('tr');
-  const allRows = $('#scheduleTable tbody tr[data-id]').toArray();
+  const allRows = $('#queueRows tr[data-id]').toArray();
   const livePosition = row.length ? (allRows.indexOf(row[0]) + 1) : null;
 
   if (livePosition !== 1) {
@@ -1159,7 +1149,6 @@ function confirmComplete() {
 // ------------------------------------------------------------------ //
 function openDowntimeModal(id) {
 
-  downtimeChanged = false;  // ← reset on open
   $('#downtimeScheduleId').val(id);
   $('#downtimeReason').val('');
   $('#downtimeHours').val('');
@@ -1170,6 +1159,28 @@ function openDowntimeModal(id) {
   $('#downtimeEmpty').hide();
   $('#downtimeModal').modal('show');
   loadDowntimes(id);
+}
+
+//FIRST
+function formatDurationSeconds(totalSeconds) {
+  totalSeconds = parseInt(totalSeconds) || 0;
+  if (totalSeconds === 0) return '0m';
+  const days    = Math.floor(totalSeconds / 86400);
+  const hours   = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const parts = [];
+  if (days) parts.push(days + 'd');
+  if (hours) parts.push(hours + 'h');
+  if (minutes || parts.length === 0) parts.push(minutes + 'm');
+  return parts.join(' ');
+}
+
+//FIRST
+function updateScheduleRowDuration(scheduleId, downtimeSeconds, estimatedSeconds) {
+  const row = $('tr[data-id="' + scheduleId + '"]');
+  if (!row.length) return;
+  row.find('.downtime-cell').text(formatDurationSeconds(downtimeSeconds));
+  row.find('.estimated-cell').text(formatDurationSeconds(estimatedSeconds));
 }
 
 function loadDowntimes(id) {
@@ -1207,6 +1218,8 @@ function loadDowntimes(id) {
   });
 }
 
+
+
 function confirmAddDowntime() {
   const id     = $('#downtimeScheduleId').val();
   const reason = $('#downtimeReason').val();
@@ -1221,6 +1234,7 @@ function confirmAddDowntime() {
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) {
       if (resp.status === 'ok') {
+        updateScheduleRowDuration(id, resp.downtime_duration, resp.estimated_duration);
         $('#downtimeReason, #downtimeHours, #downtimeMins, #downtimeNotes').val('');
         $('#downtimeList').hide(); $('#downtimeEmpty').hide(); $('#downtimeLoading').show();
         loadDowntimes(id);
@@ -1230,7 +1244,6 @@ function confirmAddDowntime() {
   });
 }
 
-let downtimeChanged = false;  // track if any downtime was saved
 
 function saveDowntime(downtimeId, btn) {
   const scheduleId = $('#downtimeScheduleId').val();
@@ -1252,16 +1265,15 @@ function saveDowntime(downtimeId, btn) {
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) {
       if (resp.status === 'ok') {
-        downtimeChanged = true;  // mark as changed
+        updateScheduleRowDuration(scheduleId, resp.downtime_duration, resp.estimated_duration);
         $(btn).html('<i class="fa fa-check"></i>');
-        setTimeout(function() {
-          $(btn).html('<i class="fa fa-save"></i>');
-        }, 1500);
+        setTimeout(function() { $(btn).html('<i class="fa fa-save"></i>'); }, 1500);
       }
     },
     error: function() { alert('Error saving downtime.'); }
   });
 }
+
 
 function deleteDowntime(downtimeId, btn) {
   if (!confirm('Delete this downtime record?')) return;
@@ -1273,6 +1285,7 @@ function deleteDowntime(downtimeId, btn) {
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) {
       if (resp.status === 'ok') {
+        updateScheduleRowDuration(scheduleId, resp.downtime_duration, resp.estimated_duration);
         $(btn).closest('tr').fadeOut(300, function() {
           $(this).remove();
           if ($('#downtimeBody tr:visible').length === 0) { $('#downtimeList').hide(); $('#downtimeEmpty').show(); }
@@ -1527,4 +1540,6 @@ setTimeout(function() {
   }
 }, WARNING_MS);
 </script>
+
+{% endif %}
 {% endblock javascripts %}

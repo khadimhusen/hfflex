@@ -92,21 +92,148 @@ if (focusedElement) {
 
 </script>
 <script>
-    function myShortcutFunction() {
-    alert("Keyboard shortcut executed!");
-}
+    // Fields to copy from the row above into the focused row.
+    // These correspond to the formset field names used in the template.
+    var COPY_FIELDS = [
+        "materialname",
+        "item_mat_type",
+        "item_grade",
+        "size",
+        "micron",
+        "nos",
+        "rate"
+    ];
 
-// Add an event listener to the document to listen for keydown events
-document.addEventListener("keydown", function(event) {
-    // Check for the key combination you want (e.g., Ctrl+Alt+S)
-    if (event.ctrlKey && event.altKey && event.key === "D") {
-        // Prevent the default behavior (e.g., saving the page)
-        event.preventDefault();
+    // Django formset inputs/selects are named like: <prefix>-<index>-<fieldname>
+    // and ID'd like: id_<prefix>-<index>-<fieldname>
+    // We don't hardcode <prefix> - we detect it from whatever is focused.
+    var FORMSET_PREFIX = null; // cached once detected
 
-        // Call your custom function
-        myShortcutFunction();
+    function detectPrefixFromName(name) {
+        // Matches things like "form-3-materialname" or "inward-3-materialname"
+        var match = name.match(/^([A-Za-z0-9_]+)-(\d+)-([A-Za-z0-9_]+)$/);
+        return match ? { prefix: match[1], index: parseInt(match[2], 10), field: match[3] } : null;
     }
-});
+
+    function findFormsetField(el) {
+        // Walk up from the focused element to find one with a matching name pattern.
+        // Handles cases where focus might be on a wrapper/search box rather than
+        // the actual named form field.
+        var current = el;
+        var depth = 0;
+        while (current && depth < 5) {
+            if (current.name) {
+                var parsed = detectPrefixFromName(current.name);
+                if (parsed) return { el: current, parsed: parsed };
+            }
+            current = current.parentElement;
+            depth++;
+        }
+        return null;
+    }
+
+    function getRowInfoFromElement(el) {
+        var found = findFormsetField(el);
+        if (!found) {
+            console.warn("Ctrl+D: could not find a formset-named field near focus.",
+                "Focused element was:", el,
+                "name attr:", el ? el.name : null,
+                "id attr:", el ? el.id : null);
+            return null;
+        }
+        if (!FORMSET_PREFIX) {
+            FORMSET_PREFIX = found.parsed.prefix;
+            console.info("Ctrl+D: detected formset prefix '" + FORMSET_PREFIX + "'.");
+        }
+        return found.parsed;
+    }
+
+    function copyValueToField(srcEl, destEl) {
+        if (!srcEl || !destEl) return;
+
+        if (destEl.tagName === "SELECT") {
+            destEl.value = srcEl.value;
+        } else if (destEl.type === "checkbox" || destEl.type === "radio") {
+            destEl.checked = srcEl.checked;
+        } else {
+            destEl.value = srcEl.value;
+        }
+
+        // Fire both native and jQuery change events so any listeners
+        // (select2, validation, etc.) pick up the update.
+        var evt = new Event("change", { bubbles: true });
+        destEl.dispatchEvent(evt);
+        if (window.jQuery) {
+            jQuery(destEl).trigger("change");
+        }
+    }
+
+    function copyFocusedRowIntoRowBelow() {
+        var focusedElement = document.activeElement;
+        var info = getRowInfoFromElement(focusedElement);
+
+        if (!info) {
+            return; // diagnostic already logged in getRowInfoFromElement
+        }
+
+        var prefix = FORMSET_PREFIX;
+        var srcRowIndex = info.index;
+        var destRowIndex = info.index + 1;
+
+        // Confirm a row actually exists below before doing anything.
+        // We check against the first copy field as a representative probe.
+        var probeFieldName = COPY_FIELDS[0];
+        var probeDestId = "id_" + prefix + "-" + destRowIndex + "-" + probeFieldName;
+        if (!document.getElementById(probeDestId)) {
+            console.warn("Ctrl+D: no row exists below row " + srcRowIndex + "; nothing to copy into.");
+            return;
+        }
+
+        var copiedCount = 0;
+
+        COPY_FIELDS.forEach(function (fieldName) {
+            var srcId = "id_" + prefix + "-" + srcRowIndex + "-" + fieldName;
+            var destId = "id_" + prefix + "-" + destRowIndex + "-" + fieldName;
+
+            var srcEl = document.getElementById(srcId);
+            var destEl = document.getElementById(destId);
+
+            if (srcEl && destEl) {
+                copyValueToField(srcEl, destEl);
+                copiedCount++;
+            } else {
+                console.warn("Ctrl+D: missing field for '" + fieldName + "'.",
+                    "Looked for srcId:", srcId, "(found:", !!srcEl + ")",
+                    "destId:", destId, "(found:", !!destEl + ")");
+            }
+        });
+
+        console.info("Ctrl+D: copied " + copiedCount + " of " + COPY_FIELDS.length + " fields from row " + srcRowIndex + " into row " + destRowIndex + ".");
+
+        // Move focus to gross_wt of the newly-filled row so the user can
+        // immediately type the next weighment without touching the mouse.
+        var grossWtId = "id_" + prefix + "-" + destRowIndex + "-gross_wt";
+        var grossWtEl = document.getElementById(grossWtId);
+        if (grossWtEl) {
+            grossWtEl.focus();
+            if (typeof grossWtEl.select === "function") {
+                grossWtEl.select(); // select existing text for quick overwrite
+            }
+        } else {
+            console.warn("Ctrl+D: could not find gross_wt field to focus.", "Looked for:", grossWtId);
+        }
+    }
+
+    // Ctrl+D anywhere inside a formset row copies the repeating fields
+    // (Material, Type, Grade, size, micron, Nos, Rate, qc_status, remark)
+    // from the focused row into the row below it, then moves focus to
+    // that row's gross_wt field.
+    document.addEventListener("keydown", function (event) {
+        if (event.ctrlKey && event.key === "d") {
+            event.preventDefault();
+            copyFocusedRowIntoRowBelow();
+        }
+    });
 
 </script>
 

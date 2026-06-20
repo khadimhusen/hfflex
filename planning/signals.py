@@ -1,7 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import transaction
-from django.db.models import F
 from datetime import timedelta
 
 from order.models import JobProcess
@@ -48,7 +47,6 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     color_count      = instance.job.itemmaster.itemcolors.count() or 1
 
     # Determine initial status based on job status
-    from planning.choices import HOLD_STATUSES, RELEASE_STATUSES
     job_status     = instance.job.jobstatus
     initial_status = 'Hold' if job_status in HOLD_STATUSES else 'Pending'
 

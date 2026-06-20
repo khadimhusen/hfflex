@@ -14,7 +14,7 @@ from django.db.models import Sum
 
 from .utils import get_planning_role, manager_or_supervisor_required
 from django.db.models import F
-
+from .pdfs import generate_schedule_pdf
 
 @login_required(login_url='/login/')
 @planning_access_required
@@ -24,7 +24,7 @@ def machine_schedule(request, machine_id):
 
     # Managers and supervisors see all active machines
     # Operators see only their machine
-    if role in ('manager', 'supervisor'):
+    if role in ('manager', 'supervisor', 'viewer'):
         machines = Machine.objects.filter(active=True)
     else:
         machines = Machine.objects.filter(pk=machine_id)
@@ -95,6 +95,7 @@ def machine_schedule(request, machine_id):
         'is_manager': role == 'manager',
         'is_supervisor': role == 'supervisor',
         'is_operator': role == 'operator',
+        'is_viewer' : role == 'viewer',
         'last_end_time': last_end_time,
             }
     return render(request, 'planning/machine_schedule.html', context)
@@ -103,8 +104,6 @@ def machine_schedule(request, machine_id):
 # ------------------------------------------------------------------ #
 # Edit MachineSchedule                                                 #
 # ------------------------------------------------------------------ #
-
-
 @login_required(login_url='/login/')
 @require_POST
 def edit_schedule(request, machine_id, schedule_id):
@@ -904,14 +903,18 @@ def add_downtime(request, machine_id, schedule_id):
                 estimated_duration=new_estimated,
             )
             recalculate_timeline(machine)
-            return JsonResponse({'status': 'ok'})
+            return JsonResponse({
+                'status': 'ok',
+                'downtime_duration': str(int(total_downtime.total_seconds())),  # seconds, easy to format client-side
+                'estimated_duration': str(int(new_estimated.total_seconds())),
+            })
 
         except Exception as e:
             print(f"add_downtime error: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
-from .pdfs import generate_schedule_pdf
+
 
 @login_required(login_url='/login/')
 def schedule_pdf(request):
