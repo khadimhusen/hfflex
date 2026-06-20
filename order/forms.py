@@ -110,7 +110,7 @@ class JobMaterialForm(forms.ModelForm):
 class JobDetailEditForm(forms.ModelForm):
     class Meta:
         model = Job
-        exclude = ['joborder', 'itemmaster','prejob']
+        exclude = ['joborder', 'itemmaster','prejob','approvedby','account_clearance_date']
 
 
 class JobProcessForm(forms.ModelForm):
