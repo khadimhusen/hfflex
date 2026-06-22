@@ -630,6 +630,7 @@
                     <thead>
                     <tr>
                         <th>Process</th>
+                        <th>Machine</th>
                         <th>Start Time</th>
                         <th>End Time</th>
                         <th>Qty</th>
@@ -641,6 +642,7 @@
                     {% for plan in plans %}
                     <tr>
                         <th>{{plan.jobprocess.process}}-{{plan.jobprocess.process_count|ordinal}}</th>
+                        <th>{{plan.machine}}</th>
                         <th>{{plan.start_time}}</th>
                         <th>{{plan.end_time}}</th>
                         <th>{{plan.qty}} {{plan.unit}}</th>
