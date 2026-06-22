@@ -89,18 +89,6 @@ def capture_job_changes(sender, instance, **kwargs):
 @receiver(post_save, sender=Job)
 def write_job_changes(sender, instance, created, **kwargs):
 
-
-    if created:
-        JobChangeLog.objects.create(
-            job=instance,
-            field_name='__created__',
-            old_value=None,
-            new_value=None,
-            changed_by=instance.editedby,
-            action='create',
-        )
-        return
-
     changes = getattr(instance, '_pending_changes', [])
     if not changes:
         return
