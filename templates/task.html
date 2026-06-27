@@ -1,46 +1,130 @@
-<li class="nav-item dropdown">
-    <a herf="#" id="task_list" class="nav-link dropdown_toggle" data-toggle="dropdown"
-       style="color:lightgreen">
-        <strong>Task({{taskteome}}/{{taskbyme}}/{{tasktobeclose}})</strong>
+{% load extra_tag %}
+<!-- New Task shortcut -->
+
+<li class="nav-item">
+    <a href="{% url 'task:addtask' %}" class="btn btn-sm btn-warning mr-2 my-auto" title="New Task">
+        <i class="fas fa-plus"></i> Task
     </a>
-
-    <div class="dropdown-menu " aria-labelledby="task">
-        <ul>
-
-            <table class="table dropdown-item">
-
-                <tr>
-                    <td>
-                        <a href="{% url 'task:tasklist' %}?task_alloted_to={{userid}}&is_closed=false"
-                           class="nav-link" style="color:blue; font-size:20px">To Me ({{taskteome}})</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&is_closed=false"
-                           class="nav-link"
-                           style="color:blue; font-size:20px">By Me ({{taskbyme}})</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&request_to_close=true&is_closed=false"
-                           class="nav-link"
-                           style="color:blue; font-size:20px">To Be Close ({{tasktobeclose}})</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'task:tasklist' %}?createdby={{userid}}&request_to_close=true&is_closed=true"
-                           class="nav-link"
-                           style="color:blue; font-size:20px">Closed</a>
-                    </td>
-                </tr>
-
-            </table>
-
-        </ul>
-
-    </div>
-
 </li>
+
+<!-- Pending Tasks button -->
+<li class="nav-item">
+    <a href="#" class="btn btn-sm btn-info mr-2 my-auto"
+       data-toggle="modal" data-target="#globalPendingModal"
+       onclick="loadPendingTasks()">
+        <i class="fas fa-tasks"></i> Pending
+        {% if taskteome %}
+        <span class="badge badge-light">{{ taskteome }}</span>
+        {% endif %}
+    </a>
+</li>
+
+<!-- Notification Bell -->
+<li class="nav-item dropdown">
+    <a class="nav-link" href="#" id="notifDropdown" role="button"
+       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+       onclick="markNotificationsRead()">
+        <i class="fas fa-bell"></i>
+        {% if task_unread_count %}
+        <span class="badge badge-danger navbar-badge" id="notif-badge">
+            {{ task_unread_count }}
+        </span>
+        {% endif %}
+    </a>
+    <div class="dropdown-menu dropdown-menu-right"
+         style="width:320px; max-height:400px; overflow-y:auto;">
+        <span class="dropdown-header">Notifications</span>
+        {% if task_notifications %}
+            {% for notif in task_notifications %}
+            <a href="{% url 'task:taskdetail' notif.task.id %}" class="dropdown-item">
+                <i class="fas fa-tasks mr-2 text-primary"></i>
+                <small>{{ notif.message }}<br>
+                <span class="text-muted">{{ notif.created|timesince }} ago</span></small>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="dropdown-item text-muted">
+                <small>No new notifications</small>
+            </div>
+        {% endif %}
+        <div class="dropdown-divider"></div>
+        <a href="{% url 'task:tasklist' %}" class="dropdown-item text-center">
+            <small>View all tasks</small>
+        </a>
+    </div>
+</li>
+
+<!-- Global Pending Tasks Modal -->
+<div class="modal fade" id="globalPendingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-tasks mr-2"></i> My Pending Tasks
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0" id="pendingTasksBody">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'task:tasklist' %}?tab=assigned" class="btn btn-primary btn-sm">
+                    View All My Tasks
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markNotificationsRead() {
+    fetch("{% url 'task:mark_notifications_read' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(() => {
+        const badge = document.getElementById('notif-badge');
+        if (badge) badge.style.display = 'none';
+    });
+}
+
+function loadPendingTasks() {
+    const body = document.getElementById('pendingTasksBody');
+    body.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    fetch("{% url 'task:pending_tasks_json' %}")
+        .then(r => r.json())
+        .then(data => {
+            if (data.tasks.length === 0) {
+                body.innerHTML = '<div class="text-center text-muted py-4">No pending tasks.</div>';
+                return;
+            }
+            let rows = data.tasks.map(t => {
+                const date = new Date(t.target_date).toLocaleDateString('en-GB');
+                const badge = t.priority === 'HIGH'
+                    ? 'badge-danger' : t.priority === 'NORMAL'
+                    ? 'badge-warning' : 'badge-primary';
+                return `<tr>
+                    <td>${t.taskname}</td>
+                    <td>${t.createdby__username}</td>
+                    <td>${date}</td>
+                    <td><span class="badge ${badge}">${t.priority}</span></td>
+                    <td><a href="/task/detail/${t.id}/" class="btn btn-primary btn-sm">Open</a></td>
+                </tr>`;
+            }).join('');
+            body.innerHTML = `
+                <table class="table table-sm table-striped mb-0">
+                    <thead><tr>
+                        <th>Task</th><th>Assigned By</th>
+                        <th>Target Date</th><th>Priority</th><th></th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="text-center text-danger py-4">Failed to load.</div>';
+        });
+}
+</script>

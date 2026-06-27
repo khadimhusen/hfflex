@@ -27,6 +27,8 @@ urlpatterns = [
                   path('test/', views.test, name='test'),
                   path('test1/', views.test1, name='test1'),
                   path('test2/', views.test2, name='test2'),
+                  path('inkstore/', include('inkstore.urls')),
+
                   path('ckeditor5/', include('django_ckeditor_5.urls')),
                   path('resolutions/', include('resolutions.urls')),
                   path('permisiondenid/', views.noaccess, name='noaccess'),

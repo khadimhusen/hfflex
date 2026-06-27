@@ -1,155 +1,287 @@
 {% extends 'home.html' %}
 {% load static %}
-
-
 {% load crispy_forms_tags %}
 
-{% block customcss%}
+{% block customcss %}
+<style>
+.task-header-card { border-top: 4px solid #007bff; }
+.status-badge { font-size: 0.85rem; padding: 5px 12px; border-radius: 20px; }
+.chat-box { height: 420px; overflow-y: scroll; background: #f8f9fa; border-radius: 6px; padding: 12px; }
+.msg-bubble { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+.msg-bubble.mine { border-left: 3px solid #007bff; }
+.msg-bubble.others { border-left: 3px solid #6c757d; }
+.msg-meta { font-size: 11px; color: #888; margin-bottom: 4px; }
+.msg-text { font-size: 13px; }
+.chat-input-area { background: #fff; border-top: 1px solid #dee2e6; padding: 12px; }
+#ajax-msg-form .form-group { margin-bottom: 6px; }
 
-{% endblock customcss %}
+{% if task.request_to_close %}
+
+@keyframes pulse-green {
+    0%   { box-shadow: 0 0 0 0 rgba(200, 20, 69, 0.7); }
+    70%  { box-shadow: 0 0 0 10px rgba(200, 20, 69, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(200, 20, 69, 0); }
+}
+.btn-pulse {
+    animation: pulse-green 1.5s infinite;
+}
+
+{% endif %}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-2">
-            <a href="{% url 'task:tasklist' %}" class="btn btn-primary">Tasklist</a>
-        </div>
+<div class="container mt-3">
+
+    <!-- Back -->
+    <div class="mb-3">
+        <a href="{% url 'task:tasklist' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Task List
+        </a>
     </div>
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title"> {{task.taskname|title }}</h5>
-            {% if tocloseform %}
-            <form action="{% url 'task:toclosetask' task.id %}" method="post">
-                <div hidden="hidden">{{tocloseform}}</div>
-                {% csrf_token %}
-                <button type="submit"> to close</button>
-            </form>
-            {% endif %}
-            {% if requesttocloseform %}
-            <form action="{% url 'task:requesttoclosetask' task.id %}" method="post">
-                <dir hidden="hidden">{{requesttocloseform}}</dir>
-                {% csrf_token %}
-                <button type="submit">request to close</button>
-            </form>
-            {% endif %}
-        </div>
+
+    <!-- Task Header Card -->
+    <div class="card task-header-card shadow-sm mb-3">
         <div class="card-body">
-            <p class="card-text">{{task.description}}</p>
-        </div>
-        <hr>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-3">
-                    <h7 class="card-text">Taks created by:- {{task.createdby}} on {{task.created}}</h7>
+            <div class="d-flex align-items-start justify-content-between flex-wrap">
+                <div>
+                    <h4 class="mb-1">{{ task.taskname|title }}</h4>
+                    <p class="text-muted mb-2">{{ task.description }}</p>
                 </div>
-                <div class="col-3">
-                    <h7 class="card-text text-right">Taks Alloted to:- {{task.task_alloted_to}}</h7>
-                </div>
-                <div class="col-3">
-                    <h7 class="card-text text-right">Target Date:- {{task.target_date}}</h7>
-                </div>
-                <div class="col-3">
+                <div class="text-right">
                     {% if task.is_closed %}
-                    <h7 class="card-text text-right text-success font-weight-bold">
-                        Task:- Closed on {{task.close_date}}
-                    </h7>
+                    <span class="badge badge-success status-badge">
+                        <i class="fas fa-check-circle"></i> Closed on {{ task.close_date|date:"d/m/Y" }}
+                    </span>
                     {% elif task.request_to_close %}
-                    <h7 class="card-text text-right text-primary font-weight-bold">
-                        Task- Requested to Close on {{task.request_date}}
-                    </h7>
+                    <span class="badge badge-warning status-badge">
+                        <i class="fas fa-hourglass-half"></i> Close Requested on {{ task.request_date|date:"d/m/Y H:i" }}
+                    </span>
                     {% else %}
-                    <h7 class="card-text text-right text-danger font-weight-bold">
-                        Task- Pending to Close
-                    </h7>
+                    <span class="badge badge-danger status-badge">
+                        <i class="fas fa-clock"></i> Pending
+                    </span>
                     {% endif %}
                 </div>
             </div>
+            <hr class="my-2">
+            <div class="row text-sm">
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Created By</small>
+                    <strong>{{ task.createdby }}</strong>
+                    <small class="text-muted d-block">{{ task.created|date:"d/m/Y H:i" }}</small>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Assigned To</small>
+                    <strong>{{ task.task_alloted_to }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Target Date</small>
+                    <strong>{{ task.target_date|date:"d/m/Y" }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Priority</small>
+                    {% if task.priority == "HIGH" %}
+                    <span class="badge badge-danger">HIGH</span>
+                    {% elif task.priority == "NORMAL" %}
+                    <span class="badge badge-warning">NORMAL</span>
+                    {% else %}
+                    <span class="badge badge-primary">LOW</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            {% if tocloseform or requesttocloseform %}
+            <hr class="my-2">
+            <div class="d-flex gap-2">
+                {% if tocloseform %}
+                <form action="{% url 'task:toclosetask' task.id %}" method="post" class="d-inline">
+                    <div hidden>{{ tocloseform }}</div>
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success  btn-pulse">
+                        <i class="fas fa-check mr-1"></i> Approve & Close Task
+                    </button>
+                </form>
+                {% endif %}
+                {% if requesttocloseform %}
+                <form action="{% url 'task:requesttoclosetask' task.id %}" method="post" class="d-inline">
+                    <div hidden>{{ requesttocloseform }}</div>
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-paper-plane mr-1"></i> Request to Close
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
-    <div class="card">
+
+    <!-- Chat Section -->
+    <div class="card shadow-sm">
         <div class="card-header">
-            {% if taskmsgform %}
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModal">
-                Reply Msg
-            </button>
+            <i class="fas fa-comments mr-1 text-primary"></i>
+            <strong>Messages</strong>
+            <span class="badge badge-secondary ml-1" id="msg-count">{{ task.taskmsg.count }}</span>
+        </div>
 
-            <!-- Modal -->
-            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                 aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Task reply Form</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+        <!-- Chat Messages -->
+        <div class="chat-box" id="chat-box">
+            {% for msg in task.taskmsg.all %}
+            <div class="msg-bubble {% if msg.createdby == request.user %}mine{% else %}others{% endif %}">
+                <div class="msg-meta">
+                    <strong>{{ msg.createdby }}</strong> &middot; {{ msg.created|date:"d/m/Y H:i" }}
+                </div>
+                {% if msg.msg_image %}
+                <div class="mb-2">
+                    <a href="{{ msg.msg_image.url }}" target="_blank">
+                        {% if msg.thumbnail %}
+                        <img src="{{ msg.thumbnail.url }}" class="img-thumbnail" style="max-width:120px;">
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
+                {% if msg.msg_file %}
+                <div class="mb-1">
+                    <a href="{{ msg.msg_file.url }}" target="_blank" class="btn btn-xs btn-outline-secondary btn-sm">
+                        <i class="fas fa-paperclip"></i> {{ msg.msg_file.name|truncatechars:20 }}
+                    </a>
+                </div>
+                {% endif %}
+                {% if msg.msg_text %}
+                <div class="msg-text">{{ msg.msg_text }}</div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-4" id="no-msg-placeholder">
+                <i class="fas fa-comments fa-2x mb-2"></i><br>No messages yet.
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- AJAX Message Input -->
+        {% if taskmsgform %}
+        <div class="chat-input-area">
+            <form id="ajax-msg-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea class="form-control form-control-sm" id="id_msg_text"
+                              name="msg_text" rows="2" placeholder="Type a message..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="col">
+                        <div class="custom-file form-control-sm">
+                            <input type="file" class="custom-file-input" id="id_msg_image" name="msg_image" accept="image/*">
+                            <label class="custom-file-label" for="id_msg_image">Image</label>
                         </div>
-                        <form action="" method="post" enctype="multipart/form-data">
-                            <div class="modal-body">
-
-                                <div hidden="hidden">
-                                    {{taskmsgform.task}}
-                                </div>
-                                <div class="form-group col-md-12 mb-0 ">
-                                    {{taskmsgform.msg_text|as_crispy_field}}
-                                </div>
-                                <div class="form-group col-md-12 mb-0 ">
-                                    {{taskmsgform.msg_image|as_crispy_field}}
-                                </div>
-                                <div class="form-group col-md-12 mb-0 ">
-                                    {{taskmsgform.msg_file|as_crispy_field}}
-                                </div>
-                                {% csrf_token %}
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Save changes</button>
-                            </div>
-                        </form>
-
+                    </div>
+                    <div class="col">
+                        <div class="custom-file form-control-sm">
+                            <input type="file" class="custom-file-input" id="id_msg_file" name="msg_file">
+                            <label class="custom-file-label" for="id_msg_file">File</label>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm" id="send-btn">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
                     </div>
                 </div>
-            </div>
-            {% endif %}
+                <small class="text-danger d-none" id="msg-error">Please enter a message, image, or file.</small>
+            </form>
         </div>
-        <div class="card-body" style="height: 300px; overflow-y: scroll;">
-            <div class="row">
-                {% for msg in task.taskmsg.all %}
-                <div class="col-2 border border-primary">
-                    <p>[{{ forloop.counter }}]:- {{msg.createdby}} {{msg.created}}</p>
-                    {% if msg.msg_image %}
-                    <a href="{{msg.msg_image.url}}" target="_blank">
-                        {% if msg.thumbnail %}
-                        <img src="{{msg.thumbnail.url}}" class="img-thumbnail">
-
-                        {% endif %} </a>
-                    {% endif %}
-                    <hr>
-                    {% if msg.msg_file %}
-                    <a href="{{msg.msg_file.url}}" target="_blank">file:- {{msg.msg_file.name|truncatechars:7 }}</a>
-                    {% endif %}
-                </div>
-                <div class="col-10 border border-primary">
-                    <p class="card-text">
-                        {{msg.msg_text}}
-                    </p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
+        {% endif %}
     </div>
-
 </div>
-{% endblock content %}
-
+{% endblock %}
 
 {% block javascripts %}
-<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
-<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
-
 <script>
+const chatBox = document.getElementById('chat-box');
+// Scroll chat to bottom on load
+if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 
+const ajaxForm = document.getElementById('ajax-msg-form');
+if(ajaxForm){
+    // Custom file label update
+    document.querySelectorAll('.custom-file-input').forEach(input => {
+        input.addEventListener('change', function(){
+            const label = this.nextElementSibling;
+            label.textContent = this.files[0] ? this.files[0].name : (this.id === 'id_msg_image' ? 'Image' : 'File');
+        });
+    });
+
+    ajaxForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        const msgText = document.getElementById('id_msg_text').value.trim();
+        const msgImage = document.getElementById('id_msg_image').files[0];
+        const msgFile = document.getElementById('id_msg_file').files[0];
+        const errEl = document.getElementById('msg-error');
+
+        if(!msgText && !msgImage && !msgFile){
+            errEl.classList.remove('d-none');
+            return;
+        }
+        errEl.classList.add('d-none');
+
+        const formData = new FormData(ajaxForm);
+        const sendBtn = document.getElementById('send-btn');
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        fetch("{% url 'task:post_task_message' task.id %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': ajaxForm.querySelector('[name=csrfmiddlewaretoken]').value},
+            body: formData,
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.success){
+                // Remove placeholder if present
+                const placeholder = document.getElementById('no-msg-placeholder');
+                if(placeholder) placeholder.remove();
+
+                // Build bubble
+                const bubble = document.createElement('div');
+                bubble.className = 'msg-bubble mine';
+                let html = `<div class="msg-meta"><strong>You</strong> &middot; ${data.created}</div>`;
+                if(data.image_url){
+                    const thumb = data.thumbnail_url || data.image_url;
+                    html += `<div class="mb-2"><a href="${data.image_url}" target="_blank">
+                        <img src="${thumb}" class="img-thumbnail" style="max-width:120px;"></a></div>`;
+                }
+                if(data.file_url){
+                    html += `<div class="mb-1"><a href="${data.file_url}" target="_blank"
+                        class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-paperclip"></i> ${data.file_name}</a></div>`;
+                }
+                if(data.msg_text){
+                    html += `<div class="msg-text">${data.msg_text}</div>`;
+                }
+                bubble.innerHTML = html;
+                chatBox.appendChild(bubble);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Update count
+                const countBadge = document.getElementById('msg-count');
+                if(countBadge) countBadge.textContent = parseInt(countBadge.textContent||0) + 1;
+
+                // Reset form
+                ajaxForm.reset();
+                document.querySelectorAll('.custom-file-label').forEach((l,i) => {
+                    l.textContent = i===0 ? 'Image' : 'File';
+                });
+            } else {
+                alert('Error: ' + JSON.stringify(data.errors || data.error));
+            }
+        })
+        .catch(() => alert('Network error, please try again.'))
+        .finally(() => {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+        });
+    });
+}
 </script>
-{% endblock javascripts%}
+{% endblock %}

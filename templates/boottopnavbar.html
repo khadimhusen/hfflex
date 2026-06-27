@@ -53,7 +53,8 @@
     <div class="navbar-collapse collapse">
         <ul class="navbar-nav mx-auto">
 
-            {% tasklist %}
+
+
 
             {% if user|user_in_department:"topprejoblist" %}
             {% prejoblist %}
@@ -95,7 +96,7 @@
             </li>
             {% endif %}
 
-
+            {% tasklist %}
             <li class="nav-item dropdown">
                 <a href="#" id="dd_user" class="nav-link dropdown-toggle" data-toggle="dropdown"
                    style="color:lightgreen">

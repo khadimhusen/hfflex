@@ -18,13 +18,16 @@ from .forms import OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetail
 from customer.models import Address
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
-
+from task.models import Task
 
 @login_required(login_url='/login/')
 @forceview
 @accessview
 def joblist(request):
+
+    context={}
     param = request.get_full_path().replace(request.path, "")
+    context['param']=param
     q = request.GET.get('q', None)
     if q != None:
         job_list = Job.objects.filter(jobstatus=q)
@@ -32,6 +35,8 @@ def joblist(request):
         job_list = Job.objects.all()
 
     myFilter = JobFilter(request.GET, job_list)
+
+
     job_list = myFilter.qs.select_related('joborder', 'itemmaster', 'unit',
                                           'joborder__customer').prefetch_related('jobprocess__process')
     result = job_list.aggregate(Sum('kgqty'))
@@ -45,7 +50,23 @@ def joblist(request):
         jobs = paginator.page(1)
     except EmptyPage:
         jobs = paginator.page(paginator.num_pages)
-    return render(request, 'job/joblist.html', {'jobs': jobs, 'myFilter': myFilter, 'kgsum': kgsum, 'param': param})
+
+    context['jobs']=jobs
+    context['myFilter']=myFilter
+    context['kgsum']= kgsum
+
+    if request.session.pop('show_pending_tasks', False):
+        print("FLAG WAS TRUE")
+        pending_tasks = Task.objects.filter(
+            task_alloted_to=request.user,
+            is_closed=False
+        ).select_related('createdby').order_by('target_date')[:10]
+        print("pending tasks count:", pending_tasks.count())
+        context['pending_tasks_popup'] = pending_tasks
+    else:
+        print("FLAG WAS FALSE OR MISSING")
+
+    return render(request, 'job/joblist.html', context)
 
 
 @login_required(login_url='/login/')

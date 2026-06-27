@@ -664,7 +664,7 @@
                         <th>Field</th>
                         <th>Old</th>
                         <th>New</th>
-                        <th>Chanded by</th>
+                        <th>Changed by</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -672,9 +672,9 @@
                     {% for item in job.change_logs.all %}
                     <tr>
                         <th>{{item.field_name}}-</th>
-                        <th>{{item.old_value}}-</th>
-                        <th>{{item.new_value}}-</th>
-                        <th>{{item.changed_by}}{{item.changed_at}}</th>
+                        <th>{{item.old_value|default:""}}-</th>
+                        <th>{{item.new_value|default:""}}-</th>
+                        <th>{{item.changed_by|default:""}} {{item.changed_at}}</th>
                         <th>{{item.action}}-</th>
 
                     </tr>

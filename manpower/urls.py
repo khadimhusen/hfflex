@@ -10,5 +10,7 @@ urlpatterns = [
     path('shiftdetail/<int:id>/', views.shiftdetail, name='shiftdetail'),
     path('approvedshift/<int:id>/',views.approveshift,name='approveshift'),
     path('downtimelist/',views.downtimelist,name='downtimelist'),
+    path('qctestlist/',views.qctestlist,name='qctestlist'),
+
 
 ]

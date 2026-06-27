@@ -186,6 +186,59 @@
 
     </div>
 </div>
+{% if pending_tasks_popup %}
+<div class="modal fade" id="pendingTasksModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    You have {{ pending_tasks_popup|length }} pending task(s)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="table table-sm table-striped mb-0">
+                    <thead><tr>
+                        <th>Task</th>
+                        <th>Assigned By</th>
+                        <th>Target Date</th>
+                        <th>Priority</th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody>
+                    {% for t in pending_tasks_popup %}
+                    <tr>
+                        <td>{{ t.taskname }}</td>
+                        <td>{{ t.createdby }}</td>
+                        <td>{{ t.target_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if t.priority == "HIGH" %}
+                            <span class="badge badge-danger">HIGH</span>
+                            {% elif t.priority == "NORMAL" %}
+                            <span class="badge badge-warning">NORMAL</span>
+                            {% else %}
+                            <span class="badge badge-primary">LOW</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'task:taskdetail' t.id %}" class="btn btn-primary btn-sm">Open</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'task:tasklist' %}?tab=assigned" class="btn btn-primary btn-sm">
+                    View All My Tasks
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% endblock content %}
 
@@ -196,5 +249,18 @@
 
 <script>$(function () {$( "#id_created__lt" ).datetimepicker({format: 'd/m/Y'});});</script>
 <script>$(function () {$( "#id_created__gt" ).datetimepicker({format: 'd/m/Y'});});</script>
+
+{% if pending_tasks_popup %}
+
+<script>
+    function showPendingTasks() {
+        $('#pendingTasksModal').modal('show');
+    }
+    $(document).ready(function () {
+        $('#pendingTasksModal').modal('show');  // still auto-shows after login
+    });
+</script>
+
+{% endif %}
 
 {% endblock javascripts %}

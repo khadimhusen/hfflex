@@ -64,6 +64,10 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     estimated_duration = makeready_duration + running_duration + downtime_duration
 
     with transaction.atomic():
+        MachineSchedule.objects.select_for_update().filter(
+            machine=machine
+        ).values('id')
+
         last = (
             MachineSchedule.objects
             .for_machine(machine)
@@ -89,17 +93,17 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
         createdby          = instance.createdby,
         )
 
-    production_tasks = [
-        ProductionTask(
-            machine_schedule = schedule,
-            task             = t,
-            time_per_task    = t.duration,
-            qty              = t.default_qty if t.default_qty is not None else color_count,
-        )
-        for t in tasks
-    ]
-    if production_tasks:
-        ProductionTask.objects.bulk_create(production_tasks)
+        production_tasks = [
+            ProductionTask(
+                machine_schedule = schedule,
+                task             = t,
+                time_per_task    = t.duration,
+                qty              = t.default_qty if t.default_qty is not None else color_count,
+            )
+            for t in tasks
+        ]
+        if production_tasks:
+            ProductionTask.objects.bulk_create(production_tasks)
 
     recalculate_timeline(machine)
     print(f"MachineSchedule created — id={schedule.id}, position={next_position}")

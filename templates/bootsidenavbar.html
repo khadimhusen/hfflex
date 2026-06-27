@@ -1,5 +1,9 @@
 {% load extra_tag %}
 <div class="sidebar sidebar-dark bg-dark">
+
+
+
+
     <ul class="list-unstyled">
         <!-- Customer nav-->
         {% if user|user_in_department:"sidecustomer" %}
@@ -121,7 +125,14 @@
         </li>
         {% endif %}
 
+        <li>
+            <a href="#Inkstore" data-toggle="collapse"><strong style="color:lightgreen">I</strong>nkstore</a>
+            <ul id="Inkstore" class="list-unstyled collapse">
 
+                <li><a href="{% url 'inkstore:list' %}">Can List</a></li>
+                <li><a href="{% url 'inkstore:search' %}">Ink Search</a></li>
+            </ul>
+        </li>
         {% if user|user_in_department:"sidematerial" %}
 
         <!-- JobMateril-->
@@ -251,6 +262,7 @@
                 <li><a href="{% url 'manpower:shiftlist' %}?machine=4">POUCH-1</a></li>
                 <li><a href="{% url 'manpower:shiftlist' %}?machine=5">POUCH-2</a></li>
                 <li><a href="{% url 'manpower:downtimelist' %}">Downtime List</a></li>
+                <li><a href="{% url 'manpower:qctestlist' %}">Qc List</a></li>
 
             </ul>
         </li>

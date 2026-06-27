@@ -6,4 +6,5 @@ app_name = 'quality'
 
 urlpatterns = [
 
+
 ]

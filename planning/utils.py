@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect
+from django.db.models import F
 
 
 def get_planning_role(user):
@@ -71,19 +72,29 @@ def recalculate_timeline(machine):
                 MachineSchedule.objects.filter(pk=running.pk).update(end_time=chain_end)
         return
 
-    offset = max(10000, len(all_active) * 10 + 1000)  # always safely large
 
-    # Step 1 — move all to temp positions
-    for i, schedule in enumerate(all_active):
-        MachineSchedule.objects.filter(pk=schedule.pk).update(
-            queue_position=offset + i + 1
-        )
 
-    # Step 2 — assign final positions
+    # Step 1 — move all to temp positions (preserves relative order)
+    MachineSchedule.objects.filter(
+        machine=machine,
+        queue_position__gt=0,
+        status__in=['Pending', 'Hold']
+    ).update(queue_position=F('queue_position') + 50000)
+
+    # Re-fetch after shift so any rows inserted between the initial fetch and
+    # Step 1 are included; ordering by shifted value preserves the original order.
+    all_active = list(
+        MachineSchedule.objects
+        .filter(machine=machine, queue_position__gt=50000, status__in=['Pending', 'Hold'])
+        .order_by('queue_position')
+    )
+
+    # Step 2 — assign final positions (1, 2, 3, ...)
     for i, schedule in enumerate(all_active):
         MachineSchedule.objects.filter(pk=schedule.pk).update(
             queue_position=i + 1
         )
+
 
     # Determine chain anchor
     if running:

@@ -76,3 +76,14 @@ class TaskMsg(models.Model):
         # Update the thumbnail field
         self.thumbnail.name = thumbnail_path
         super().save()
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_notifications')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=512)
+    is_read = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} — {self.message}"

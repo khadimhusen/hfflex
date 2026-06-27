@@ -114,64 +114,91 @@ def sync_schedule_on_job_status(sender, instance, created, **kwargs):
     job_status = instance.jobstatus
 
     if job_status in HOLD_STATUSES:
-        schedules = MachineSchedule.objects.filter(
+        # Evaluate queryset BEFORE atomic block
+        schedules = list(MachineSchedule.objects.filter(
             jobprocess__job=instance,
             status='Pending',
             queue_position__gt=0,
-        ).select_related('machine')
+        ).select_related('machine'))
+
+        machines = set()
 
         with transaction.atomic():
             for schedule in schedules:
                 machine = schedule.machine
-                offset  = 1000
-                old_pos = schedule.queue_position
 
-                # Step 1 — move THIS schedule to temp position first
+                # Lock all rows on this machine
+                MachineSchedule.objects.select_for_update().filter(
+                    machine=machine
+                ).values('id')
+
+                # Re-fetch current position — it may have changed in previous iteration
+                current = MachineSchedule.objects.filter(pk=schedule.pk).values('queue_position').first()
+                if not current or current['queue_position'] <= 0:
+                    continue  # already moved or completed
+                old_pos = current['queue_position']
+
+                # Step 1 — move THIS schedule to very high temp position
                 MachineSchedule.objects.filter(pk=schedule.pk).update(
-                    queue_position=offset + 500
+                    queue_position=99999
                 )
 
-                # Step 2 — close gap, skip our temp row
+                # Pass A — shift rows above old_pos up to 50000+ range
                 MachineSchedule.objects.filter(
                     machine=machine,
                     queue_position__gt=old_pos,
-                    queue_position__lt=offset
-                ).update(queue_position=F('queue_position') + offset)
+                    queue_position__lt=99999,
+                ).update(queue_position=F('queue_position') + 50000)
 
+                # Pass B — shift back down to fill gap
                 MachineSchedule.objects.filter(
                     machine=machine,
-                    queue_position__gt=offset,
-                    queue_position__lt=offset + 500
-                ).update(queue_position=F('queue_position') - offset - 1)
+                    queue_position__gt=50000,
+                    queue_position__lt=99999,
+                ).update(queue_position=F('queue_position') - 50001)
 
                 # Step 3 — find new end of queue
                 last = (
                     MachineSchedule.objects
-                    .select_for_update()
-                    .filter(machine=machine, queue_position__gt=0)
+                    .filter(machine=machine, queue_position__gt=0, queue_position__lt=99999)
                     .order_by('-queue_position')
                     .first()
                 )
                 new_pos = (last.queue_position + 1) if last else 1
 
-                # Step 4 — move to end and set Hold
+                # Step 4 — move to end as Hold
                 MachineSchedule.objects.filter(pk=schedule.pk).update(
                     status='Hold',
                     queue_position=new_pos,
                 )
 
-                recalculate_timeline(machine)
+                machines.add(machine)
+        # Recalculate OUTSIDE atomic — no locks held
+        for machine in machines:
+            recalculate_timeline(machine)
 
     elif job_status in RELEASE_STATUSES:
-        schedules = MachineSchedule.objects.filter(
+        schedules = list(MachineSchedule.objects.filter(
             jobprocess__job=instance,
             status='Hold',
             queue_position__gt=0,
-        ).select_related('machine')
+        ).select_related('machine'))
 
         machines = set()
+
         with transaction.atomic():
-            schedules.update(status='Pending')
+            # Lock first
+            machine_ids = [s.machine_id for s in schedules]
+            MachineSchedule.objects.select_for_update().filter(
+                machine_id__in=machine_ids
+            ).values('id')
+
+            MachineSchedule.objects.filter(
+                jobprocess__job=instance,
+                status='Hold',
+                queue_position__gt=0,
+            ).update(status='Pending')
+
             for schedule in schedules:
                 machines.add(schedule.machine)
 

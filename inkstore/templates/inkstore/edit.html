@@ -1,0 +1,210 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block customcss %}
+<style>
+  .lab-group { background: #f8f9fa; border-radius: 8px; padding: 16px; }
+  .swatch-preview {
+    width: 80px; height: 80px;
+    border-radius: 8px;
+    border: 2px solid rgba(0,0,0,.15);
+    display: inline-block;
+    transition: background-color 0.3s;
+  }
+  .lab-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .lab-field { flex: 1; min-width: 90px; max-width: 130px; }
+</style>
+{% endblock customcss %}
+
+{% block content %}
+<div class="container-fluid">
+
+  {# ── Breadcrumb ── #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'inkstore:search' %}">Ink Search</a></li>
+      <li class="breadcrumb-item active">Edit Can #{{ ink.id }}</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <div class="col-lg-7 col-xl-6">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <span class="badge bg-secondary font-monospace me-2" style="font-size:1rem">Can #{{ ink.id }}</span>
+            Edit Ink Data
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <form method="post" autocomplete="off">
+            {% csrf_token %}
+
+            {# ── No White ── #}
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-secondary">
+                  <i class="fas fa-circle me-1" style="font-size:1.2rem"></i>
+                  No White &nbsp;(ink only on polyester)
+                </h6>
+                <span class="swatch-preview" id="swatch_nw"></span>
+              </div>
+              <div class="lab-group">
+                <div class="lab-row">
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">L*</label>
+                    <input type="number" name="l_nw" id="id_l_nw"
+                           class="form-control  lab-input-nw"
+                           step="0.01" min="0" max="100"
+                           value="{{ ink.l_nw|default:'' }}"
+                           placeholder="0 – 100">
+                  </div>
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">a*</label>
+                    <input type="number" name="a_nw" id="id_a_nw"
+                           class="form-control  lab-input-nw"
+                           step="0.01" min="-128" max="128"
+                           value="{{ ink.a_nw|default:'' }}"
+                           placeholder="-128 – 128">
+                  </div>
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">b*</label>
+                    <input type="number" name="b_nw" id="id_b_nw"
+                           class="form-control  lab-input-nw"
+                           step="0.01" min="-128" max="128"
+                           value="{{ ink.b_nw|default:'' }}"
+                           placeholder="-128 – 128">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {# ── With White ── #}
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-secondary">
+                  <i class="fas fa-circle me-1" style="font-size:1.2rem; color:#ccc"></i>
+                  With White &nbsp;(white backup)
+                </h6>
+                <span class="swatch-preview" id="swatch_ww"></span>
+              </div>
+              <div class="lab-group">
+                <div class="lab-row">
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">L*</label>
+                    <input type="number" name="l_ww" id="id_l_ww"
+                           class="form-control  lab-input-ww"
+                           step="0.01" min="0" max="100"
+                           value="{{ ink.l_ww|default:'' }}"
+                           placeholder="0 – 100">
+                  </div>
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">a*</label>
+                    <input type="number" name="a_ww" id="id_a_ww"
+                           class="form-control  lab-input-ww"
+                           step="0.01" min="-128" max="128"
+                           value="{{ ink.a_ww|default:'' }}"
+                           placeholder="-128 – 128">
+                  </div>
+                  <div class="lab-field">
+                    <label class="form-label fw-semibold">b*</label>
+                    <input type="number" name="b_ww" id="id_b_ww"
+                           class="form-control  lab-input-ww"
+                           step="0.01" min="-128" max="128"
+                           value="{{ ink.b_ww|default:'' }}"
+                           placeholder="-128 – 128">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {# ── Qty & Notes ── #}
+            <div class="row g-3 mb-4">
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold">Qty (kg)</label>
+                <input type="number" name="qty" class="form-control "
+                       step="0.01" min="0"
+                       value="{{ ink.qty|default:'' }}"
+                       placeholder="0.00">
+              </div>
+              <div class="col-sm-8">
+                <label class="form-label fw-semibold">Notes</label>
+                <input type="text" name="notes" class="form-control "
+                       value="{{ ink.notes }}"
+                       placeholder="e.g. PMS 348 approx, mixed on 2024-01-15">
+              </div>
+            </div>
+
+            {# ── Actions ── #}
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-save me-1"></i> Save
+              </button>
+              <a href="{% url 'inkstore:search' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Search
+              </a>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="card-footer text-muted ">
+          Last updated: {{ ink.updated_at|date:"d M Y, H:i" }}
+          &nbsp;|&nbsp;
+          Created: {{ ink.created_at|date:"d M Y" }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<script>
+function lab_to_rgb(L, a, b) {
+  let fy = (L + 16) / 116;
+  let fx = a / 500 + fy;
+  let fz = fy - b / 200;
+  let X = (fx ** 3 > 0.008856) ? fx ** 3 : (fx - 16/116) / 7.787;
+  let Y = (L > 7.9996) ? ((L + 16) / 116) ** 3 : L / 903.3;
+  let Z = (fz ** 3 > 0.008856) ? fz ** 3 : (fz - 16/116) / 7.787;
+  X *= 0.95047; Y *= 1.00000; Z *= 1.08883;
+  let r  =  3.2406*X - 1.5372*Y - 0.4986*Z;
+  let g  = -0.9689*X + 1.8758*Y + 0.0415*Z;
+  let bv =  0.0557*X - 0.2040*Y + 1.0570*Z;
+  const gamma = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
+  r  = Math.round(Math.min(255, Math.max(0, gamma(r)  * 255)));
+  g  = Math.round(Math.min(255, Math.max(0, gamma(g)  * 255)));
+  bv = Math.round(Math.min(255, Math.max(0, gamma(bv) * 255)));
+  return `rgb(${r},${g},${bv})`;
+}
+
+function updateSwatch(prefix) {
+  const L = parseFloat(document.getElementById(`id_l_${prefix}`).value);
+  const a = parseFloat(document.getElementById(`id_a_${prefix}`).value);
+  const b = parseFloat(document.getElementById(`id_b_${prefix}`).value);
+  const swatch = document.getElementById(`swatch_${prefix}`);
+  if (!isNaN(L) && !isNaN(a) && !isNaN(b)) {
+    swatch.style.backgroundColor = lab_to_rgb(L, a, b);
+    swatch.style.border = '2px solid rgba(0,0,0,.2)';
+  } else {
+    swatch.style.backgroundColor = '#e9ecef';
+  }
+}
+
+// Live update on input
+document.querySelectorAll('.lab-input-nw').forEach(el => {
+  el.addEventListener('input', () => updateSwatch('nw'));
+});
+document.querySelectorAll('.lab-input-ww').forEach(el => {
+  el.addEventListener('input', () => updateSwatch('ww'));
+});
+
+// Paint on page load with existing values
+updateSwatch('nw');
+updateSwatch('ww');
+</script>
+{% endblock javascripts %}

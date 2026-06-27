@@ -14,6 +14,7 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
+            request.session['show_pending_tasks'] = True
 
             if user.department.filter(department_name='machine').exists():
                 messages.success(request, f'Welcome {username} ')

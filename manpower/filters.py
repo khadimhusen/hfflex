@@ -1,5 +1,8 @@
 import django_filters
 from .models import Shift, Activity, ShiftPerson, DowntimeReport
+from production.models import JobQc
+
+from django import forms
 
 
 class ShiftFilter(django_filters.FilterSet):
@@ -29,3 +32,21 @@ class DowntimeFilter(django_filters.FilterSet):
         super(DowntimeFilter, self).__init__(*args, **kwargs)
         self.filters['activity__shift__machine'].label = "Machine"
         self.filters['activity__shift__shift'].label = "Shift"
+
+
+class JobQcFilter(django_filters.FilterSet):
+    time__gt = django_filters.DateFilter(
+        label="From Date",
+        field_name='created',
+        lookup_expr='date__gte',
+        widget=forms.DateInput(attrs={'id': 'id_time__gt'})
+    )
+    time__lt = django_filters.DateFilter(
+        label="To Date",
+        field_name='created',
+        lookup_expr='date__lte',
+        widget=forms.DateInput(attrs={'id': 'id_time__lt'})
+    )
+    class Meta:
+        model = JobQc
+        fields = ["createdby","prodreport__prodprocess__process"]

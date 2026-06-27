@@ -25,8 +25,6 @@ def costing(request):
     return render(request, "quotation/costing.html", context)
 
 
-
-
 @login_required(login_url='/login/')
 @accessview
 def addquotation(request):
@@ -49,23 +47,22 @@ def addquotation(request):
 @login_required(login_url='/login/')
 @accessview
 def quotationlist(request):
-
-
-    if request.user.username not in ["khadimhusen","firoj","admin"]:
+    context = {}
+    if request.user.username not in ["khadimhusen", "firoj", "admin"]:
 
         param = request.get_full_path().replace(request.path, "")
         q = request.GET.get('deleted', None)
         if q != None:
-            quot_list = Quotation.objects.filter(is_deleted=q,createdby = request.user)
+            quot_list = Quotation.objects.filter(is_deleted=q, createdby=request.user)
         else:
-            quot_list = Quotation.objects.filter(is_deleted=False,createdby = request.user)
+            quot_list = Quotation.objects.filter(is_deleted=False, createdby=request.user)
     else:
         param = request.get_full_path().replace(request.path, "")
         q = request.GET.get('deleted', None)
         if q != None:
-            quot_list = Quotation.objects.filter(is_deleted =q)
+            quot_list = Quotation.objects.filter(is_deleted=q)
         else:
-            quot_list = Quotation.objects.filter(is_deleted =False)
+            quot_list = Quotation.objects.filter(is_deleted=False)
 
     myFilter = QuotationFilter(request.GET, quot_list)
     quot_list = myFilter.qs.select_related()
@@ -80,25 +77,42 @@ def quotationlist(request):
     except EmptyPage:
         quo = paginator.page(paginator.num_pages)
 
-    return render(request, "quotation/list.html",
-                  {"quo": quo, "myFilter": myFilter, "param": param})
+    from task.models import Task
+
+    if request.session.pop('show_pending_tasks', False):
+        pending_tasks = Task.objects.filter(
+            task_alloted_to=request.user,
+            is_closed=False
+        ).select_related('createdby').order_by('target_date')[:10]
+
+        context['pending_tasks_popup'] = pending_tasks if pending_tasks.exists() else None
+
+    context['quo'] = quo
+    context['myFilter'] = myFilter
+    context['param'] = param
+
+    return render(request, "quotation/list.html", context)
 
 
 def materialjson(request):
-    data = list(MaterialRate.objects.values("density","rate","solid","material"))
-    return JsonResponse(data,safe=False)
+    data = list(MaterialRate.objects.values("density", "rate", "solid", "material"))
+    return JsonResponse(data, safe=False)
 
-def getstructurejson(request,ply="3ply"):
-    data = list(MaterialStructure.objects.filter(predefined__structure=ply).values(film=F("material__material"),mic=F('micron')))
-    return JsonResponse(data,safe=False)
+
+def getstructurejson(request, ply="3ply"):
+    data = list(MaterialStructure.objects.filter(predefined__structure=ply).values(film=F("material__material"),
+                                                                                   mic=F('micron')))
+    return JsonResponse(data, safe=False)
+
 
 @csrf_exempt
-def getquotationjson(request,id=None):
-    quote=Quotation.objects.filter(id=id or 1)
-    serializer=QuotationSerializer(quote)
+def getquotationjson(request, id=None):
+    quote = Quotation.objects.filter(id=id or 1)
+    serializer = QuotationSerializer(quote)
     # data = list(Quotation.objects.filter(id=id or 1).values())
 
     return JsonResponse(serializer.data, safe=False)
+
 
 @login_required(login_url='/login/')
 @accessview
@@ -106,8 +120,10 @@ def editquote(request, id=None):
     context = {}
 
     quote = get_object_or_404(Quotation, id=id)
-    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=12, can_delete=True)
-    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=12, can_delete=True)
+    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=12,
+                                             can_delete=True)
+    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=12,
+                                                can_delete=True)
 
     if request.method == 'POST':
         mainform = QuotationForm(request.POST, instance=quote)
@@ -124,7 +140,7 @@ def editquote(request, id=None):
                 quoteitemform.save()
                 additiontermform.save()
                 return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': id}))
-            except :
+            except:
                 messages.warning(request, 'Something gone wrong')
                 print("mainform", mainform.errors)
                 print("quoteitemform", quoteitemform.errors)
@@ -139,10 +155,10 @@ def editquote(request, id=None):
     else:
 
         if quote.approvedby:
-            if request.user.username =="firoj" or request.user.username=="khadimhusen":
-                mainform = QuotationForm( instance=quote)
+            if request.user.username == "firoj" or request.user.username == "khadimhusen":
+                mainform = QuotationForm(instance=quote)
                 quoteitemform = quoteitemformset(prefix="quoteitemform", instance=quote)
-                additiontermform = additiontermformset( prefix="additiontermform", instance=quote)
+                additiontermform = additiontermformset(prefix="additiontermform", instance=quote)
                 context['mainform'] = mainform
                 context['quoteitemform'] = quoteitemform
                 context['additiontermform'] = additiontermform
@@ -158,39 +174,41 @@ def editquote(request, id=None):
             context['additiontermform'] = additiontermform
             return render(request, 'quotation/editquote.html', context)
 
-@login_required(login_url='/login/')
-@accessview
-def detailquote (request,id=None):
-    context = {}
-    quote = get_object_or_404(Quotation, id=id)
-    context["quoteapprovalform"] = QuoteApprovalForm(instance=quote,initial={'approvedby': request.user})
-    context["quote"]=quote
-    return render(request, "quotation/quotedetail.html",context)
-
-def quotepdf(request,id=None):
-    context = {}
-    quote = get_object_or_404(Quotation, id=id)
-    context["quoteapprovalform"] = QuoteApprovalForm(instance=quote,initial={'approvedby': request.user})
-    context["quote"]=quote
-    return render(request, "quotation/quotedetail.html",context)
-
 
 @login_required(login_url='/login/')
 @accessview
-def quoteapproval(request,id=None):
+def detailquote(request, id=None):
+    context = {}
+    quote = get_object_or_404(Quotation, id=id)
+    context["quoteapprovalform"] = QuoteApprovalForm(instance=quote, initial={'approvedby': request.user})
+    context["quote"] = quote
+    return render(request, "quotation/quotedetail.html", context)
+
+
+def quotepdf(request, id=None):
+    context = {}
+    quote = get_object_or_404(Quotation, id=id)
+    context["quoteapprovalform"] = QuoteApprovalForm(instance=quote, initial={'approvedby': request.user})
+    context["quote"] = quote
+    return render(request, "quotation/quotedetail.html", context)
+
+
+@login_required(login_url='/login/')
+@accessview
+def quoteapproval(request, id=None):
     context = {}
     quote = get_object_or_404(Quotation, id=id)
     if request.method == "POST" and request.user:
         form = QuoteApprovalForm(request.POST, instance=quote)
-        context["quoteapprovalform"]=form
+        context["quoteapprovalform"] = form
         if form.is_valid():
             forminstance = form.save(commit=False)
             forminstance.approvedby = request.user
             forminstance.approved = datetime.now()
             forminstance.save()
-            messages.success(request,"Quotation is Approved")
-            return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id':quote.id}))
-    return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id':quote.id}))
+            messages.success(request, "Quotation is Approved")
+            return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
+    return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
 
 
 @login_required(login_url='/login/')
@@ -198,8 +216,10 @@ def quoteapproval(request,id=None):
 def clonequote(request, id=None):
     context = {}
     quote = get_object_or_404(Quotation, id=id)
-    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=2, can_delete=True)
-    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=2, can_delete=True)
+    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=2,
+                                             can_delete=True)
+    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=2,
+                                                can_delete=True)
 
     if request.method == 'POST':
         mainform = QuotationForm(request.POST)
@@ -210,14 +230,14 @@ def clonequote(request, id=None):
         context['additiontermform'] = additiontermform
         if mainform.is_valid() and quoteitemform.is_valid() and additiontermform.is_valid():
             try:
-                mainquote=mainform.save(commit=False)
+                mainquote = mainform.save(commit=False)
 
                 mainquote.createdby = request.user
                 mainquote.save()
                 quote = get_object_or_404(Quotation, id=mainquote.id)
-                print("quote -",quote)
+                print("quote -", quote)
                 for i in quoteitemform:
-                    print("quoteform id:- ",i.cleaned_data['id'])
+                    print("quoteform id:- ", i.cleaned_data['id'])
                 #
                 # q=quoteitemform.save(commit=False)
                 # q.quote=quote
@@ -226,7 +246,7 @@ def clonequote(request, id=None):
                 # a.quote=quote
                 # a.save()
                 return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': mainquote.id}))
-            except :
+            except:
                 messages.warning(request, 'Something gone wrong')
                 print("mainform", mainform.errors)
                 print("quoteitemform", quoteitemform.errors)
@@ -239,9 +259,9 @@ def clonequote(request, id=None):
             print("additiontermform :-", additiontermform.errors)
             return render(request, 'quotation/editquote.html', context)
     else:
-        mainform = QuotationForm( instance=quote)
+        mainform = QuotationForm(instance=quote)
         quoteitemform = quoteitemformset(prefix="quoteitemform", instance=quote)
-        additiontermform = additiontermformset( prefix="additiontermform", instance=quote)
+        additiontermform = additiontermformset(prefix="additiontermform", instance=quote)
         context['mainform'] = mainform
         context['quoteitemform'] = quoteitemform
         context['additiontermform'] = additiontermform

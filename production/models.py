@@ -331,7 +331,8 @@ class JobQc(models.Model):
     editedby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                  related_name='qcedited')
 
-
+    class Meta:
+        ordering = ['created', 'id']
     def __str__(self):
         return f'{self.prodreport}={self.qctest}'
 

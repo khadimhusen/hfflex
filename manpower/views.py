@@ -5,10 +5,10 @@ from django.forms import inlineformset_factory, modelform_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from manpower.models import Shift, Activity, Machine, ShiftPerson, DowntimeReport
 from myproject.access import accessview
-from .filters import ShiftFilter, DowntimeFilter
+from .filters import ShiftFilter, DowntimeFilter, JobQcFilter
 from .forms import NewShiftForm, ActivityForm, ShiftPersonForm , DowntimeReportForm
 import datetime
-
+from production.models import JobQc
 
 @login_required(login_url='/login/')
 @accessview
@@ -161,3 +161,25 @@ def downtimelist(request):
 
     return render(request, 'activity/downtimelist.html', {"downtimes": downtimes,
                                                           'myFilter': myFilter,'machine':machine })
+
+
+
+@login_required(login_url='/login/')
+@accessview
+def qctestlist(request):
+
+    qc_list = JobQc.objects.all().order_by('created')
+
+    myFilter = JobQcFilter(request.GET, qc_list)
+    qc_list = myFilter.qs
+    page = request.GET.get('page', 1)
+    paginator = Paginator(qc_list, 100)
+    try:
+        qc_list = paginator.page(page)
+    except PageNotAnInteger:
+        qc_list = paginator.page(1)
+    except EmptyPage:
+        qc_list = paginator.page(paginator.num_pages)
+
+    return render(request, 'activity/qclist.html', {"qclist": qc_list,
+                                                          'myFilter': myFilter})

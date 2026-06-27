@@ -109,15 +109,24 @@ def polist():
 
 @register.inclusion_tag('task.html', takes_context=True)
 def tasklist(context):
-    request = context['request']  # Get the request from the context
+    request = context['request']
     user = request.user
-    userid = user.id
 
     tasktome = Task.objects.filter(task_alloted_to=user, is_closed=False).count()
     taskbyme = Task.objects.filter(createdby=user, is_closed=False).count()
     tasktobeclose = Task.objects.filter(createdby=user, is_closed=False, request_to_close=True).count()
 
-    return {'taskteome': tasktome, 'taskbyme': taskbyme, 'tasktobeclose': tasktobeclose, 'userid': userid}
+    return {
+        'taskteome': tasktome,
+        'taskbyme': taskbyme,
+        'tasktobeclose': tasktobeclose,
+        'userid': user.id,
+        'request': request,
+        # pass context processor values through
+        'task_unread_count': context.get('task_unread_count', 0),
+        'task_notifications': context.get('task_notifications', []),
+        'csrf_token': context.get('csrf_token'),
+    }
 
 
 @register.filter
