@@ -1,0 +1,203 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block customcss %}
+<style>
+  .table-orange { --bs-table-bg: #ffe5cc; }
+  .bg-orange { background-color: #fd7e14 !important; }
+</style>
+{% endblock customcss %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <div class="mb-3">
+    <h4 class="fw-bold mb-1">Mixed Ink Search</h4>
+    <p class="text-muted small mb-0">Enter target LAB values to find the nearest stored ink.</p>
+  </div>
+
+  {# ── SEARCH FORM ── #}
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+
+          <div class="col-auto">
+            <label class="form-label fw-semibold small">L*</label>
+            <input type="number" name="L" class="form-control" step="0.01"
+                   min="0" max="100" placeholder="0 – 100"
+                   value="{{ request.POST.L }}" required style="width:110px">
+          </div>
+          <div class="col-auto">
+            <label class="form-label fw-semibold small">a*</label>
+            <input type="number" name="A" class="form-control" step="0.01"
+                   min="-128" max="128" placeholder="-128 – 128"
+                   value="{{ request.POST.A }}" required style="width:110px">
+          </div>
+          <div class="col-auto">
+            <label class="form-label fw-semibold small">b*</label>
+            <input type="number" name="B" class="form-control" step="0.01"
+                   min="-128" max="128" placeholder="-128 – 128"
+                   value="{{ request.POST.B }}" required style="width:110px">
+          </div>
+
+          <div class="col-auto">
+            <label class="form-label fw-semibold small d-block">Sample Type</label>
+            <div class="btn-group" role="group">
+              <input type="radio" class="btn-check" name="mode" id="mode_nw"
+                     value="nw" {% if mode == 'nw' %}checked{% endif %}>
+              <label class="btn btn-outline-secondary btn-sm" for="mode_nw">No White</label>
+
+              <input type="radio" class="btn-check" name="mode" id="mode_ww"
+                     value="ww" {% if mode == 'ww' %}checked{% endif %}>
+              <label class="btn btn-outline-secondary btn-sm" for="mode_ww">With White</label>
+            </div>
+          </div>
+
+          <div class="col-auto">
+            <label class="form-label fw-semibold small" for="id_top_n">Show Top</label>
+            <select name="top_n" id="id_top_n" class="form-select form-select-sm" style="width:80px">
+              <option value="5"  {% if top_n == 5  %}selected{% endif %}>5</option>
+              <option value="10" {% if top_n == 10 %}selected{% endif %}>10</option>
+              <option value="20" {% if top_n == 20 %}selected{% endif %}>20</option>
+              <option value="50" {% if top_n == 50 %}selected{% endif %}>50</option>
+            </select>
+          </div>
+
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search me-1"></i> Search
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+  {% endif %}
+
+  {% if results %}
+  <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+    <h6 class="fw-bold mb-0">
+      Top {{ results|length }} matches
+      <span class="badge bg-secondary ms-1">{{ mode|upper }}</span>
+    </h6>
+    <span class="text-muted small d-flex align-items-center gap-1">
+      Target &nbsp;
+      <strong>L* {{ target.L }}</strong>
+      <strong>a* {{ target.A }}</strong>
+      <strong>b* {{ target.B }}</strong>
+      <span id="targetSwatch"
+            style="display:inline-block;width:24px;height:14px;border-radius:3px;
+                   border:1px solid rgba(0,0,0,.2)">
+      </span>
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Can ID</th>
+          <th>L*</th>
+          <th>a*</th>
+          <th>b*</th>
+          <th>ΔE</th>
+          <th>Qty</th>
+          <th>Colour</th>
+          <th>Match</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr class="{% if r.de <= 2 %}table-success{% elif r.de <= 5 %}table-warning{% elif r.de <= 10 %}table-orange{% else %}table-danger{% endif %}">
+          <td class="text-muted small">{{ r.rank }}</td>
+          <td>
+             <a href="{% url 'inkstore:edit' r.ink.id %}" class="h5"># {{ r.ink.id }}</a>
+          </td>
+          <td>{{ r.L }}</td>
+          <td>{{ r.A }}</td>
+          <td>{{ r.B }}</td>
+          <td><strong>{{ r.de }}</strong></td>
+          <td>{{ r.ink.qty|default:"—" }}</td>
+          <td>
+            <span class="colour-swatch"
+                  data-l="{{ r.L }}" data-a="{{ r.A }}" data-b="{{ r.B }}"
+                  style="display:inline-block;width:40px;height:22px;
+                         border-radius:4px;border:1px solid rgba(0,0,0,.2)">
+            </span>
+          </td>
+          <td>
+            {% if r.de <= 2 %}
+              <span class="badge bg-success">Excellent</span>
+            {% elif r.de <= 5 %}
+              <span class="badge bg-warning text-dark">Good</span>
+            {% elif r.de <= 10 %}
+              <span class="badge bg-orange text-white">Fair</span>
+            {% else %}
+              <span class="badge bg-danger">Poor</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-muted small">
+    <strong>ΔE guide:</strong>
+    <span class="badge bg-success">≤ 2 Excellent</span>
+    <span class="badge bg-warning text-dark">≤ 5 Good</span>
+    <span class="badge bg-orange text-white">≤ 10 Fair</span>
+    <span class="badge bg-danger">&gt; 10 Poor</span>
+  </p>
+
+  {% elif target %}
+    <div class="alert alert-info">No ink records found with LAB data for the selected mode.</div>
+  {% endif %}
+
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<script>
+function lab_to_rgb(L, a, b) {
+  let fy = (L + 16) / 116;
+  let fx = a / 500 + fy;
+  let fz = fy - b / 200;
+  let X = (fx ** 3 > 0.008856) ? fx ** 3 : (fx - 16/116) / 7.787;
+  let Y = (L > 7.9996) ? ((L + 16) / 116) ** 3 : L / 903.3;
+  let Z = (fz ** 3 > 0.008856) ? fz ** 3 : (fz - 16/116) / 7.787;
+  X *= 0.95047; Y *= 1.00000; Z *= 1.08883;
+  let r  =  3.2406*X - 1.5372*Y - 0.4986*Z;
+  let g  = -0.9689*X + 1.8758*Y + 0.0415*Z;
+  let bv =  0.0557*X - 0.2040*Y + 1.0570*Z;
+  const gamma = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
+  r  = Math.round(Math.min(255, Math.max(0, gamma(r)  * 255)));
+  g  = Math.round(Math.min(255, Math.max(0, gamma(g)  * 255)));
+  bv = Math.round(Math.min(255, Math.max(0, gamma(bv) * 255)));
+  return `rgb(${r},${g},${bv})`;
+}
+
+document.querySelectorAll('.colour-swatch').forEach(el => {
+  const L = parseFloat(el.dataset.l);
+  const a = parseFloat(el.dataset.a);
+  const b = parseFloat(el.dataset.b);
+  if (!isNaN(L)) el.style.backgroundColor = lab_to_rgb(L, a, b);
+});
+
+const tSwatch = document.getElementById('targetSwatch');
+if (tSwatch) {
+  const tL = {{ target.L|default:"null" }};
+  const tA = {{ target.A|default:"null" }};
+  const tB = {{ target.B|default:"null" }};
+  if (tL !== null) tSwatch.style.backgroundColor = lab_to_rgb(tL, tA, tB);
+}
+</script>
+{% endblock javascripts %}

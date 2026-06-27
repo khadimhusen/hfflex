@@ -1,0 +1,225 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block customcss %}
+<style>
+  .swatch-sm {
+    display: inline-block;
+    width: 32px; height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,.2);
+    vertical-align: middle;
+  }
+  .table { font-size: 12px; }
+</style>
+{% endblock customcss %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">Ink Store — Can List</h5>
+    <a href="{% url 'inkstore:search' %}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-search me-1"></i> Colour Search
+    </a>
+  </div>
+
+  {# ── FILTERS ── #}
+  <form method="get" class="card mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+
+        <div class="col-auto">
+          <label class="form-label small mb-1">Can ID</label>
+          <input type="number" name="id" class="form-control form-control-sm"
+                 value="{{ request.GET.id }}" placeholder="e.g. 57" style="width:90px">
+        </div>
+
+        <div class="col-auto">
+          <label class="form-label small mb-1">Data</label>
+          <select name="data" class="form-select form-select-sm" style="width:130px">
+            <option value="">All Cans</option>
+            <option value="has_data" {% if request.GET.data == 'has_data' %}selected{% endif %}>Has Data</option>
+            <option value="empty"    {% if request.GET.data == 'empty'    %}selected{% endif %}>Empty</option>
+          </select>
+        </div>
+
+        <div class="col-auto">
+          <label class="form-label small mb-1">Notes</label>
+          <input type="text" name="notes" class="form-control form-control-sm"
+                 value="{{ request.GET.notes }}" placeholder="Search notes…" style="width:160px">
+        </div>
+
+        <div class="col-auto">
+          <label class="form-label small mb-1">Sort By</label>
+<select name="sort" class="form-select form-select-sm" style="width:170px">
+  <option value="id"          {% if sort == 'id'          %}selected{% endif %}>Can ID</option>
+  <option value="hue_nw"      {% if sort == 'hue_nw'      %}selected{% endif %}>Hue NW ↑</option>
+  <option value="hue_nw_desc" {% if sort == 'hue_nw_desc' %}selected{% endif %}>Hue NW ↓</option>
+  <option value="hue_ww"      {% if sort == 'hue_ww'      %}selected{% endif %}>Hue WW ↑</option>
+  <option value="hue_ww_desc" {% if sort == 'hue_ww_desc' %}selected{% endif %}>Hue WW ↓</option>
+</select>
+        </div>
+
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fas fa-filter me-1"></i> Filter
+          </button>
+          <a href="{% url 'inkstore:list' %}" class="btn btn-outline-secondary btn-sm ms-1">
+            Clear
+          </a>
+        </div>
+
+        <div class="col-auto ms-auto">
+          <span class="text-muted small">{{ page_obj.paginator.count }} cans</span>
+        </div>
+
+      </div>
+    </div>
+  </form>
+
+  {# ── TABLE ── #}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Can ID</th>
+          <th colspan="3" class="text-center">No White (L / a / b)</th>
+          <th>NW Colour</th>
+          <th colspan="3" class="text-center">With White (L / a / b)</th>
+          <th>WW Colour</th>
+          <th>Qty</th>
+          <th>Notes</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ink in page_obj %}
+        <tr>
+          <td class="h5"># {{ ink.id }}</td>
+
+          {% if ink.l_nw is not None %}
+            <td>{{ ink.l_nw }}</td>
+            <td>{{ ink.a_nw }}</td>
+            <td>{{ ink.b_nw }}</td>
+            <td>
+              <span class="swatch-sm"
+                    data-l="{{ ink.l_nw }}"
+                    data-a="{{ ink.a_nw }}"
+                    data-b="{{ ink.b_nw }}">
+              </span>
+            </td>
+          {% else %}
+            <td class="text-muted">—</td>
+            <td class="text-muted">—</td>
+            <td class="text-muted">—</td>
+            <td></td>
+          {% endif %}
+
+          {% if ink.l_ww is not None %}
+            <td>{{ ink.l_ww }}</td>
+            <td>{{ ink.a_ww }}</td>
+            <td>{{ ink.b_ww }}</td>
+            <td>
+              <span class="swatch-sm"
+                    data-l="{{ ink.l_ww }}"
+                    data-a="{{ ink.a_ww }}"
+                    data-b="{{ ink.b_ww }}">
+              </span>
+            </td>
+          {% else %}
+            <td class="text-muted">—</td>
+            <td class="text-muted">—</td>
+            <td class="text-muted">—</td>
+            <td></td>
+          {% endif %}
+
+          <td>{{ ink.qty|default:"—" }}</td>
+          <td class="text-muted">{{ ink.notes|default:"" }}</td>
+          <td>
+            <a href="{% url 'inkstore:edit' ink.id %}" class="btn btn-outline-primary btn-sm py-0 px-2">
+              <i class="fas fa-edit"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="13" class="text-center text-muted py-4">No cans found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# ── PAGINATION ── #}
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav>
+    <ul class="pagination pagination-sm justify-content-center flex-wrap">
+
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?{{ query_string }}&page=1">&laquo; First</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">Prev</a>
+      </li>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+          </li>
+        {% elif num >= page_obj.number|add:"-3" and num <= page_obj.number|add:"3" %}
+          <li class="page-item">
+            <a class="page-link" href="?{{ query_string }}&page={{ num }}">{{ num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?{{ query_string }}&page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?{{ query_string }}&page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+      </li>
+      {% endif %}
+
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock content %}
+
+
+{% block javascripts %}
+<script>
+function lab_to_rgb(L, a, b) {
+  let fy = (L + 16) / 116;
+  let fx = a / 500 + fy;
+  let fz = fy - b / 200;
+  let X = (fx ** 3 > 0.008856) ? fx ** 3 : (fx - 16/116) / 7.787;
+  let Y = (L > 7.9996) ? ((L + 16) / 116) ** 3 : L / 903.3;
+  let Z = (fz ** 3 > 0.008856) ? fz ** 3 : (fz - 16/116) / 7.787;
+  X *= 0.95047; Y *= 1.00000; Z *= 1.08883;
+  let r  =  3.2406*X - 1.5372*Y - 0.4986*Z;
+  let g  = -0.9689*X + 1.8758*Y + 0.0415*Z;
+  let bv =  0.0557*X - 0.2040*Y + 1.0570*Z;
+  const gamma = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
+  r  = Math.round(Math.min(255, Math.max(0, gamma(r)  * 255)));
+  g  = Math.round(Math.min(255, Math.max(0, gamma(g)  * 255)));
+  bv = Math.round(Math.min(255, Math.max(0, gamma(bv) * 255)));
+  return `rgb(${r},${g},${bv})`;
+}
+
+document.querySelectorAll('.swatch-sm').forEach(el => {
+  const L = parseFloat(el.dataset.l);
+  const a = parseFloat(el.dataset.a);
+  const b = parseFloat(el.dataset.b);
+  if (!isNaN(L) && !isNaN(a) && !isNaN(b))
+    el.style.backgroundColor = lab_to_rgb(L, a, b);
+});
+</script>
+{% endblock javascripts %}
