@@ -1,5 +1,4 @@
-from django.db import models
-
+import math
 from django.db import models
 
 class MixedInk(models.Model):
@@ -23,6 +22,16 @@ class MixedInk(models.Model):
 
     def __str__(self):
         return f"Ink Can #{self.id}"
+
+    @property
+    def delta_nw_ww(self):
+
+        """ delta with white and without white."""
+        return round(math.sqrt(
+            (float(self.l_nw) - float(self.l_ww)) ** 2 +
+            (float(self.a_nw) - float(self.a_ww)) ** 2 +
+            (float(self.b_nw) - float(self.b_ww)) ** 2
+        ),0)
 
 
 
