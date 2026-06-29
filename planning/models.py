@@ -105,7 +105,17 @@ class MachineSchedule(models.Model):
                         (models.Q(jobprocess__isnull=False) & models.Q(idle_reason__isnull=True)) |
                         (models.Q(jobprocess__isnull=True) & models.Q(idle_reason__isnull=False))
                 )
-            )
+            ),
+
+            #start_time is equal of less then end_time
+            models.CheckConstraint(
+                check=(
+                        models.Q(end_time__isnull=True) |
+                        models.Q(start_time__isnull=True) |
+                        models.Q(end_time__gte=models.F('start_time'))
+                ),
+                name='end_time_gte_start_time',
+            ),
         ]
 
     @property

@@ -502,13 +502,23 @@ def start_schedule(request, machine_id, schedule_id):
 
         with transaction.atomic():
             # Complete current running job if any
-            MachineSchedule.objects.filter(
+            current_running = MachineSchedule.objects.filter(
                 machine=machine, queue_position=0
-            ).update(
-                queue_position=-1,
-                status='Completed',
-                end_time=datetime.now(),
-            )
+            ).first()
+
+            if current_running:
+                prev_expected_end = (
+                    current_running.start_time + current_running.estimated_duration
+                    if current_running.start_time and current_running.estimated_duration
+                    else None
+                )
+                prev_variance = (actual_start - prev_expected_end) if prev_expected_end else None
+                MachineSchedule.objects.filter(pk=current_running.pk).update(
+                    queue_position=-1,
+                    status='Completed',
+                    end_time=actual_start,  # ← was datetime.now()
+                    time_variance=prev_variance,
+                )
 
             # Start this job
             MachineSchedule.objects.filter(pk=schedule.pk).update(
