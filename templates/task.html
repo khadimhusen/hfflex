@@ -9,7 +9,7 @@
 
 <!-- Pending Tasks button -->
 <li class="nav-item">
-    <a href="#" class="btn btn-sm btn-info mr-2 my-auto"
+    <a href="#" class="btn btn-sm btn-info mr-2 my-auto p-1"
        data-toggle="modal" data-target="#globalPendingModal"
        onclick="loadPendingTasks()">
         <i class="fas fa-tasks"></i> Pending
@@ -17,8 +17,14 @@
         <span class="badge badge-light">{{ taskteome }}</span>
         {% endif %}
     </a>
+        <a href="{% url 'task:tasklist' %}?tab=created" class="btn btn-sm btn-warning mr-2 my-auto p-1"
+       title="Tasks requested to close">
+        <i class="fas fa-hourglass-half"></i> To Close
+        {% if tasktobeclose %}
+        <span class="badge badge-danger">{{ tasktobeclose }}</span>
+        {% endif %}
+    </a>
 </li>
-
 <!-- Notification Bell -->
 <li class="nav-item dropdown">
     <a class="nav-link" href="#" id="notifDropdown" role="button"
