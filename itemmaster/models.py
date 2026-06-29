@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from itemmaster.choices import row_choice, TASK_CATEGORY
 from material.models import Material, MatType, Grade, Unit, Commodity
@@ -32,7 +32,7 @@ class MachineTask(models.Model):
     task = models.CharField(max_length=512)
     qty_from_colors = models.BooleanField(default=True)
     default_qty = models.PositiveSmallIntegerField(default=0,
-        null=True, blank=True)
+                                                   null=True, blank=True)
 
     duration = models.PositiveSmallIntegerField()
 
@@ -99,7 +99,11 @@ class ItemMaster(models.Model):
                                      null=True, default=0, validators=[MaxValueValidator(1300), MinValueValidator(360)])
     cylinder_status = models.CharField(max_length=126, choices=CYLINDER, default="Not Available", blank=True,
                                        null=True)
-    cylinder_manufacture = models.ForeignKey(Customer, limit_choices_to={"is_supplier": True, "active": True},
+    cylinder_manufacture = models.ForeignKey(Customer,
+                                             limit_choices_to={
+                                                 'is_supplier':True,
+                                                 'active':True,
+                                                 'supplier_item__itemname':'Cylinder'},
                                              blank=True, null=True, on_delete=models.PROTECT)
     printing = models.CharField(max_length=32, choices=[('Surface', 'Surface'),
                                                         ('Reverse', 'Reverse'),

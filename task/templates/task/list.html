@@ -24,7 +24,7 @@
             <ul class="nav nav-tabs card-header-tabs">
                 <li class="nav-item">
                     <a class="nav-link {% if tab == 'assigned' %}active{% endif %}"
-                       href="?tab=assigned">Assigned to Me</a>
+                       href="?tab=assigned&is_closed=false">Assigned to Me</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if tab == 'created' %}active{% endif %}"
@@ -35,8 +35,8 @@
                        href="?tab=toclose">To Close</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if tab == 'all' %}active{% endif %}"
-                       href="?tab=all">All Tasks</a>
+                    <a class="nav-link {% if tab == '' %}active{% endif %}"
+                       href="?tab=">All Tasks</a>
                 </li>
             </ul>
         </div>

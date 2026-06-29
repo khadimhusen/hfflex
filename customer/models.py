@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from material.models import PurchaseMaterial
 
 
 class Customer(models.Model):
@@ -11,6 +12,7 @@ class Customer(models.Model):
     # credit_period = models.PositiveSmallIntegerField(blank=True, null=True)
     # credit_cap = models.PositiveIntegerField(blank=True, null=True)
     # outstanding = models.PositiveIntegerField(default=0)
+    supplier_item=models.ManyToManyField(PurchaseMaterial, related_name="supplier_items")
     active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='customercreated')
@@ -69,3 +71,5 @@ class Person(models.Model):
 
     class Meta:
         ordering = ['customer']
+
+

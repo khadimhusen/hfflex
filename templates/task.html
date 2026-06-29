@@ -17,7 +17,7 @@
         <span class="badge badge-light">{{ taskteome }}</span>
         {% endif %}
     </a>
-        <a href="{% url 'task:tasklist' %}?tab=created" class="btn btn-sm btn-warning mr-2 my-auto p-1"
+    <a href="{% url 'task:tasklist' %}?tab=toclose" class="btn btn-sm btn-danger mr-2 my-auto p-1"
        title="Tasks requested to close">
         <i class="fas fa-hourglass-half"></i> To Close
         {% if tasktobeclose %}

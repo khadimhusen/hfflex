@@ -71,3 +71,10 @@ class Unit(models.Model):
     def save(self, *args, **kwargs):
         self.unit = self.unit.upper()
         super(Unit, self).save(*args, **kwargs)
+
+
+class PurchaseMaterial(models.Model):
+    itemname=models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.itemname
