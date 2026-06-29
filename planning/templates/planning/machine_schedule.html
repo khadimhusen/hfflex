@@ -1083,6 +1083,7 @@ function openStartModal(id, btnEl) {
   // Always check the CURRENT live position in the DOM, not a stale value
   // baked in at page load — this fixes the bug where reordering + saving
   // without a full page reload left old position numbers in onclick attrs.
+
   const row = $(btnEl).closest('tr');
   const allRows = $('#queueRows tr[data-id]').toArray();
   const livePosition = row.length ? (allRows.indexOf(row[0]) + 1) : null;
@@ -1094,15 +1095,42 @@ function openStartModal(id, btnEl) {
 
   $('#startScheduleId').val(id);
   $('#startSchedulePosition').val(1);
-  $('#startTime').val('{{ last_end_time|default:"" }}' || nowForPicker());
+
+  // Use last_end_time only if there is a currently running job
+  // otherwise use current time
+  const hasRunning  = {% if running %}true{% else %}false{% endif %};
+  const lastEndTime = '{{ last_end_time|default:"" }}';
+
+  $('#startTime').val(hasRunning && lastEndTime ? lastEndTime : nowForPicker());
   $('#startModal').modal('show');
 }
 
 
 function confirmStart() {
+  const runningStartStr = '{{ running_start_time|default:"" }}';
+  if (runningStartStr) {
+  const runningStartDt = new Date(pickerToISO(runningStartStr));
+  const startDt        = new Date(pickerToISO(timeVal));
+  if (startDt < runningStartDt) {
+    alert('Start time cannot be earlier than current running job start time (' + runningStartStr + ').');
+    return;
+  }
+}
   const id      = $('#startScheduleId').val();
   const timeVal = $('#startTime').val();
   if (!timeVal) { alert('Please enter a start time.'); return; }
+
+  const lastEndStr = '{{ last_end_time|default:"" }}';
+  if (lastEndStr) {
+    const lastEndDt  = new Date(pickerToISO(lastEndStr));
+    const startDt    = new Date(pickerToISO(timeVal));
+    if (startDt < lastEndDt) {
+      alert('Start time cannot be earlier than previous job end time (' + lastEndStr + ').');
+      return;
+    }
+  }
+
+
   if (!confirm('Start this job? The currently running job will be marked as completed.')) return;
   $.ajax({
     url: buildUrl('start', id), method: 'POST',
@@ -1131,6 +1159,21 @@ function confirmComplete() {
   const id      = $('#completeScheduleId').val();
   const timeVal = $('#endTime').val();
   if (!timeVal) { alert('Please enter an end time.'); return; }
+
+
+  const startTimeStr = '{{ running.start_time|date:"d/m/Y H:i"|default:"" }}';
+  if (startTimeStr) {
+    const startParts = startTimeStr.split(' ');
+    const startDate  = startParts[0].split('/');
+    const startISO   = `${startDate[2]}-${startDate[1]}-${startDate[0]}T${startParts[1]}:00`;
+    const startDt    = new Date(startISO);
+    const endDt      = new Date(pickerToISO(timeVal));
+    if (endDt < startDt) {
+      alert('End time cannot be earlier than start time (' + startTimeStr + ').');
+      return;
+    }
+  }
+
   if (!confirm('Mark this job as completed?')) return;
   $.ajax({
     url: buildUrl('complete', id), method: 'POST',

@@ -97,6 +97,7 @@ def machine_schedule(request, machine_id):
         'is_operator': role == 'operator',
         'is_viewer' : role == 'viewer',
         'last_end_time': last_end_time,
+        'running_start_time': running.start_time.strftime('%d/%m/%Y %H:%M') if running and running.start_time else None,
             }
     return render(request, 'planning/machine_schedule.html', context)
 
@@ -505,6 +506,15 @@ def start_schedule(request, machine_id, schedule_id):
             current_running = MachineSchedule.objects.filter(
                 machine=machine, queue_position=0
             ).first()
+
+            if current_running and current_running.start_time:
+                if actual_start < current_running.start_time:
+                    return JsonResponse(
+                        {'status': 'error',
+                         'message': f'Start time cannot be earlier than current running job start time '
+                                    f'({current_running.start_time.strftime("%d/%m/%Y %H:%M")}).'},
+                        status=400
+                    )
 
             if current_running:
                 prev_expected_end = (
