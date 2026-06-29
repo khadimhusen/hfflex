@@ -195,22 +195,61 @@
 
                                     <td>{% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Slitting' %}
-                                        <p>
-                                        <strong>{{ pro.status }} </strong> </p>
+                                        <strong>
+                                            <p>
+                                        {{ pro.status }}
+                                         {% for i in pro.schedules.all  %}
+                                                {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+
+
+                                            {% endfor %}
+
+                                            </p>
+                                        </strong>
                                         {% endif %}
                                         {% endfor %}
                                     </td>
                                     <td>{% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Pouching' %}
-                                        <p>
-                                        <strong>{{ pro.status }} </strong> </p>
+                                        <strong>
+                                            <p>
+                                        {{ pro.status }}
+                                         {% for i in pro.schedules.all  %}
+                                                {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+
+
+                                            {% endfor %}
+
+                                            </p>
+                                        </strong>
                                         {% endif %}
                                         {% endfor %}
                                     </td>
                                     <td>{% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'REPACKING' %}
-                                        <p>
-                                        <strong>{{ pro.status }} </strong> </p>
+                                        <strong>
+                                            <p>
+                                        {{ pro.status }}
+                                         {% for i in pro.schedules.all  %}
+                                                {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+
+
+                                            {% endfor %}
+
+                                            </p>
+                                        </strong>
                                         {% endif %}
                                         {% endfor %}
                                     </td>
