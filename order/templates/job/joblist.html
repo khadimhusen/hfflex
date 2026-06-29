@@ -91,7 +91,8 @@
                                     <th>SIZE</th>
                                     <th>waste</th>
                                     <th>Printing</th>
-                                    <th>Lamination</th>
+                                    <th>Lami-1</th>
+                                    <th>Lami-2</th>
                                     <th>Slitting</th>
                                     <th>Pouching</th>
                                     <th>Repacking</th>
@@ -131,17 +132,67 @@
                                     <td>
                                         {% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Printing' %}
-                                        <p> <strong>{{ pro.status }} </strong> </p>
+                                       <strong>
+                                           <p>
+                                            {{ pro.status }}
+
+
+
+                                            {% for i in pro.schedules.all  %}
+                                           {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+                                            {% endfor %}
+                                            </p>
+                                       </strong>
+
                                         {% endif %}
                                         {% endfor %}
                                     </td>
                                     <td>{% for pro in job.jobprocess.all %}
-                                        {% if pro.process.process == 'Lamination' %}
-                                        <p>
-                                        <strong>{{ pro.status }} </strong> </p>
+                                        {% if pro.process.process == 'Lamination' and pro.process_count == 1 %}
+                                        <strong>
+                                            <p>
+                                        {{ pro.status }}
+                                        {% for i in pro.schedules.all  %}
+
+                                            {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+                                        {% endfor %}
+
+                                            </p>
+                                        </strong>
+
                                         {% endif %}
                                         {% endfor %}
                                     </td>
+                                    <td>{% for pro in job.jobprocess.all %}
+                                        {% if pro.process.process == 'Lamination' and pro.process_count == 2 %}
+                                        <strong>
+                                            <p>
+                                        {{ pro.status }}
+                                         {% for i in pro.schedules.all  %}
+                                                {% if not forloop.first %}
+                                            <hr class="border-top border-primary">
+                                            {% endif %}
+                                            {{i.start_time }}
+
+
+
+                                            {% endfor %}
+
+                                            </p>
+                                        </strong>
+
+                                        {% endif %}
+                                        {% endfor %}
+                                    </td>
+
                                     <td>{% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Slitting' %}
                                         <p>
