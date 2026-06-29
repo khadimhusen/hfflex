@@ -10,6 +10,16 @@
   font-size: 15px !important;
   font-weight: 400;
   }
+
+  #errorModal {
+  z-index: 9999;
+    }
+  #errorModal + .modal-backdrop {
+  z-index: 9998;
+    }
+
+
+
   .row-running   { background-color: #eeed00 !important; }
   .row-idle      { background-color: #fff3cd !important; }
   .row-completed { opacity: 0.55; }
@@ -476,6 +486,24 @@
 </div>
 
 {% if not is_viewer %}
+{# ================================================================== #}
+{# MODAL: Error alert                                                  #}
+{# ================================================================== #}
+<div class="modal fade" id="errorModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fa fa-exclamation-circle"></i> Error</h5>
+        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body" id="errorModalBody">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
 {# ================================================================== #}
 {# MODAL: Start job                                                    #}
 {# ================================================================== #}
@@ -965,6 +993,12 @@ function nowForPicker() {
   return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
+function showError(message) {
+  $('#errorModalBody').html(message);
+  $('#errorModal').modal('show');
+}
+
+
 function pickerToISO(val) {
   // val = "12/06/2026 16:28"
   const parts = val.split(' ');
@@ -1071,7 +1105,7 @@ function saveOrder() {
         location.reload();
       }
     },
-    error: function() { alert('Error saving sequence. Please try again.'); }
+    error: function() { showError('Error saving sequence. Please try again.<br> '); }
   });
 }
 
@@ -1089,7 +1123,8 @@ function openStartModal(id, btnEl) {
   const livePosition = row.length ? (allRows.indexOf(row[0]) + 1) : null;
 
   if (livePosition !== 1) {
-    alert('Only the first job in queue can be started.');
+    showError('Only the first job in queue can be started.<br>केवल पहला जॉब शुरू किया जा सकता है।');
+
     return;
   }
 
@@ -1105,33 +1140,28 @@ function openStartModal(id, btnEl) {
   $('#startModal').modal('show');
 }
 
-
 function confirmStart() {
+  const id      = $('#startScheduleId').val();
+  const timeVal = $('#startTime').val();          // ← declare first
+  if (!timeVal) { showError('Please enter a start time.<br>कृपया शुरू करने का समय दर्ज करें।'); return; }
+
+  // Now safe to use timeVal in validations
   const runningStartStr = '{{ running_start_time|default:"" }}';
   if (runningStartStr) {
-  const runningStartDt = new Date(pickerToISO(runningStartStr));
-  const startDt        = new Date(pickerToISO(timeVal));
-  if (startDt < runningStartDt) {
-    alert('Start time cannot be earlier than current running job start time (' + runningStartStr + ').');
-    return;
-  }
-}
-  const id      = $('#startScheduleId').val();
-  const timeVal = $('#startTime').val();
-  if (!timeVal) { alert('Please enter a start time.'); return; }
-
-  const lastEndStr = '{{ last_end_time|default:"" }}';
-  if (lastEndStr) {
-    const lastEndDt  = new Date(pickerToISO(lastEndStr));
-    const startDt    = new Date(pickerToISO(timeVal));
-    if (startDt < lastEndDt) {
-      alert('Start time cannot be earlier than previous job end time (' + lastEndStr + ').');
+    const runningStartDt = new Date(pickerToISO(runningStartStr));
+    const startDt        = new Date(pickerToISO(timeVal));  // ← used after declaration
+    if (startDt < runningStartDt) {
+      showError(
+        'Start time cannot be earlier than current running job start time.<br>' +
+        '(' + runningStartStr + ')<br><br>' +
+        '<span class="text-muted">शुरू करने का समय चालू जॉब के शुरू होने के समय से पहले नहीं हो सकता।</span>'
+      );
       return;
     }
   }
 
-
   if (!confirm('Start this job? The currently running job will be marked as completed.')) return;
+
   $.ajax({
     url: buildUrl('start', id), method: 'POST',
     contentType: 'application/json',
@@ -1141,10 +1171,12 @@ function confirmStart() {
       if (resp.status === 'ok') { $('#startModal').modal('hide'); location.reload(); }
     },
     error: function(xhr) {
-      alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error starting job.');
+      showError(xhr.responseJSON ? xhr.responseJSON.message : 'Error starting job.<br>जॉब शुरू करने में त्रुटि।');
     }
   });
 }
+
+
 
 // ------------------------------------------------------------------ //
 // Complete job                                                         //
@@ -1158,7 +1190,7 @@ function openCompleteModal(id) {
 function confirmComplete() {
   const id      = $('#completeScheduleId').val();
   const timeVal = $('#endTime').val();
-  if (!timeVal) { alert('Please enter an end time.'); return; }
+  if (!timeVal) { showError('Please enter an end time.<br>कृपया समाप्त करने का समय दर्ज करें।'); return; }
 
 
   const startTimeStr = '{{ running.start_time|date:"d/m/Y H:i"|default:"" }}';
@@ -1169,7 +1201,7 @@ function confirmComplete() {
     const startDt    = new Date(startISO);
     const endDt      = new Date(pickerToISO(timeVal));
     if (endDt < startDt) {
-      alert('End time cannot be earlier than start time (' + startTimeStr + ').');
+      showError('End time cannot be earlier than start time (' + startTimeStr + ').<br>समाप्ति समय शुरू होने के समय से पहले नहीं हो सकता (' + startTimeStr + ') ');
       return;
     }
   }
@@ -1183,7 +1215,8 @@ function confirmComplete() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#completeModal').modal('hide'); location.reload(); }
     },
-    error: function() { alert('Error completing job. Please try again.'); }
+    error: function() { showError('Error completing job. Please try again.<br>जॉब पूर्ण करने में त्रुटि।');
+ }
   });
 }
 
@@ -1283,7 +1316,7 @@ function confirmAddDowntime() {
         loadDowntimes(id);
       }
     },
-    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error adding downtime.'); }
+    error: function(xhr) { showError(xhr.responseJSON ? xhr.responseJSON.message : 'Error adding downtime.<br>डाउनटाइम जोड़ने में त्रुटि।'); }
   });
 }
 
@@ -1293,7 +1326,7 @@ function saveDowntime(downtimeId, btn) {
   const row  = $(btn).closest('tr');
   const hrs  = parseInt(row.find('.dt-hours').val()) || 0;
   const mins = parseInt(row.find('.dt-mins').val())  || 0;
-  if (!hrs && !mins) { alert('Duration required.'); return; }
+  if (!hrs && !mins) { showError('Duration required.<br>अवधि आवश्यक है।'); return; }
   $.ajax({
     url: buildUrl('downtime', scheduleId), method: 'POST',
     contentType: 'application/json',
@@ -1313,7 +1346,7 @@ function saveDowntime(downtimeId, btn) {
         setTimeout(function() { $(btn).html('<i class="fa fa-save"></i>'); }, 1500);
       }
     },
-    error: function() { alert('Error saving downtime.'); }
+    error: function() { showError('Error saving downtime.<br>डाउनटाइम सहेजने में त्रुटि।'); }
   });
 }
 
@@ -1335,7 +1368,7 @@ function deleteDowntime(downtimeId, btn) {
         });
       }
     },
-    error: function() { alert('Error deleting downtime.'); }
+    error: function() { showError('Error deleting downtime.<br>डाउनटाइम हटाने में त्रुटि।'); }
   });
 }
 
@@ -1385,7 +1418,7 @@ function confirmIdle() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#idleModal').modal('hide'); location.reload(); }
     },
-    error: function() { alert('Error adding idle slot. Please try again.'); }
+    error: function() { showError('Error adding idle slot. Please try again.<br>आइडल स्लॉट जोड़ने में त्रुटि।'); }
   });
 }
 
@@ -1417,7 +1450,7 @@ function confirmEditIdle() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#editIdleModal').modal('hide'); location.reload(); }
     },
-    error: function() { alert('Error updating idle slot. Please try again.'); }
+    error: function() { showError('Error updating idle slot. Please try again.<br>आइडल स्लॉट अपडेट करने में त्रुटि।'); }
   });
 }
 
@@ -1428,7 +1461,7 @@ function deleteIdle(id) {
     contentType: 'application/json', data: JSON.stringify({}),
     headers: { 'X-CSRFToken': CSRF },
     success: function(resp) { if (resp.status === 'ok') { location.reload(); } },
-    error: function() { alert('Error deleting idle slot. Please try again.'); }
+    error: function() { showError('Error deleting idle slot. Please try again.<br>आइडल स्लॉट हटाने में त्रुटि।'); }
   });
 }
 
@@ -1465,7 +1498,7 @@ function confirmEditBasic() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#editScheduleModal').modal('hide'); location.reload(); }
     },
-    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error saving.'); }
+    error: function(xhr) { showError(xhr.responseJSON ? xhr.responseJSON.message : 'Error saving.<br>सहेजने में त्रुटि।'); }
   });
 }
 
@@ -1480,8 +1513,8 @@ function confirmSplit() {
   const id       = $('#editScheduleId').val();
   const splitQty = parseFloat($('#splitQty').val()) || 0;
   const total    = parseFloat($('#editScheduleQty').val()) || 0;
-  if (!splitQty || splitQty <= 0) { alert('Enter a valid split qty.'); $('#splitQty').focus(); return; }
-  if (splitQty >= total) { alert('Split qty must be less than current qty (' + total + ').'); return; }
+  if (!splitQty || splitQty <= 0) { showError('Enter a valid split qty.<br>कृपया सही विभाजन मात्रा दर्ज करें।'); $('#splitQty').focus(); return; }
+  if (splitQty >= total) { showError('Split qty must be less than current qty (' + total + ').<br>विभाजन मात्रा वर्तमान मात्रा से कम होनी चाहिए।'); return; }
   if (!confirm('Split this schedule? A new schedule with ' + (total - splitQty) + ' qty will be added to the bottom of the queue.')) return;
   $.ajax({
     url: buildUrl('edit-schedule', id), method: 'POST',
@@ -1498,7 +1531,7 @@ function confirmSplit() {
 function confirmChangeMachine() {
   const id         = $('#editScheduleId').val();
   const newMachine = $('#newMachine').val();
-  if (!newMachine) { alert('Please select a machine.'); return; }
+  if (!newMachine) { showError('Please select a machine.<br>कृपया एक मशीन चुनें।'); return; }
   if (!confirm('Change machine? Existing makeready tasks will be deleted and recalculated. Schedule moves to bottom of new machine queue.')) return;
   $.ajax({
     url: buildUrl('edit-schedule', id), method: 'POST',
@@ -1508,7 +1541,7 @@ function confirmChangeMachine() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#editScheduleModal').modal('hide'); location.reload(); }
     },
-    error: function(xhr) { alert(xhr.responseJSON ? xhr.responseJSON.message : 'Error changing machine.'); }
+    error: function(xhr) { showError(xhr.responseJSON ? xhr.responseJSON.message : 'Error changing machine.<br>मशीन बदलने में त्रुटि।'); }
   });
 }
 
@@ -1557,7 +1590,7 @@ function confirmEditTasks() {
     success: function(resp) {
       if (resp.status === 'ok') { $('#tasksModal').modal('hide'); location.reload(); }
     },
-    error: function() { alert('Error saving tasks. Please try again.'); }
+    error: function() { showError('Error saving tasks. Please try again.<br>कार्य सहेजने में त्रुटि।'); }
   });
 }
 
@@ -1568,7 +1601,7 @@ $(document).ajaxError(function(event, xhr, settings, error) {
   if (xhr.status === 401) {
     var resp = xhr.responseJSON;
     if (resp && resp.code === 'session_expired') {
-      alert('Your session has expired. You will be redirected to the login page.');
+      showError('Your session has expired. You will be redirected to the login page.<br>आपका सत्र समाप्त हो गया है। आपको लॉगिन पेज पर भेजा जाएगा।');
       window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
     }
   }
