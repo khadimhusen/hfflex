@@ -55,7 +55,7 @@ def coaedit(request, id):
     coa = get_object_or_404(Coa, id=id)
     TestFormSet = inlineformset_factory(
         Coa, TestParameter, form=TestParameterForm,
-        extra=6, can_delete=True,max_num=20
+        extra=12, can_delete=True,max_num=20
     )
 
     if request.method == 'POST':
