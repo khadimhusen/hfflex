@@ -337,4 +337,4 @@ class ItemStandardParameter(models.Model):
     value = models.CharField(max_length=128)
 
     def __str__(self):
-        return str(self.itemaster)[0:20] + " : " + self.value + " : " + str(self.standard_parameter)
+        return str(self.itemmaster)[0:20] + " : " + self.value + " : " + str(self.standard_parameter)
