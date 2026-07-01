@@ -183,7 +183,7 @@ def itemmasterdetailedit(request, id=None):
     itemattributeformset = inlineformset_factory(ItemMaster, ItemAttribute, fields=('item_attirbuate', 'attri_value'),
                                                  extra=8, max_num=12)
     coa_parameter_formset = inlineformset_factory(ItemMaster,ItemStandardParameter,
-                                                  ItemStandardParameterForm, extra=5)
+                                                  ItemStandardParameterForm, extra=10)
 
     if request.method == 'POST':
         item = ItemMasterForm(request.POST, instance=itemmaster)
