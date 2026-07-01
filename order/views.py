@@ -351,7 +351,7 @@ def jobdetailedit(request, id):
     subformset3 = inlineformset_factory(Job, JobImage, form=JobImageForm, extra=3, can_delete=can_delete)
     subformset4 = inlineformset_factory(Job, JobItemAttribute, form=JobItemAttributeForm, extra=3,
                                         can_delete=can_delete)
-    subformset5 = inlineformset_factory(Job, JobCoa, form=JobCoaForm, extra=3, can_delete=can_delete)
+    subformset5 = inlineformset_factory(Job, JobCoa, form=JobCoaForm, extra=9, can_delete=can_delete)
     subformset6 = inlineformset_factory(Job, JobColor, form=JobColorForm, extra=3, can_delete=can_delete)
 
     if request.method == 'POST':
