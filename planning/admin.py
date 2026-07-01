@@ -92,6 +92,11 @@ class MachineScheduleAdmin(admin.ModelAdmin):
         'makeready_duration', 'running_duration',
         'downtime_duration', 'estimated_duration','start_time','end_time'
     ]
+    list_editable = ('queue_position', 'status',
+        'makeready_duration', 'running_duration',
+        'downtime_duration', 'estimated_duration','start_time','end_time')
+
+
     list_filter = ['machine', 'schedule_type', 'status']
     search_fields = ['jobprocess__job__id', 'machine__machinename','jobprocess__job__itemname']
     readonly_fields = [
