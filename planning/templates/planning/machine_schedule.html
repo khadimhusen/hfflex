@@ -63,6 +63,7 @@
   data-start="{% url 'planning:start_schedule' machine.id 0 %}"
   data-complete="{% url 'planning:complete_schedule' machine.id 0 %}"
   data-downtime="{% url 'planning:add_downtime' machine.id 0 %}"
+  data-detail="{% url 'planning:schedule_detail' machine.id 0 %}"
   style="display:none">
 </span>
 
@@ -231,7 +232,13 @@
                     {% else %}&mdash;
                     {% endif %}
                   </td>
-                  <td><span class="badge badge-secondary">Completed</span></td>
+                  <td>
+
+                  <button class="btn btn-xs btn-info ml-1"
+                          onclick="openScheduleDetail({{ s.id }})">
+                    <i class="fa fa-info-circle"></i> Detail
+                  </button>
+                  </td>
                   {% endif %}
 
                 </tr>
@@ -486,6 +493,111 @@
 </div>
 
 {% if not is_viewer %}
+
+{# ================================================================== #}
+{# MODAL: Schedule detail                                              #}
+{# ================================================================== #}
+<div class="modal fade" id="scheduleDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa fa-info-circle"></i> Schedule Detail
+        </h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="detailLoading" class="text-center py-3">
+          <i class="fa fa-spinner fa-spin"></i> Loading...
+        </div>
+        <div id="detailContent" style="display:none">
+
+          {# Job info #}
+          <h6 class="border-bottom pb-1 mb-2">
+            <i class="fa fa-briefcase"></i> Job Info
+          </h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tr><th style="width:30%">Job</th><td id="dJob"></td></tr>
+            <tr><th>Start</th><td id="dStart"></td></tr>
+            <tr><th>End</th><td id="dEnd"></td></tr>
+            <tr><th>Remark</th><td id="dRemark"></td></tr>
+          </table>
+
+          {# Speed & Manpower #}
+          <h6 class="border-bottom pb-1 mb-2">
+            <i class="fa fa-tachometer"></i> Speed & Manpower
+          </h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tr><th style="width:30%">Speed</th><td id="dSpeed"></td></tr>
+            <tr><th>Qty</th><td id="dQty"></td></tr>
+            <tr><th>Persons Assigned</th><td id="dPersons"></td></tr>
+          </table>
+
+          {# Duration summary #}
+          <h6 class="border-bottom pb-1 mb-2">
+            <i class="fa fa-clock-o"></i> Duration Summary
+          </h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tr><th style="width:30%">Makeready</th><td id="dMakeready"></td></tr>
+            <tr><th>Running</th><td id="dRunning"></td></tr>
+            <tr><th>Downtime</th><td id="dDowntime"></td></tr>
+            <tr><th>Est. Duration</th><td id="dEstimated"></td></tr>
+            <tr><th>Variance</th><td id="dVariance"></td></tr>
+          </table>
+
+          {# Tasks #}
+          <h6 class="border-bottom pb-1 mb-2">
+            <i class="fa fa-list"></i> Tasks
+          </h6>
+          <div id="dTasksEmpty" class="text-muted mb-3" style="display:none">
+            No tasks recorded.
+          </div>
+          <table class="table table-sm table-bordered mb-3"
+                 id="dTasksTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Time/task (min)</th>
+                <th>Total (min)</th>
+              </tr>
+            </thead>
+            <tbody id="dTasksBody"></tbody>
+          </table>
+
+          {# Downtime events #}
+          <h6 class="border-bottom pb-1 mb-2">
+            <i class="fa fa-exclamation-triangle text-danger"></i> Downtime Events
+          </h6>
+          <div id="dDowntimeEmpty" class="text-muted mb-3" style="display:none">
+            No downtime recorded.
+          </div>
+          <table class="table table-sm table-bordered mb-0"
+                 id="dDowntimeTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Reason</th>
+                <th>Duration</th>
+                <th>Notes</th>
+                <th>Recorded</th>
+              </tr>
+            </thead>
+            <tbody id="dDowntimeBody"></tbody>
+          </table>
+
+        </div>{# /detailContent #}
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {# ================================================================== #}
 {# MODAL: Error alert                                                  #}
 {# ================================================================== #}
@@ -1258,6 +1370,89 @@ function updateScheduleRowDuration(scheduleId, downtimeSeconds, estimatedSeconds
   row.find('.downtime-cell').text(formatDurationSeconds(downtimeSeconds));
   row.find('.estimated-cell').text(formatDurationSeconds(estimatedSeconds));
 }
+
+function openScheduleDetail(id) {
+  $('#detailLoading').show();
+  $('#detailContent').hide();
+  $('#scheduleDetailModal').modal('show');
+
+  $.ajax({
+    url: buildUrl('detail', id), method: 'GET',
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      $('#detailLoading').hide();
+
+      // Job info
+      $('#dJob').text(resp.job);
+      $('#dStart').text(resp.start);
+      $('#dEnd').text(resp.end);
+      $('#dRemark').text(resp.remark);
+
+      // Speed & manpower
+      $('#dSpeed').text(resp.speed + ' ' + resp.unit + '/Min.');
+      $('#dQty').text(resp.qty + ' ' + resp.unit);
+      $('#dPersons').text(resp.persons);
+
+      // Duration
+      $('#dMakeready').text(resp.makeready);
+      $('#dRunning').text(resp.running);
+      $('#dDowntime').text(resp.downtime);
+      $('#dEstimated').text(resp.estimated);
+      $('#dVariance').text(resp.variance);
+
+      // Tasks
+      if (resp.tasks && resp.tasks.length > 0) {
+        const tbody = $('#dTasksBody').empty();
+        resp.tasks.forEach(function(t) {
+          tbody.append(
+            '<tr>' +
+            '<td>' + t.task + '</td>' +
+            '<td><span class="badge badge-' +
+              (t.category === 'Makeready' ? 'warning' : 'secondary') +
+            '">' + t.category + '</span></td>' +
+            '<td>' + t.qty + '</td>' +
+            '<td>' + t.time_per_task + '</td>' +
+            '<td>' + t.total_time + '</td>' +
+            '</tr>'
+          );
+        });
+        $('#dTasksTable').show();
+        $('#dTasksEmpty').hide();
+      } else {
+        $('#dTasksTable').hide();
+        $('#dTasksEmpty').show();
+      }
+
+      // Downtime events
+      if (resp.downtimes && resp.downtimes.length > 0) {
+        const tbody = $('#dDowntimeBody').empty();
+        resp.downtimes.forEach(function(d) {
+          tbody.append(
+            '<tr>' +
+            '<td>' + d.reason + '</td>' +
+            '<td>' + d.duration + '</td>' +
+            '<td>' + d.notes + '</td>' +
+            '<td>' + d.recorded + '</td>' +
+            '</tr>'
+          );
+        });
+        $('#dDowntimeTable').show();
+        $('#dDowntimeEmpty').hide();
+      } else {
+        $('#dDowntimeTable').hide();
+        $('#dDowntimeEmpty').show();
+      }
+
+      $('#detailContent').show();
+    },
+    error: function() {
+      $('#detailLoading').hide();
+      showError('Error loading schedule detail.<br>विवरण लोड करने में त्रुटि।');
+    }
+  });
+}
+
+
 
 function loadDowntimes(id) {
   $.ajax({

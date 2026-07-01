@@ -1,10 +1,10 @@
 from datetime import datetime
-
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from order.models import Job
 
+from django.contrib.admin.views.decorators import staff_member_required
 from myproject.access import accessview
 from .forms import CoaForm, TestParameterForm
 from django.forms import inlineformset_factory
@@ -18,7 +18,7 @@ from order.models import JobCoa
 
 @login_required(login_url='/login/')
 @accessview
-def addcoa(request, jobid=None, dcid=None):
+def add_coa(request, jobid=None, dcid=None):
     try:
         coa = Coa.objects.get(jobname_id=jobid, delivery_challan_id=dcid)
         return HttpResponseRedirect(reverse('coa:coadetail', kwargs={'pk': coa.id}))
@@ -51,12 +51,18 @@ def addcoa(request, jobid=None, dcid=None):
 
 @login_required(login_url='/login/')
 @accessview
-def coaedit(request, id):
-    coa = get_object_or_404(Coa, id=id)
+def coa_edit(request, id):
+    coa = get_object_or_404(Coa.objects.select_related('jobname__itemmaster'), id=id)
     TestFormSet = inlineformset_factory(
         Coa, TestParameter, form=TestParameterForm,
         extra=12, can_delete=True,max_num=20
     )
+    if coa.is_approved:
+        messages.error(
+            request,
+            f"COA {coa.coa_number} is already approved and cannot be edited."
+        )
+        return redirect('coa:coadetail', pk=coa.pk)
 
     if request.method == 'POST':
         coaform = CoaForm(request.POST, instance=coa)
@@ -81,7 +87,7 @@ def coaedit(request, id):
 
 @login_required(login_url='/login/')
 @accessview
-def coadetail(request, pk):
+def coa_detail(request, pk):
     coa = get_object_or_404(
         Coa.objects.select_related(
             'jobname',
@@ -158,7 +164,7 @@ def add_test_parameter(request, coa_id):
 
 @login_required(login_url='/login/')
 @accessview
-def coaapprove(request, pk):
+def coa_approve(request, pk):
     coadetail = get_object_or_404(Coa, pk=pk)
 
     # Server-side verification
@@ -171,3 +177,23 @@ def coaapprove(request, pk):
         coadetail.save()
         messages.success(request, 'Coa is Approved')
         return HttpResponseRedirect(reverse('coa:coadetail', kwargs={'pk': pk}))
+
+
+
+
+@login_required(login_url='/login/')
+@staff_member_required
+def coa_reopen(request, pk):
+    coa = get_object_or_404(Coa, pk=pk)
+
+    if request.method == 'POST':
+        coa.approvedby = None
+        coa.approve_date = None
+        coa.save(update_fields=['approvedby', 'approve_date'])
+        messages.warning(
+            request,
+            f"COA {coa.coa_number} has been reopened for editing."
+        )
+        return redirect('coa:coadetail', pk=coa.pk)
+
+    return render(request, 'coa/coa_reopen_confirm.html', {'coa': coa})

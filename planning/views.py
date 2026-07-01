@@ -11,7 +11,7 @@ from .models import MachineSchedule, IdleTime, ProductionTask, MachineDowntime
 from datetime import datetime
 from django.utils.dateparse import parse_datetime
 from django.db.models import Sum
-
+from django.db import IntegrityError
 from .utils import get_planning_role, manager_or_supervisor_required
 from django.db.models import F
 from .pdfs import generate_schedule_pdf
@@ -509,12 +509,12 @@ def start_schedule(request, machine_id, schedule_id):
 
             if current_running and current_running.start_time:
                 if actual_start < current_running.start_time:
-                    return JsonResponse(
-                        {'status': 'error',
-                         'message': f'Start time cannot be earlier than current running job start time '
-                                    f'({current_running.start_time.strftime("%d/%m/%Y %H:%M")}).'},
-                        status=400
-                    )
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Start time cannot be earlier than current running job start time '
+                                   f'({current_running.start_time.strftime("%d/%m/%Y %H:%M")}).\n\n'
+                                   f'शुरू करने का समय चालू जॉब के शुरू होने के समय से पहले नहीं हो सकता।'
+                    }, status=400)
 
             if current_running:
                 prev_expected_end = (
@@ -549,6 +549,16 @@ def start_schedule(request, machine_id, schedule_id):
 
         recalculate_timeline(machine)
         return JsonResponse({'status': 'ok'})
+    except IntegrityError as e:
+        if 'end_time_gte_start_time' in str(e):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Start time is earlier than the current running job\'s start time. '
+                           'Please enter a valid start time.\n\n'
+                           'शुरू करने का समय चालू जॉब के शुरू होने के समय से पहले है। '
+                           'कृपया सही समय दर्ज करें।'
+            }, status=400)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     except Exception as e:
         print(f"start_schedule error: {e}")
@@ -949,3 +959,56 @@ def schedule_pdf(request):
     )
     generate_schedule_pdf(response)
     return response
+
+@login_required(login_url='/login/')
+def schedule_detail(request, machine_id, schedule_id):
+    machine  = get_object_or_404(Machine, pk=machine_id)
+    schedule = get_object_or_404(
+        MachineSchedule, pk=schedule_id,
+        machine=machine,
+        queue_position=-1  # completed only
+    )
+
+    tasks = schedule.productiontasks.select_related('task').all()
+    downtimes = schedule.downtimes.select_related('reason').all()
+
+    tasks_data = [
+        {
+            'task'         : t.task.task,
+            'category'     : t.task.category,
+            'qty'          : t.qty,
+            'time_per_task': t.time_per_task,
+            'total_time'   : t.effective_duration,
+        }
+        for t in tasks
+    ]
+
+    downtimes_data = [
+        {
+            'reason'  : d.reason.name,
+            'duration': f"{int(d.duration.total_seconds()) // 3600}h "
+                        f"{(int(d.duration.total_seconds()) % 3600) // 60}m",
+            'notes'   : d.notes or '—',
+            'recorded': d.created.strftime('%d/%m %H:%M'),
+        }
+        for d in downtimes
+    ]
+
+    return JsonResponse({
+        'status'   : 'ok',
+        'job'      : str(schedule.jobprocess) if schedule.jobprocess else str(schedule.idle_reason),
+        'speed'    : schedule.speed,
+        'unit'     : str(schedule.unit) if schedule.unit else '',
+        'qty'      : str(schedule.qty),
+        'persons'  : schedule.persons_assigned,
+        'start'    : schedule.start_time.strftime('%d/%m/%Y %H:%M') if schedule.start_time else '—',
+        'end'      : schedule.end_time.strftime('%d/%m/%Y %H:%M') if schedule.end_time else '—',
+        'makeready': str(schedule.makeready_duration or '—'),
+        'running'  : str(schedule.running_duration or '—'),
+        'downtime' : str(schedule.downtime_duration or '—'),
+        'estimated': str(schedule.estimated_duration or '—'),
+        'variance' : str(schedule.time_variance or '—'),
+        'remark'   : schedule.remark or '—',
+        'tasks'    : tasks_data,
+        'downtimes': downtimes_data,
+    })

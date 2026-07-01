@@ -1,0 +1,64 @@
+{% extends "home.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-unlock"></i> Reopen Approved COA
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <strong>Warning:</strong> You are about to reopen an approved COA for editing.
+            This will clear the approval and require re-approval afterwards.
+          </div>
+
+          <table class="table table-sm">
+            <tbody>
+              <tr>
+                <th width="40%">COA Number:</th>
+                <td><strong>{{ coa.coa_number }}</strong></td>
+              </tr>
+              <tr>
+                <th>Job:</th>
+                <td>{{ coa.jobname.itemname }}</td>
+              </tr>
+              <tr>
+                <th>Approved By:</th>
+                <td>{{ coa.approvedby.get_full_name|default:coa.approvedby.username }}</td>
+              </tr>
+              <tr>
+                <th>Approved On:</th>
+                <td>{{ coa.approve_date|date:"d M Y, h:i A" }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="text-muted small">
+            After reopening, the approver name and approval date will be cleared.
+            The COA will need to be approved again after your changes.
+          </p>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'coa:coadetail' coa.pk %}" class="btn btn-secondary">
+                <i class="bi bi-x"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-unlock"></i> Yes, Reopen for Editing
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

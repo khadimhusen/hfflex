@@ -9,12 +9,22 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Certificate of Analysis</h2>
-            <p class="text-muted mb-0">COA ID: <strong>#{{ coa.id }}</strong></p>
+            <p class="text-muted mb-0">COA ID: <strong>#{{ coa.coa_number }}</strong></p>
         </div>
         <div class=" d-print-none">
+            {% if coa.is_approved and request.user.is_staff %}
+            <a href="{% url 'coa:coa_reopen' coa.pk %}"
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Reopen this approved COA for editing?');">
+                <i class="bi bi-unlock"></i> Reopen for Editing
+            </a>
+            {% endif %}
             {% if coa.approvedby %}
-            <span class="badge bg-success fs-6"> Approved </span>
-            {% elif user|user_in_department:"can_approve_coa"  %}
+
+            <span class="badge bg-success fs-6">
+                <i class="bi bi-lock-fill"></i> Locked (Approved)
+                  </span>
+            {% elif user|user_in_department:"can_approve_coa" %}
             <form method="post" action="{% url 'coa:coaaprove' coa.id %}"
                   onsubmit="return confirm('Are you sure you want to Approve this COA?');">
                 {% csrf_token %}
@@ -25,10 +35,12 @@
             {% else %}
             <span class="badge bg-warning text-dark "> Pending Approval </span>
             {% endif %}
-
+            {% if not coa.is_approved %}
             <a href="{% url 'coa:coaedit' coa.id %}" class="btn btn-outline-secondary btn-sm ms-2">
                 <i class="bi bi-arrow-left"></i> Edit
             </a>
+
+            {% endif %}
             <button onclick="window.print()" class="btn btn-primary btn-sm">
                 <i class="bi bi-printer"></i> Print
             </button>
@@ -48,7 +60,11 @@
                         <tr>
                             <th width="40%">Job & Customer Name:</th>
 
-                            <td><a href="{% url 'order:jobdetail' coa.jobname.id %}">{{ coa.jobname.itemname|default:"—" }}</a></td>
+                            <td>
+                                <a href="{% url 'order:jobdetail' coa.jobname.id %}">
+                                    {{ coa.jobname.itemname|default:"—" }}
+                                </a>
+                            </td>
                         </tr>
                         <tr>
                             <th>Purchase Order:</th>
@@ -134,8 +150,10 @@
                         </td>
                     </tr>
                     {% endfor %}
-                    <tr >
-                        <td colspan="6"><pre class="border-0">{{coa.remark}}</pre></td>
+                    <tr>
+                        <td colspan="6">
+                            <pre class="border-0">{{coa.remark}}</pre>
+                        </td>
                     </tr>
                     </tbody>
 

@@ -35,5 +35,8 @@ urlpatterns = [
          views.add_downtime, name='add_downtime'),
 
     path('schedule/pdf/', views.schedule_pdf, name='schedule_pdf'),
-    
+
+    path('machine/<int:machine_id>/schedule/<int:schedule_id>/detail/',
+         views.schedule_detail, name='schedule_detail'),
+
 ]

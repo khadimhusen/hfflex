@@ -5,9 +5,10 @@ app_name = 'coa'
 
 
 urlpatterns = [
-    path('new/<int:jobid>/', views.addcoa, name='addcoa'),
-    path('newcoadc/<int:jobid>/<int:dcid>/', views.addcoa, name='addcoadc'),
-    path('coaedit/<int:id>', views.coaedit, name='coaedit'),
-    path('coadetail/<int:pk>', views.coadetail, name='coadetail'),
-    path('coaapprove/<int:pk>', views.coaapprove, name='coaaprove'),
+    path('new/<int:jobid>/', views.add_coa, name='addcoa'),
+    path('newcoadc/<int:jobid>/<int:dcid>/', views.add_coa, name='addcoadc'),
+    path('coaedit/<int:id>', views.coa_edit, name='coaedit'),
+    path('coadetail/<int:pk>', views.coa_detail, name='coadetail'),
+    path('coaapprove/<int:pk>', views.coa_approve, name='coaaprove'),
+    path('coareopen/<int:pk>', views.coa_reopen, name='coa_reopen'),
 ]
