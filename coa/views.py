@@ -6,7 +6,7 @@ from order.models import Job
 
 from django.contrib.admin.views.decorators import staff_member_required
 from myproject.access import accessview
-from .forms import CoaForm, TestParameterForm
+from .forms import CoaForm, TestParameterForm, CoaAdminForm
 from django.forms import inlineformset_factory
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -197,3 +197,26 @@ def coa_reopen(request, pk):
         return redirect('coa:coadetail', pk=coa.pk)
 
     return render(request, 'coa/coa_reopen_confirm.html', {'coa': coa})
+
+@login_required
+def coa_admin_edit(request, pk):
+    """Administrative fields — always editable, even after approval."""
+    coa = get_object_or_404(Coa, pk=pk)
+
+    if request.method == 'POST':
+        form = CoaAdminForm(request.POST, instance=coa)
+        if form.is_valid():
+            coa = form.save(commit=False)
+            coa.editedby = request.user
+            coa.save()
+            messages.success(
+                request,
+                f"Administrative details updated for COA {coa.coa_number}."
+            )
+            return redirect('coa:coadetail', pk=coa.pk)
+    else:
+        form = CoaAdminForm(instance=coa)
+
+    return render(request, 'coa/coa_admin_edit.html', {
+        'coa': coa, 'form': form,
+    })

@@ -50,3 +50,8 @@ class TestParameterForm(forms.ModelForm):
             self.fields['standard_parameter'].queryset = StdParameter.objects.none()
 
 
+class CoaAdminForm(forms.ModelForm):
+    """Administrative fields only — allowed even after approval."""
+    class Meta:
+        model = Coa
+        fields = ["work_order", "delivery_challan", "invoice_no", "qty"]

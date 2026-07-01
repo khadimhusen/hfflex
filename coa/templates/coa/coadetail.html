@@ -12,13 +12,24 @@
             <p class="text-muted mb-0">COA ID: <strong>#{{ coa.coa_number }}</strong></p>
         </div>
         <div class=" d-print-none">
-            {% if coa.is_approved and request.user.is_staff %}
+
+            {% if not coa.is_approved %}
+            <a href="{% url 'coa:coaedit' coa.pk %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            {% else %}
+            <a href="{% url 'coa:coa_admin_edit' coa.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil"></i> Edit Admin Details
+            </a>
+            {% if request.user.is_staff %}
             <a href="{% url 'coa:coa_reopen' coa.pk %}"
                class="btn btn-outline-danger btn-sm"
-               onclick="return confirm('Reopen this approved COA for editing?');">
-                <i class="bi bi-unlock"></i> Reopen for Editing
+               onclick="return confirm('Reopen this approved COA for full editing?');">
+                <i class="bi bi-unlock"></i> Reopen
             </a>
             {% endif %}
+            {% endif %}
+
             {% if coa.approvedby %}
 
             <span class="badge bg-success fs-6">
@@ -34,12 +45,6 @@
             </form>
             {% else %}
             <span class="badge bg-warning text-dark "> Pending Approval </span>
-            {% endif %}
-            {% if not coa.is_approved %}
-            <a href="{% url 'coa:coaedit' coa.id %}" class="btn btn-outline-secondary btn-sm ms-2">
-                <i class="bi bi-arrow-left"></i> Edit
-            </a>
-
             {% endif %}
             <button onclick="window.print()" class="btn btn-primary btn-sm">
                 <i class="bi bi-printer"></i> Print

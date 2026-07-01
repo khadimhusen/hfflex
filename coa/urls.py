@@ -11,4 +11,5 @@ urlpatterns = [
     path('coadetail/<int:pk>', views.coa_detail, name='coadetail'),
     path('coaapprove/<int:pk>', views.coa_approve, name='coaaprove'),
     path('coareopen/<int:pk>', views.coa_reopen, name='coa_reopen'),
+    path('<int:pk>/edit-admin/', views.coa_admin_edit, name='coa_admin_edit'),
 ]

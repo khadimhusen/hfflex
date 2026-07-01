@@ -1,0 +1,43 @@
+{% extends "home.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+
+      <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Edit Administrative Details</h5>
+          <span class="badge bg-secondary">COA {{ coa.coa_number }}</span>
+        </div>
+
+        <div class="card-body">
+          {% if coa.is_approved %}
+            <div class="alert alert-info small">
+              <i class="bi bi-info-circle"></i>
+              This COA is approved. Only administrative fields (work order,
+              delivery challan, invoice no, quantity) can be edited.
+              Test parameters and results are locked.
+            </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'coa:coadetail' coa.pk %}" class="btn btn-secondary">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check"></i> Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
