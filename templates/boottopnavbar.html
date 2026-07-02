@@ -7,7 +7,9 @@
     <a class="sidebar-toggle mr-3" href="#" id="sidebarhide"><i class="fa fa-bars"></i><i class="fa fa-bars"></i></a>
     <div class="navbar-collapse collapse">
         <ul class="navbar-nav mx-auto">
-
+           <li class="nav-item"><a href="{% url 'order:joblist' %}?q=Account clearance" class="nav-link" style="color:white">
+                <span style="background-color:red; color:yellow; font-size:20px; ">Account ({% accountclearance %})- Qty ({% accountclearancekg %}Kg.)</span></a>
+            </li>
             {% tasklist %}
             {% prejoblist %}
 
@@ -52,8 +54,6 @@
     <a class="sidebar-toggle mr-3" href="#" id="sidebarhide"><i class="fa fa-bars"></i><i class="fa fa-bars"></i></a>
     <div class="navbar-collapse collapse">
         <ul class="navbar-nav mx-auto">
-
-
 
 
             {% if user|user_in_department:"topprejoblist" %}

@@ -74,11 +74,13 @@ def machine_schedule(request, machine_id):
         .order_by('-end_time')
         .first()
     )
-    last_end_time = (
-        last_completed.end_time.strftime('%d/%m/%Y %H:%M')
-        if last_completed and last_completed.end_time
-        else None
-    )
+
+    if running and running.end_time:
+        last_end_time = running.end_time.strftime('%d/%m/%Y %H:%M')
+    elif last_completed and last_completed.end_time:
+        last_end_time = last_completed.end_time.strftime('%d/%m/%Y %H:%M')
+    else:
+        last_end_time = None
 
     context = {
         'machine': machine,
