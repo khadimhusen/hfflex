@@ -87,7 +87,7 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
         status             = initial_status,
         makeready_duration = makeready_duration,
         running_duration   = running_duration,
-        downtime_duration = downtime_duration,
+        downtime_duration  = downtime_duration,
         estimated_duration = estimated_duration,
         queue_position     = next_position,
         createdby          = instance.createdby,

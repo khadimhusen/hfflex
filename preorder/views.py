@@ -5,7 +5,6 @@ from django.forms import modelform_factory, inlineformset_factory
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 
-# Create your views here.
 from django.urls import reverse
 
 from customer.models import Customer
@@ -68,9 +67,10 @@ def editpreorder(request, id=None):
     preorder = get_object_or_404(PreOrder, id=id)
     context['customerlist'] = list(Customer.objects.filter(is_customer=True).values_list('name', flat=True))
     preorder_form = AddPreOrderForm(request.POST or None, instance=preorder)
-    inlinejobforms = inlineformset_factory(PreOrder, JobName, fields=["id", "jobname", "qty", "unit",
-                                                                      "rate", "preimg","prefile","remark","new_cyl_qty",
-                                                                      "cyl_cost","design_charges"],can_delete=True)
+    inlinejobforms = inlineformset_factory(PreOrder, JobName,
+                                           fields=["id", "jobname", "qty", "unit",
+                                                    "rate", "preimg","prefile","remark","new_cyl_qty","new_cylinder",
+                                                    "cyl_cost","design_charges"], can_delete=True)
     jobforms = inlinejobforms(request.POST or None, request.FILES or None,prefix='jobformset', instance=preorder)
     if request.method == 'POST':
         if preorder_form.is_valid() and jobforms.is_valid():
@@ -106,8 +106,11 @@ def finalsubmit(request, id=None):
     context = {}
     preorder = get_object_or_404(PreOrder, id=id)
     preorder_form = AddPreOrderForm(request.POST or None, instance=preorder)
-    inlinejobforms = inlineformset_factory(PreOrder, JobName, fields=["id", "jobname", "qty", "unit", "rate","preimg",
-                                                                      "prefile","remark"],can_delete=True)
+    inlinejobforms = inlineformset_factory(PreOrder, JobName,
+                                           fields=["id", "jobname", "qty", "unit",
+                                                    "rate","preimg", "prefile","remark","new_cyl_qty","new_cylinder",
+                                                    "cyl_cost","design_charges"
+                                                   ],can_delete=True)
     jobforms = inlinejobforms(request.POST or None, prefix='jobformset', instance=preorder)
     if request.method == 'POST':
         if preorder_form.is_valid() and jobforms.is_valid():
