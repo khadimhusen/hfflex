@@ -38,7 +38,7 @@ class JobName(models.Model):
     qty = models.PositiveIntegerField()
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
     new_cyl_qty = models.PositiveSmallIntegerField()
-    new_cylinder = models.BooleanField(null = True)
+    new_cylinder = models.BooleanField(null=True)
     cyl_invoice = models.CharField(max_length=32, blank=True, null=True)
     cyl_cost = models.DecimalField(max_digits=7, decimal_places=2)
     design_charges = models.DecimalField(max_digits=7, decimal_places=2)
@@ -53,5 +53,10 @@ class JobName(models.Model):
     editedby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='jobnameeditedby')
 
     def __str__(self):
-        return self.jobname + " | " + str(self.preorder) + " - " + "| Qty.=" + str(self.qty) + " " + str(
+        return self.jobname + self.job_status + " | " + str(self.preorder) + " - " + "| Qty.=" + str(
+            self.qty) + " " + str(
             self.unit) + "| Rate = Rs." + str(self.rate)
+
+    @property
+    def job_status(self):
+        return " (New Cylinder) " if self.new_cylinder else " (Repeat Cylinder) "
