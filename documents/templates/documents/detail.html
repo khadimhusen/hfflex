@@ -8,11 +8,18 @@
             <a href="{% url 'documents:download' document.pk %}" class="btn btn-primary btn-sm">
                 <i class="fa fa-download"></i> Download
             </a>
-            {% if document.uploaded_by_id == request.user.id %}
+            {% if document.uploaded_by_id == request.user.id or request.user.is_superuser %}
             <a href="{% url 'documents:manage_viewers' document.pk %}" class="btn btn-outline-secondary btn-sm">
                 Manage Viewers
             </a>
+            <form method="post" action="{% url 'documents:delete' document.pk %}" class="d-inline"
+                  onsubmit="return confirm('Do you realy want to delete \'{{ document.title }}\'? This cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
             {% endif %}
+
+
         </div>
     </div>
 

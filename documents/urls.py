@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/', views.document_detail, name='detail'),
     path('<int:pk>/download/', views.document_download, name='download'),
     path('<int:pk>/viewers/', views.manage_viewers, name='manage_viewers'),
+    path('<int:pk>/delete/', views.document_delete, name='delete'),
 ]

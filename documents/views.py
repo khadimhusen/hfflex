@@ -84,3 +84,21 @@ def manage_viewers(request, pk):
         form = ManageViewersForm(instance=doc)
     return render(request, 'documents/manage_viewers.html', {'form': form, 'document': doc})
 
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def document_delete(request, pk):
+    doc = get_object_or_404(Document, pk=pk)
+
+    if doc.uploaded_by_id != request.user.id and not request.user.is_superuser:
+        raise PermissionDenied
+
+    # remove the physical file from disk before deleting the DB row
+    if doc.file:
+        doc.file.delete(save=False)
+
+    title = doc.title
+    doc.delete()
+    messages.success(request, f'"{title}" was deleted.')
+    return redirect('documents:list')
