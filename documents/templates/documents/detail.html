@@ -1,0 +1,45 @@
+{% extends "home.html" %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4>{{ document.title }}</h4>
+        <div>
+            <a href="{% url 'documents:download' document.pk %}" class="btn btn-primary btn-sm">
+                <i class="fa fa-download"></i> Download
+            </a>
+            {% if document.uploaded_by_id == request.user.id %}
+            <a href="{% url 'documents:manage_viewers' document.pk %}" class="btn btn-outline-secondary btn-sm">
+                Manage Viewers
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <p class="text-muted mt-2">
+        Uploaded by {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+        on {{ document.created_at|date:"d M Y, h:i A" }}
+    </p>
+
+    {% if document.description %}
+        <p>{{ document.description }}</p>
+    {% endif %}
+
+    {% if document.uploaded_by_id == request.user.id %}
+    <div class="mt-3">
+        <strong>Current viewers:</strong>
+        {% if document.viewers.all %}
+            <ul>
+            {% for v in document.viewers.all %}
+                <li>{{ v.get_full_name|default:v.username }}</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No viewers assigned yet — only you can see this.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <a href="{% url 'documents:list' %}" class="btn btn-link">&larr; Back to list</a>
+</div>
+{% endblock %}

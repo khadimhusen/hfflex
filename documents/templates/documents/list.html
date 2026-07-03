@@ -1,0 +1,53 @@
+{% extends "home.html" %}
+
+{% block customcss %}
+<style>
+    .doc-card { border: 1px solid #e3e6ec; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .doc-card h5 { margin-bottom: 4px; }
+    .doc-meta { color: #6c757d; font-size: 0.85rem; }
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Documents</h4>
+        <a href="{% url 'documents:upload' %}" class="btn btn-primary btn-sm">
+            <i class="fa fa-upload"></i> Upload Document
+        </a>
+    </div>
+
+    <form method="get" class="mb-3 d-flex" style="max-width: 400px;">
+        <input type="text" name="q" value="{{ query }}" class="form-control me-2"
+               placeholder="Search by title...">
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
+        {% if query %}
+        <a href="{% url 'documents:list' %}" class="btn btn-link">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if documents %}
+    {% for doc in documents %}
+    <div class="doc-card d-flex justify-content-between align-items-center">
+        <div>
+            <h5><a href="{% url 'documents:detail' doc.pk %}">{{ doc.title }}</a></h5>
+            <div class="doc-meta">
+                Uploaded by {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.username }}
+                on {{ doc.created_at|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'documents:detail' doc.pk %}" class="btn btn-outline-secondary btn-sm">View</a>
+            <a href="{% url 'documents:download' doc.pk %}" class="btn btn-outline-primary btn-sm">Download</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted">
+        {% if query %}No documents found matching "{{ query }}".{% else %}No documents available to you yet.{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
