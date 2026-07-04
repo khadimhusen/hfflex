@@ -145,7 +145,6 @@ def itemmasterdetailadd(request):
         if item_form.is_valid() and formset1.is_valid() and formset2.is_valid():
             item = item_form.save()
             for f1 in formset1:
-                print(f1.cleaned_data)
                 if f1.cleaned_data:
                     if f1.cleaned_data['id'] is None:
                         image = f1.save(commit=False)

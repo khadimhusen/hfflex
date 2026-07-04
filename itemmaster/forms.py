@@ -1,8 +1,6 @@
 from django import forms
 from .models import *
 from customer.models import Customer
-from django.db.models import Q
-
 from crispy_forms.helper import FormHelper
 
 

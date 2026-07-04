@@ -81,8 +81,7 @@
                                 <thead>
                                 <tr>
                                     <th>JOBID</th>
-                                    <th>ORDER DATE</th>
-                                    <th>SCHEDULE</th>
+                                    <th>DATE</th>
                                     <th>JOBSTATUS</th>
                                     <th>CUSTOMER</th>
                                     <th>ITEMNAME</th>
@@ -115,13 +114,18 @@
 
                                     {% endif %}>
                                     <td>{{job.id}}</td>
-                                    <td>{{job.created|date:"d/m/Y"}}</td>
                                     <td>
-                                        {{ job.joborder.deliverydate|date:"d/m/Y"}}
+                                        Ord: {{job.created|date:"d/m/Y"}}
+                                        Sch: {{ job.joborder.deliverydate|date:"d/m/Y"}}
                                     </td>
+
                                     <td>{{job.jobstatus}}</td>
 
-                                    <td>{{job.joborder.customer}}</td>
+                                    <td>
+                                        {{job.joborder.customer}}
+                                        <hr>
+                                        {{job.marketing_person.profile.formal_name}}
+                                    </td>
                                     <td>{{job.itemname}}</td>
                                     <td>
                                     {{job.job_repeat_status}}

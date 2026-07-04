@@ -56,15 +56,12 @@ def joblist(request):
     context['kgsum']= kgsum
 
     if request.session.pop('show_pending_tasks', False):
-        print("FLAG WAS TRUE")
         pending_tasks = Task.objects.filter(
             task_alloted_to=request.user,
             is_closed=False
         ).select_related('createdby').order_by('target_date')[:10]
         print("pending tasks count:", pending_tasks.count())
         context['pending_tasks_popup'] = pending_tasks
-    else:
-        print("FLAG WAS FALSE OR MISSING")
 
     return render(request, 'job/joblist.html', context)
 

@@ -9,6 +9,9 @@ class Customer(models.Model):
     is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
     email = models.EmailField(null=True, blank=True)
+    marketing_person = models.ForeignKey(User,related_name='customers',on_delete=models.PROTECT, null=True,
+                                         limit_choices_to={'department__department_name': 'marketing',
+                                                           'is_active':True})
     # credit_period = models.PositiveSmallIntegerField(blank=True, null=True)
     # credit_cap = models.PositiveIntegerField(blank=True, null=True)
     # outstanding = models.PositiveIntegerField(default=0)
@@ -71,5 +74,3 @@ class Person(models.Model):
 
     class Meta:
         ordering = ['customer']
-
-

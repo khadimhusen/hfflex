@@ -61,6 +61,9 @@ class Job(models.Model):
     jobstatus = models.CharField(max_length=32, choices=jobchoices, default="Account clearance")
     account_clearance_date = models.DateTimeField(null=True, blank=True)
     approvedby = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
+    marketing_person = models.ForeignKey(User, on_delete=models.PROTECT, null=True, related_name="jobs",
+                                         limit_choices_to={'department__department_name': 'marketing',
+                                                           'is_active':True})
     dispatch_approval = models.BooleanField(default=False, blank=True)
     dispatch_approval_date = models.DateTimeField(null=True, blank=True)
     dispatch_remark = models.CharField(max_length=256, null=True, blank=True)
@@ -161,6 +164,9 @@ class Job(models.Model):
             else:
                 self.kgqty = round(self.quantity * self.pouch_weight / 1000, 0)
                 self.totalpouch = self.quantity
+
+            self.marketing_person= self.itemmaster.itemcustomer.marketing_person
+
             self.pouch_per_kg = round(1000 / (self.pouch_weight), 1)
             self.totalmeter = round(
                 self.kgqty * 1000000 * ((self.waste / 100) + 1) / (self.total_gsm * self.film_size), 0)

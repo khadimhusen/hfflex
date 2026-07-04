@@ -11,7 +11,8 @@ class Profile(models.Model):
     dob = models.DateField(null=True, blank=True)
     doj = models.DateField(null=True, blank=True)
     dor = models.DateField(null=True, blank=True)
-    prefix = models.CharField(max_length=8, choices=(['Mr.', 'Mr.'], ['Mrs.', 'Mrs.'], ['Miss', 'Miss'],['Ms.','Ms.']), null=True)
+    prefix = models.CharField(max_length=8, choices=(['Mr.', 'Mr.'], ['Mrs.', 'Mrs.'],
+                                                     ['Miss', 'Miss'],['Ms.','Ms.']), null=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='profilecreated')
     edited = models.DateTimeField(auto_now=True)
@@ -22,6 +23,10 @@ class Profile(models.Model):
 
     def __str__(self):
         return "{0} - {1}".format(self.user.username, self.designation)
+
+    @property
+    def formal_name(self):
+        return f'{self.prefix} {self.user.first_name}'
 
 
 class ViewName(models.Model):
