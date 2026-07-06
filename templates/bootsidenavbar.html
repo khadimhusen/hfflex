@@ -246,13 +246,12 @@
      <!-- Documents nav-->
 
 
-        {% if not user|user_in_department:"sidedocuments" %}
+        {% if user|user_in_department:"sidedocuments" %}
 
         <li>
             <a href="#Documents" data-toggle="collapse"><strong style="color:lightgreen">D</strong>ocuments</a>
             <ul id="Documents" class="list-unstyled collapse">
                 <li><a href="{% url 'documents:list' %}">List</a></li>
-
             </ul>
         </li>
 

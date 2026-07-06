@@ -10,8 +10,6 @@
     font-size: 14px;
     }
 
-
-
 </style>
 <!--table start from here-->
 
@@ -40,7 +38,6 @@
                                 {{myFilter.form.is_supplier|as_crispy_field}}
                             </div>
 
-
                             <div class=" col-md-1 mb-0 ">
                                 <br>
                                 <button class="btn btn-primary" type="submit">search</button>
@@ -56,12 +53,16 @@
                                 <th>Id</th>
                                 <th>Name</th>
                                 <th>GST No</th>
+                                <th>Marketing</th>
                                 <th>Address</th>
                                 <th>Active</th>
                                 <th>Customer</th>
                                 <th>Supplier</th>
-                                <th class="text-center"><a href=" {% url 'customer:customerdetailadd' %}"> Add
-                                    New Company</a></th>
+                                <th class="text-center">
+                                    <a href=" {% url 'customer:customerdetailadd' %}">
+                                    Add New Company
+                                    </a>
+                                </th>
                             </tr>
                             </thead>
 
@@ -76,6 +77,9 @@
                                     {% else %}
                                     <strong> --- UNREGISTERED ---</strong>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    {{cust.customer.marketing_person}}
                                 </td>
                                 <td>
                                         <p>{{cust.add1}} <br>{{cust.add2}}<br>{{cust.pincode}}</p>

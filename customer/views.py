@@ -36,7 +36,8 @@ def customerlist(request):
         custs = paginator.page(1)
     except EmptyPage:
         custs = paginator.page(paginator.num_pages)
-    return render(request, 'customer/customer_list.html', {'custs': custs, 'q': q, 'total': totalcount,'myFilter':myFilter})
+    return render(request, 'customer/customer_list.html',
+                  {'custs': custs, 'q': q, 'total': totalcount,'myFilter':myFilter})
 
 
 @login_required(login_url='/login/')

@@ -44,31 +44,35 @@ def itemlist(request):
 def itemdetail(request, id):
     context = {}
     itemmaster = get_object_or_404(ItemMaster, id=id)
-    rawmaterialformset = inlineformset_factory(ItemMaster, RawMaterial, form=RawMaterialForm, extra=0)
-    item_form = ItemMasterForm(instance=itemmaster)
-    cylindermovementform = CylinderMovementForm(request.POST or None, itemmaster= itemmaster)
-    if request.method == 'POST':
-        cylindermovementform = CylinderMovementForm(request.POST or None, itemmaster=itemmaster)
-        if cylindermovementform.is_valid():
-            itemform=cylindermovementform.save(commit=False)
-            itemform.item=itemmaster
-            itemform.createdby=request.user
-            itemform.save()
-            messages.success(request, "Cylinder detail updated successfully")
-            cylindermovementform = CylinderMovementForm(itemmaster=itemmaster)
-
-        else:
-
-            messages.success(request, "Cylinder detail NOT updated")
+    context['itemmaster'] = itemmaster
+    imageformset = inlineformset_factory(ItemMaster, ItemImage, fields=('imagename',), extra=2, max_num=6)
+    rawmaterialformset = inlineformset_factory(ItemMaster, RawMaterial, form=RawMaterialForm, extra=6, max_num=8)
+    itemprocessformset = inlineformset_factory(ItemMaster, ItemProcess, form=ItemProcessForm, extra=8, max_num=8)
+    itemcolorformset = inlineformset_factory(ItemMaster, ItemColor, form=ItemColorForm, extra=8, max_num=8)
+    itemattributeformset = inlineformset_factory(ItemMaster, ItemAttribute, fields=('item_attirbuate', 'attri_value'),
+                                                 extra=8, max_num=12)
+    coa_parameter_formset = inlineformset_factory(ItemMaster, ItemStandardParameter,
+                                                  ItemStandardParameterForm, extra=10)
 
 
+    item = ItemMasterForm(instance=itemmaster)
+    formset1 = imageformset(instance=itemmaster, prefix='imageformset')
     formset2 = rawmaterialformset(instance=itemmaster, prefix='rawmaterialformset')
-    context['item_form'] = item_form
+    formset3 = itemprocessformset(instance=itemmaster, prefix='processformset')
+    formset5 = itemattributeformset(prefix='attributeformset', instance=itemmaster)
+    formset4 = itemcolorformset(prefix='colorformset', instance=itemmaster)
+    formset6 = coa_parameter_formset(prefix='coaformset', instance=itemmaster)
+
+    context['item_form'] = item
+    context['image_forms'] = formset1
     context['rawmaterial_forms'] = formset2
-    context['item'] = itemmaster.itemimage.all()
-    context['itemply'] = itemmaster
-    context['cylindermovementform']=cylindermovementform
+    context['process_forms'] = formset3
+    context['color_forms'] = formset4
+    context['attribute_forms'] = formset5
+    context['coa_parameter_forms'] = formset6
+
     return render(request, 'itemmaster/itemdetail.html', context)
+
 
 
 @login_required(login_url='/login/')
