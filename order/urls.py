@@ -34,11 +34,11 @@ urlpatterns = [
     path('joblist/', views.joblist, name='joblist'),
     # 127.0.0.1:8000/order/joblist/
 
-    path('processlist/<str:status>/',views.processlist, name='processlist'),
+    path('processlist/<str:status>/', views.processlist, name='processlist'),
 
-    path('planning/<str:status>/',views.planninglist, name='planninglist'),
+    path('planning/<str:status>/', views.planninglist, name='planninglist'),
 
-    path('jobmateriallist/',views.jobmateriallist, name='jobmateriallist'),
+    path('jobmateriallist/', views.jobmateriallist, name='jobmateriallist'),
 
     path('ajax/load-address/', views.load_address, name='ajax_load_address'),
 
@@ -48,11 +48,11 @@ urlpatterns = [
 
     path('jobmaterail/excel/', xlviews.jobmaterialexcel, name='jobmaterialexcel'),
 
-    path('rate/',views.rate),
+    path('rate/', views.rate),
 
-    path("alljobtopending",views.unplannedtopending),
+    path("alljobtopending", views.unplannedtopending),
 
-    path("removedisptachapproval/<int:id>/", views.removedisptachapproval,name='removedisptachapproval')
+    path("removedisptachapproval/<int:id>/", views.removedisptachapproval, name='removedisptachapproval'),
 
-
+    path('assign-marketing-person/', views.assign_marketing_person, name='assign_marketing_person'),
 ]

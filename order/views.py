@@ -576,3 +576,38 @@ def removedisptachapproval(request, id=None):
     job.dispatch_approval_date = None
     job.save()
     return HttpResponseRedirect(reverse('production:dispatchapprovalpending'))
+
+
+#-----------------
+
+from .forms import AssignMarketingPersonForm
+
+@login_required
+def assign_marketing_person(request):
+    form = AssignMarketingPersonForm()
+    updated_count = None
+
+    if request.method == 'POST':
+        form = AssignMarketingPersonForm(request.POST)
+        if form.is_valid():
+            customer         = form.cleaned_data['customer']
+            marketing_person = form.cleaned_data['marketing_person']
+
+            # Update jobs where itemmaster belongs to this customer
+            # and marketing_person is currently null
+            updated_count = Job.objects.filter(
+                itemmaster__itemcustomer=customer,
+                marketing_person__isnull=True,
+            ).update(marketing_person=marketing_person)
+
+            messages.success(
+                request,
+                f'{updated_count} job(s) updated with {marketing_person.profile.formal_name or marketing_person.username}.'
+                if updated_count
+                else 'No jobs needed updating — all matching jobs already have a marketing person assigned.'
+            )
+
+    return render(request, 'order/assign_marketing_person.html', {
+        'form': form,
+        'updated_count': updated_count,
+    })

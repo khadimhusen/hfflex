@@ -155,3 +155,25 @@ class JobColorForm(forms.ModelForm):
         super(JobColorForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_show_labels = False
+
+# ------------
+
+from django.contrib.auth.models import User
+from employee.models import Department  # adjust import path
+
+class AssignMarketingPersonForm(forms.Form):
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.all().order_by('name'),
+        label='Customer',
+        empty_label='— Select Customer —',
+    )
+    marketing_person = forms.ModelChoiceField(
+        queryset=User.objects.filter(
+            id__in=Department.objects.filter(
+                department_name='marketing'
+            ).values_list('user__id', flat=True),
+            is_active=True,
+        ).order_by('first_name', 'last_name'),
+        label='Marketing Person',
+        empty_label='— Select Marketing Person —',
+    )
