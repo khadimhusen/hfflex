@@ -57,10 +57,8 @@
           <div hidden="hidden">{{accountclearance_form}}</div>
             <button class="btn btn-danger btn-sm" type="submit">Approval for production</button>
         </form>
-
         {% else %}
         <h6 class="m-2">Account Clearance Date:- {{job.account_clearance_date}} by {{job.approvedby}}</h6>
-
         {% endif %}
 
 
@@ -102,8 +100,11 @@
                 <div class="card col-md-1 my-0">
                     <h5><strong>Job Id:-</strong> {{job.id}} </h5>
                 </div>
-                <div class="card col-md-9 my-0">
+                <div class="card col-md-7 my-0">
                     <h5><strong>Name:-</strong> {{job.itemname}}</h5>
+                </div>
+                <div class="card col-md-2 my-0">
+                    <h5><strong>Sale Person:-</strong> <br>{{job.marketing_person.profile.formal_name}}</h5>
                 </div>
                 <div class="card border-danger col-md-2 my-0 ">
                     <h5 class="text-danger">{{job.job_repeat_status}} /
