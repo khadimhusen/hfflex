@@ -26,12 +26,37 @@
                             <div class="col-md-4">{{ form.priority|as_crispy_field }}</div>
                             <div class="col-md-8">{{ form.task_alloted_to|as_crispy_field }}</div>
                         </div>
-                        <div class="form-row">
-                            <div class="col-md-4">{{ form.next_due_date|as_crispy_field }}</div>
-                            <div class="col-md-4">{{ form.interval_days|as_crispy_field }}</div>
-                            <div class="col-md-4">{{ form.advance_days|as_crispy_field }}</div>
+
+                        {{ form.recur_type|as_crispy_field }}
+
+                        <!-- Monthly fields -->
+                        <div id="monthly_fields">
+                            <div class="form-row">
+                                <div class="col-md-4">{{ form.day_of_month|as_crispy_field }}</div>
+                                <div class="col-md-8">{{ form.months|as_crispy_field }}</div>
+                            </div>
+                            <small class="text-muted d-block mb-3">
+                                <i class="fas fa-info-circle"></i>
+                                Months: comma separated e.g. <strong>1,4,7,10</strong> for quarterly
+                                or <strong>1,2,3,4,5,6,7,8,9,10,11,12</strong> for every month
+                            </small>
                         </div>
+
+                        <!-- Interval fields -->
+                        <div id="interval_fields" style="display:none;">
+                            {{ form.interval_days|as_crispy_field }}
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">{{ form.advance_days|as_crispy_field }}</div>
+                        </div>
+                        <small class="text-muted d-block mb-3">
+                            <i class="fas fa-info-circle"></i>
+                            Task will be created this many days <strong>before</strong> the due date
+                        </small>
+
                         {{ form.is_active|as_crispy_field }}
+
                         <div class="text-right mt-3">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save mr-1"></i> Save
@@ -46,11 +71,16 @@
 {% endblock %}
 
 {% block javascripts %}
-<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
-<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
 <script>
-$(function(){
-    $("#id_next_due_date").datetimepicker({ format:'d/m/Y', timepicker: false });
+function toggleRecurFields() {
+    const val = document.getElementById('id_recur_type').value;
+    document.getElementById('monthly_fields').style.display = val === 'monthly' ? 'block' : 'none';
+    document.getElementById('interval_fields').style.display = val === 'interval' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    toggleRecurFields(); // set correct state on page load (important for edit mode)
+    document.getElementById('id_recur_type').addEventListener('change', toggleRecurFields);
 });
 </script>
 {% endblock %}

@@ -212,9 +212,8 @@ from .forms import TaskForm, TaskMsgForm, RecurringTaskForm
 def recurring_task_list(request):
     recurring = RecurringTask.objects.filter(
         createdby=request.user
-    ).select_related('task_alloted_to').order_by('next_due_date')
+    ).select_related('task_alloted_to').order_by('day_of_month')
     return render(request, 'task/recurring_list.html', {'recurring': recurring})
-
 
 @login_required(login_url='/login/')
 @accessview

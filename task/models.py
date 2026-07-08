@@ -90,18 +90,47 @@ class Notification(models.Model):
 
 
 class RecurringTask(models.Model):
+
+    RECUR_TYPE = [
+        ('monthly', 'Monthly — fixed day of month'),
+        ('interval', 'Every N days'),
+    ]
+
     taskname = models.CharField(max_length=256)
     description = models.TextField()
     priority = models.CharField(max_length=16, choices=PRIORITY, default="NORMAL")
     task_alloted_to = models.ForeignKey(User, on_delete=models.PROTECT, related_name='recurring_tasks')
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='recurring_tasks_created')
-    interval_days = models.PositiveIntegerField(help_text="Repeat every N days")
-    advance_days = models.PositiveIntegerField(default=1,
-                                               help_text="Create task X days before due date")
-    next_due_date = models.DateField(help_text="Next due date for this task")
+
+    recur_type = models.CharField(max_length=16, choices=RECUR_TYPE, default='monthly')
+
+    # for monthly
+    day_of_month = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Day of month the task is due (e.g. 20 for GST)"
+    )
+    months = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text="Comma separated months e.g. 1,2,3,4,5,6,7,8,9,10,11,12 for every month"
+    )
+
+    # for interval
+    interval_days = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Repeat every N days"
+    )
+    last_created_date = models.DateField(
+        null=True, blank=True,
+        help_text="Last date a task was created — used for interval calculation"
+    )
+
+    advance_days = models.PositiveIntegerField(
+        default=1,
+        help_text="Create task X days before due date"
+    )
     is_active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.taskname} (every {self.interval_days} days)"
+        return f"{self.taskname} ({self.recur_type})"
