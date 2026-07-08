@@ -202,3 +202,51 @@ def pending_tasks_json(request):
         'target_date', 'createdby__username'
     )
     return JsonResponse({'tasks': list(tasks)})
+
+
+from .models import Task, TaskMsg, Notification, RecurringTask
+from .forms import TaskForm, TaskMsgForm, RecurringTaskForm
+
+@login_required(login_url='/login/')
+@accessview
+def recurring_task_list(request):
+    recurring = RecurringTask.objects.filter(
+        createdby=request.user
+    ).select_related('task_alloted_to').order_by('next_due_date')
+    return render(request, 'task/recurring_list.html', {'recurring': recurring})
+
+
+@login_required(login_url='/login/')
+@accessview
+def recurring_task_add(request):
+    form = RecurringTaskForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        r = form.save(commit=False)
+        r.createdby = request.user
+        r.save()
+        messages.success(request, f'Recurring task "{r.taskname}" created.')
+        return HttpResponseRedirect(reverse('task:recurring_list'))
+    return render(request, 'task/recurring_add.html', {'form': form})
+
+
+@login_required(login_url='/login/')
+@accessview
+def recurring_task_edit(request, id):
+    r = get_object_or_404(RecurringTask, id=id, createdby=request.user)
+    form = RecurringTaskForm(request.POST or None, instance=r)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, f'Updated "{r.taskname}".')
+        return HttpResponseRedirect(reverse('task:recurring_list'))
+    return render(request, 'task/recurring_add.html', {'form': form, 'edit': True})
+
+
+@login_required(login_url='/login/')
+@accessview
+def recurring_task_toggle(request, id):
+    r = get_object_or_404(RecurringTask, id=id, createdby=request.user)
+    r.is_active = not r.is_active
+    r.save()
+    status = 'activated' if r.is_active else 'paused'
+    messages.success(request, f'Recurring task "{r.taskname}" {status}.')
+    return HttpResponseRedirect(reverse('task:recurring_list'))

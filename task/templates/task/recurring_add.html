@@ -1,0 +1,56 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm" style="border-top: 4px solid #007bff;">
+                <div class="card-header d-flex align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-redo text-primary mr-2"></i>
+                        {% if edit %}Edit{% else %}New{% endif %} Recurring Task
+                    </h5>
+                    <a href="{% url 'task:recurring_list' %}"
+                       class="btn btn-sm btn-outline-secondary ml-auto">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        {{ form.taskname|as_crispy_field }}
+                        {{ form.description|as_crispy_field }}
+                        <div class="form-row">
+                            <div class="col-md-4">{{ form.priority|as_crispy_field }}</div>
+                            <div class="col-md-8">{{ form.task_alloted_to|as_crispy_field }}</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-4">{{ form.next_due_date|as_crispy_field }}</div>
+                            <div class="col-md-4">{{ form.interval_days|as_crispy_field }}</div>
+                            <div class="col-md-4">{{ form.advance_days|as_crispy_field }}</div>
+                        </div>
+                        {{ form.is_active|as_crispy_field }}
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-1"></i> Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
+<script>
+$(function(){
+    $("#id_next_due_date").datetimepicker({ format:'d/m/Y', timepicker: false });
+});
+</script>
+{% endblock %}

@@ -87,3 +87,21 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.message}"
+
+
+class RecurringTask(models.Model):
+    taskname = models.CharField(max_length=256)
+    description = models.TextField()
+    priority = models.CharField(max_length=16, choices=PRIORITY, default="NORMAL")
+    task_alloted_to = models.ForeignKey(User, on_delete=models.PROTECT, related_name='recurring_tasks')
+    createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
+                                  related_name='recurring_tasks_created')
+    interval_days = models.PositiveIntegerField(help_text="Repeat every N days")
+    advance_days = models.PositiveIntegerField(default=1,
+                                               help_text="Create task X days before due date")
+    next_due_date = models.DateField(help_text="Next due date for this task")
+    is_active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.taskname} (every {self.interval_days} days)"

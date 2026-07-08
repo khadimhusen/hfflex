@@ -115,8 +115,9 @@
                                     {% endif %}>
                                     <td>{{job.id}}</td>
                                     <td>
-                                        Ord: {{job.created|date:"d/m/Y"}}
-                                        Sch: {{ job.joborder.deliverydate|date:"d/m/Y"}}
+                                        Ord:{{job.created|date:"d/m/Y"}}<br>
+                                        Sch:{{ job.joborder.deliverydate|date:"d/m/Y"}}<br>
+                                        A/C:{{ job.account_clearance_date|date:"d/m/Y"}}
                                     </td>
 
                                     <td>{{job.jobstatus}}</td>
