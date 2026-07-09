@@ -254,7 +254,11 @@ class ItemProcess(models.Model):
 
     def save(self, *args, **kwargs):
         if self.speed is None:  # only set if user didn't provide one
-            self.speed = self.machine.mode_speed or 10
+            if self.machine:
+                self.speed = self.machine.mode_speed or 10
+            else:
+                self.speed = 10
+
         if not self.process_count:
             processcount = self.itemmaster.itemprocess.filter(process=self.process).count()
             self.process_count = processcount + 1
