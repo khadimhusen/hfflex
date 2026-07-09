@@ -253,14 +253,24 @@ class ItemProcess(models.Model):
     class Meta:
         unique_together = ('itemmaster', 'process', 'process_count')
 
-    def save(self, *args, **kwargs):
-        if self.speed is None:  # only set if user didn't provide one
-            if self.machine:
-                self.speed = self.machine.mode_speed or 10
-            else:
-                self.speed = 10
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # snapshot what's actually in the DB right now
+        self._original_process_id = self.process_id
+        self._original_itemmaster_id = self.itemmaster_id
 
-        if not self.process_count:
+    def save(self, *args, **kwargs):
+        if self.speed is None:
+            self.speed = (self.machine.mode_speed if self.machine else None) or 10
+
+        needs_recalc = (
+                self.pk is None  # new row
+                or self.process_id != self._original_process_id  # process changed
+                or self.itemmaster_id != self._original_itemmaster_id
+                or not self.process_count  # blank, as before
+        )
+
+        if needs_recalc:
             with transaction.atomic():
                 existing = (
                     ItemProcess.objects
