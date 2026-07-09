@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Sum, Q
-
+from django.db import transaction
+from django.db.models import Max
 from itemmaster.choices import row_choice, TASK_CATEGORY
 from material.models import Material, MatType, Grade, Unit, Commodity
 from customer.models import Customer
@@ -260,10 +261,18 @@ class ItemProcess(models.Model):
                 self.speed = 10
 
         if not self.process_count:
-            processcount = self.itemmaster.itemprocess.filter(process=self.process).count()
-            self.process_count = processcount + 1
-        super().save(*args, **kwargs)
-
+            with transaction.atomic():
+                existing = (
+                    ItemProcess.objects
+                    .select_for_update()
+                    .filter(itemmaster=self.itemmaster, process=self.process)
+                    .exclude(pk=self.pk)
+                    .aggregate(max_count=Max('process_count'))
+                )
+                self.process_count = (existing['max_count'] or 0) + 1
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
 class Color(models.Model):
     colorname = models.CharField(max_length=16, unique=True)

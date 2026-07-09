@@ -11,7 +11,7 @@ from .models import Document
 from .forms import DocumentUploadForm, ManageViewersForm
 
 
-@login_required
+@login_required(login_url='/login/')
 def document_list(request):
     docs = Document.objects.filter(
         models.Q(uploaded_by=request.user) | models.Q(viewers=request.user)
@@ -26,7 +26,7 @@ def document_list(request):
         'query': query,
     })
 
-@login_required
+@login_required(login_url='/login/')
 def document_upload(request):
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES, user=request.user)
@@ -42,7 +42,7 @@ def document_upload(request):
     return render(request, 'documents/upload.html', {'form': form})
 
 
-@login_required
+@login_required(login_url='/login/')
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     if not doc.has_access(request.user):
@@ -50,7 +50,7 @@ def document_detail(request, pk):
     return render(request, 'documents/detail.html', {'document': doc})
 
 
-@login_required
+@login_required(login_url='/login/')
 def document_download(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     if not doc.has_access(request.user):
@@ -67,7 +67,7 @@ def document_download(request, pk):
     )
 
 
-@login_required
+@login_required(login_url='/login/')
 def manage_viewers(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     # only the creator (or superuser) can change who has access
@@ -86,7 +86,7 @@ def manage_viewers(request, pk):
 
 from django.views.decorators.http import require_POST
 
-@login_required
+@login_required(login_url='/login/')
 @require_POST
 def document_delete(request, pk):
     doc = get_object_or_404(Document, pk=pk)
