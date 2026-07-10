@@ -326,9 +326,9 @@
             },
 
             cylinderLength() {
-                result=(this.openWidth * this.no_of_ups + 60).toFixed(0)
-                if (result < 400){
-                this.cylinderLengthError="Length is less than 400mm, Increase Ups. "
+                result=(this.openWidth * this.no_of_ups + 100).toFixed(0)
+                if (result < 440){
+                this.cylinderLengthError="Length is less than 440mm, Increase Ups. "
                 }
                 else if (result > 1100){
                 this.cylinderLengthError="Length is Higher than 1100mm, Decrease Ups. "}
@@ -403,7 +403,7 @@
 
             if (this.repeatLength >= 10 && this.openWidth >= 10 && this.no_of_repeat > 0 && this.no_of_ups > 0 ){
 
-                return Math.max(((this.circum * this.cylinderLength * 2.4 / 100) + (500)).toFixed(), 5100)
+                return Math.max(((this.circum * this.cylinderLength * 2.4 / 100) + (500)).toFixed(), 5500)
             }
             else {
             return 0
