@@ -13,6 +13,7 @@ class Machine(models.Model):
     machinename = models.CharField(max_length=32)
     max_speed = models.IntegerField()
     mode_speed = models.IntegerField()
+    default_persons = models.PositiveSmallIntegerField(default=2)
     est_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=True)

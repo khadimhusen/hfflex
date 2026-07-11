@@ -202,12 +202,13 @@ class ProductionTask(models.Model):
     @property
     def effective_duration(self):
         persons_required = self.task.persons_required
+        print("person required: ",persons_required)
 
         if persons_required == 0:
             # Person-independent — time = qty × time_per_task only
             return self.qty * self.time_per_task
         else:
-            persons_assigned = self.machine_schedule.persons_assigned or 1
+            persons_assigned = self.machine_schedule.persons_assigned or 2
             return round((self.time_per_task * persons_required * self.qty) / persons_assigned)
 
 
