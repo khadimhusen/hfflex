@@ -4,7 +4,8 @@ from customer.models import Address
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column
 from itemmaster.models import ItemMaster, Customer
-
+from django.contrib.auth.models import User
+from employee.models import Department
 
 
 class OrderForm(forms.ModelForm):
@@ -158,8 +159,6 @@ class JobColorForm(forms.ModelForm):
 
 # ------------
 
-from django.contrib.auth.models import User
-from employee.models import Department  # adjust import path
 
 class AssignMarketingPersonForm(forms.Form):
     customer = forms.ModelChoiceField(

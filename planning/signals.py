@@ -36,7 +36,6 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     if not created:
         return
 
-    print(f"Signal fired — JobProcess id={instance.id} created={created}")
 
     try:
         item_process = ItemProcess.objects.filter(
@@ -58,7 +57,6 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
         print("Exit — no machine on ItemProcess")
         return
 
-    print(f"Proceeding — machine={machine}, speed={item_process.speed}")
 
     speed            = item_process.speed or machine.mode_speed or 60
     qty              = float(instance.qty or 0)
@@ -138,7 +136,6 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
             ProductionTask.objects.bulk_create(production_tasks)
 
     recalculate_timeline(machine)
-    print(f"MachineSchedule created — id={schedule.id}, position={next_position}")
 
 
 # ------------------------------------------------------------------ #
@@ -158,7 +155,6 @@ def recalculate_on_schedule_change(sender, instance, created, **kwargs):
 # ------------------------------------------------------------------ #
 @receiver(post_save, sender=ProductionTask)
 def recalculate_on_task_change(sender, instance, created, **kwargs):
-    print(f"recalculate_on_task_change fired — ProductionTask id={instance.id}")
 
     schedule = MachineSchedule.objects.select_related('machine').get(
         pk=instance.machine_schedule_id

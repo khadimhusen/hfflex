@@ -15,7 +15,7 @@ from production.models import Stockdetail, ProdInput
 from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute, JobCoa, JobColor
 from .forms import OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetailEditForm, JobProcessForm, JobImageForm, \
     JobItemAttributeForm, JobCoaForm, JobColorForm
-from customer.models import Address
+from customer.models import Address, Customer
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 from task.models import Task
@@ -600,6 +600,8 @@ def assign_marketing_person(request):
                 marketing_person__isnull=True,
             ).update(marketing_person=marketing_person)
 
+            customer.marketing_person = marketing_person
+            customer.save()
             messages.success(
                 request,
                 f'{updated_count} job(s) updated with {marketing_person.profile.formal_name or marketing_person.username}.'
