@@ -11,7 +11,12 @@ from .choices import HOLD_STATUSES
 
 
 def task_duration_mins(task, qty, persons_assigned):
-    """Calculate task duration in minutes respecting person-independence."""
+    """Calculate task duration in minutes respecting person-independence.
+
+    task           : MachineTask instance
+    qty            : number of times task is performed
+    persons_assigned: persons working on machine
+    """
     if task.persons_required == 0:
         # Person-independent — time = qty × duration only
         return task.duration * qty
@@ -27,9 +32,9 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
 
     try:
         item_process = ItemProcess.objects.filter(
-            itemmaster     = instance.job.itemmaster,
-            process        = instance.process,
-            process_count  = instance.process_count,
+            itemmaster=instance.job.itemmaster,
+            process=instance.process,
+            process_count=instance.process_count,
         ).order_by('-created').first()
 
         if not item_process:
@@ -47,28 +52,37 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
 
     print(f"Proceeding — machine={machine}, speed={item_process.speed}")
 
-    speed            = item_process.speed or machine.mode_speed or 60
-    qty              = float(instance.qty or 0)
-    running_mins     = round(qty / speed) if speed and qty else 30
+    speed = item_process.speed or machine.mode_speed or 60
+    qty = float(instance.qty or 0)
+    running_mins = round(qty / speed) if speed and qty else 30
     running_duration = timedelta(minutes=running_mins)
-    tasks            = machine.tasks.all()
-    color_count      = instance.job.itemmaster.itemcolors.count() or 1
+    tasks = machine.tasks.all()  # MachineTask objects
+    color_count = instance.job.itemmaster.itemcolors.count() or 1
     persons_assigned = 2  # default persons for new schedule
 
-    job_status     = instance.job.jobstatus
+    job_status = instance.job.jobstatus
     initial_status = 'Hold' if job_status in HOLD_STATUSES else 'Pending'
 
+    # t is MachineTask — use t directly, not t.task
     makeready_mins = sum(
-        task_duration_mins(t.task, t.qty, persons_assigned)
-        for t in tasks if t.task.category == 'Makeready'
+        task_duration_mins(
+            t,
+            color_count if t.default_qty is None else t.default_qty,
+            persons_assigned
+        )
+        for t in tasks if t.category == 'Makeready'
     )
     breakdown_mins = sum(
-        task_duration_mins(t.task, t.qty, persons_assigned)
-        for t in tasks if t.task.category == 'Breakdown'
+        task_duration_mins(
+            t,
+            color_count if t.default_qty is None else t.default_qty,
+            persons_assigned
+        )
+        for t in tasks if t.category == 'Breakdown'
     )
 
     makeready_duration = timedelta(minutes=makeready_mins)
-    downtime_duration  = timedelta(minutes=breakdown_mins)
+    downtime_duration = timedelta(minutes=breakdown_mins)
     estimated_duration = makeready_duration + running_duration + downtime_duration
 
     with transaction.atomic():
@@ -86,27 +100,28 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
         next_position = (last.queue_position + 1) if last else 1
 
         schedule = MachineSchedule.objects.create(
-            schedule_type      = 'Production',
-            jobprocess         = instance,
-            machine            = machine,
-            qty                = instance.qty,
-            unit               = instance.unit,
-            speed              = speed,
-            status             = initial_status,
-            makeready_duration = makeready_duration,
-            running_duration   = running_duration,
-            downtime_duration  = downtime_duration,
-            estimated_duration = estimated_duration,
-            queue_position     = next_position,
-            createdby          = instance.createdby,
+            schedule_type='Production',
+            jobprocess=instance,
+            machine=machine,
+            qty=instance.qty,
+            unit=instance.unit,
+            speed=speed,
+            status=initial_status,
+            makeready_duration=makeready_duration,
+            running_duration=running_duration,
+            downtime_duration=downtime_duration,
+            estimated_duration=estimated_duration,
+            queue_position=next_position,
+            createdby=instance.createdby,
         )
 
+        # t is MachineTask — use t directly for task FK and t.duration
         production_tasks = [
             ProductionTask(
-                machine_schedule = schedule,
-                task             = t,
-                time_per_task    = t.duration,
-                qty              = color_count if t.default_qty is None else t.default_qty,
+                machine_schedule=schedule,
+                task=t,
+                time_per_task=t.duration,
+                qty=color_count if t.default_qty is None else t.default_qty,
             )
             for t in tasks
         ]
@@ -134,7 +149,8 @@ def recalculate_on_task_change(sender, instance, created, **kwargs):
         pk=instance.machine_schedule_id
     )
 
-    tasks            = schedule.productiontasks.select_related('task').all()
+    # tasks here are ProductionTask objects — use t.task for MachineTask
+    tasks = schedule.productiontasks.select_related('task').all()
     persons_assigned = schedule.persons_assigned or 2
 
     makeready_mins = sum(
@@ -147,17 +163,17 @@ def recalculate_on_task_change(sender, instance, created, **kwargs):
     )
 
     makeready_duration = timedelta(minutes=makeready_mins)
-    downtime_duration  = timedelta(minutes=breakdown_mins)
+    downtime_duration = timedelta(minutes=breakdown_mins)
     estimated_duration = (
-        makeready_duration +
-        (schedule.running_duration or timedelta(0)) +
-        downtime_duration
+            makeready_duration +
+            (schedule.running_duration or timedelta(0)) +
+            downtime_duration
     )
 
     MachineSchedule.objects.filter(pk=schedule.pk).update(
-        makeready_duration = makeready_duration,
-        downtime_duration  = downtime_duration,
-        estimated_duration = estimated_duration,
+        makeready_duration=makeready_duration,
+        downtime_duration=downtime_duration,
+        estimated_duration=estimated_duration,
     )
 
     recalculate_timeline(schedule.machine)
