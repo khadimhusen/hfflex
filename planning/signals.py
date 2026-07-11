@@ -59,20 +59,12 @@ def create_schedule_on_jobprocess(sender, instance, created, **kwargs):
     initial_status = 'Hold' if job_status in HOLD_STATUSES else 'Pending'
 
     makeready_mins = sum(
-        task_duration_mins(
-            t,
-            color_count if t.default_qty is None else t.default_qty,
-            persons_assigned
-        )
-        for t in tasks if t.category == 'Makeready'
+        task_duration_mins(t.task, t.qty, persons_assigned)
+        for t in tasks if t.task.category == 'Makeready'
     )
     breakdown_mins = sum(
-        task_duration_mins(
-            t,
-            color_count if t.default_qty is None else t.default_qty,
-            persons_assigned
-        )
-        for t in tasks if t.category == 'Breakdown'
+        task_duration_mins(t.task, t.qty, persons_assigned)
+        for t in tasks if t.task.category == 'Breakdown'
     )
 
     makeready_duration = timedelta(minutes=makeready_mins)
@@ -146,11 +138,11 @@ def recalculate_on_task_change(sender, instance, created, **kwargs):
     persons_assigned = schedule.persons_assigned or 2
 
     makeready_mins = sum(
-        task_duration_mins(t, t.qty, persons_assigned)
+        task_duration_mins(t.task, t.qty, persons_assigned)
         for t in tasks if t.task.category == 'Makeready'
     )
     breakdown_mins = sum(
-        task_duration_mins(t, t.qty, persons_assigned)
+        task_duration_mins(t.task, t.qty, persons_assigned)
         for t in tasks if t.task.category == 'Breakdown'
     )
 
