@@ -29,3 +29,15 @@ def format_duration(value):
         return f"{days}d, {hours:02d}:{minutes:02d}"
 
     return f"{hours:02d}:{minutes:02d}"
+
+@register.filter
+def is_weekly_off(value):
+    """Returns True if datetime falls within Tuesday 8:00 AM to Wednesday 8:00 AM"""
+    if not value:
+        return False
+    # Tuesday = weekday 1, Wednesday = weekday 2
+    if value.weekday() == 1 and value.hour >= 8:
+        return True
+    if value.weekday() == 2 and value.hour < 8:
+        return True
+    return False

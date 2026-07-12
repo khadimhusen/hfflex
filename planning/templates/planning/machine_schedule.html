@@ -11,6 +11,12 @@
   font-weight: 400;
   }
 
+  .weekly-off-cell {
+  background-color: #ff93cd !important;
+  font-weight: 600;
+  color: #000000;
+  }
+
   #errorModal {
   z-index: 9999;
     }
@@ -212,8 +218,15 @@
                   <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
                   <td>{{ s.jobprocess.job.film_size }}mm</td>
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
-                  <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  {# Start cell #}
+                  <td {% if s.start_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
+
+                  {# End cell #}
+                  <td {% if s.end_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
 
                   {% if not is_viewer %}
 
@@ -289,8 +302,16 @@
                   <td>{{ running.qty|default:"&mdash;" }} {{ running.unit }}</td>
                   <td>{{ running.jobprocess.job.film_size }}mm</td>
                   <td>{{ running.speed|default:"&mdash;" }} {{ running.unit }}/Min.</td>
-                  <td>{{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ running.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                                    {# Start cell #}
+                  <td {% if running.start_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ running.start_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
+
+                  {# End cell #}
+                  <td {% if running.end_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ running.end_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
+
                   {% if not is_viewer %}
 
                   <td>{{ running.makeready_duration|format_duration }}</td>
@@ -409,8 +430,14 @@
                   <td>{{ s.qty|default:"&mdash;" }} {{ s.unit }}</td>
                   <td>{{ s.jobprocess.job.film_size }}mm</td>
                   <td>{{ s.speed|default:"&mdash;" }} {{ s.unit }}/Min.</td>
-                  <td>{{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}</td>
-                  <td>{{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}</td>
+                  {# Start cell #}
+                  <td {% if s.start_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ s.start_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
+                  {# End cell #}
+                  <td {% if s.end_time|is_weekly_off %}class="weekly-off-cell"{% endif %}>
+                    {{ s.end_time|date:"d/m H:i"|default:"&mdash;" }}
+                  </td>
                   {% if not is_viewer %}
 
                   <td>{{ s.makeready_duration|format_duration }}</td>
