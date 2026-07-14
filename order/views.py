@@ -289,6 +289,10 @@ def orderedit(request, id=None):
             ord = order_form.save(commit=False)
             ord.editedby = request.user
             ord.save()
+            marketing_person = order_form.cleaned_data.get('marketing_person')
+            if marketing_person and ord.customer.marketing_person_id != marketing_person.id:
+                ord.customer.marketing_person = marketing_person
+                ord.customer.save(update_fields=['marketing_person'])
             return HttpResponseRedirect(reverse('order:orderlist'))
         else:
             return render(request, 'order/edit.html', context)

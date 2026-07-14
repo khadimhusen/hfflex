@@ -1,4 +1,5 @@
 {% extends 'home.html' %}
+{% load static %}
 
 {% load crispy_forms_tags %}
 {% block content %}
@@ -6,8 +7,11 @@
     {% csrf_token %}
     {{ order_form.management_form }}
     <div class="form-row">
-        <div class="form-group col-md-12 mb-0">
+        <div class="form-group col-md-10 mb-0">
             {{ order_form.customer|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ order_form.marketing_person|as_crispy_field }}
         </div>
     </div>
     <div class="form-row">
@@ -51,3 +55,79 @@
 </form>
 
 {% endblock content %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>
+    $(function () {
+      $( "#id_podate" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(),
+
+});
+    });
+</script>
+<script>
+    $(function () {
+      $( "#id_deliverydate" ).datetimepicker({
+    format: 'd/m/Y h:i',
+    value: new Date(Date.now() + 864e5 * 20),
+
+});
+    });
+
+</script>
+<script>
+    $("#id_customer").change(function () {
+      var url = $("#orderForm").attr("data-address-url");
+      var customerId = $(this).val();
+      $.ajax({
+        url: url,
+        data: {
+          'customer': customerId
+        },
+        success: function (data) {
+          $("#id_delivery_at").html(data);
+        }
+      });
+    });
+</script>
+
+<script>
+$(document).ready(function() {
+
+    function fetchMarketingPerson(customerId) {
+        var $marketingSelect = $('#id_marketing_person');
+
+        if (!customerId) {
+            $marketingSelect.val('');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "order:get_marketing_person" %}',
+            data: { 'customer_id': customerId },
+            dataType: 'json',
+            success: function(data) {
+                if (data.marketing_person_id) {
+                    $marketingSelect.val(data.marketing_person_id);
+                } else {
+                    $marketingSelect.val('');
+                }
+            }
+        });
+    }
+
+    // Trigger on customer dropdown change
+    $('#id_customer').on('change', function() {
+        fetchMarketingPerson($(this).val());
+    });
+
+    // Trigger once on page load (e.g. edit page with customer pre-selected)
+    fetchMarketingPerson($('#id_customer').val());
+
+});
+</script>
+
+{% endblock javascripts%}
