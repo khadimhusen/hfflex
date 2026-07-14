@@ -11,6 +11,13 @@ from employee.models import Department
 class OrderForm(forms.ModelForm):
     podate = forms.DateTimeField(input_formats=('%d/%m/%Y %H:%M',))
     deliverydate = forms.DateTimeField(input_formats=('%d/%m/%Y %H:%M',))
+    marketing_person = forms.ModelChoiceField(
+        queryset=User.objects.filter(
+            department__department_name='marketing',
+            is_active=True
+        ),
+        required=False
+    )
 
     class Meta:
         model = Order
@@ -32,9 +39,8 @@ class OrderForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # invalid input from the client; ignore and fallback to empty City queryset
         elif self.instance.pk:
-            customer_id = self.instance.customer_id
             self.fields['delivery_at'].queryset = self.instance.customer.addresses.order_by('addname')
-           # self.fields['customer'].queryset = Customer.objects.filter(id=customer_id)
+
 
 
 class JobForm(forms.ModelForm):

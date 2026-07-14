@@ -55,4 +55,6 @@ urlpatterns = [
     path("removedisptachapproval/<int:id>/", views.removedisptachapproval, name='removedisptachapproval'),
 
     path('assign-marketing-person/', views.assign_marketing_person, name='assign_marketing_person'),
+
+    path('ajax/get-marketing-person/', views.get_marketing_person, name='get_marketing_person'),
 ]

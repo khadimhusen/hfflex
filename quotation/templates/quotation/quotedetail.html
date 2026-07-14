@@ -1,6 +1,7 @@
 {% extends 'home.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load extra_tag %}
 {% block customcss%}
 <link rel="stylesheet" href="{% static 'css/purchase.css' %}">
 {% endblock customcss %}
@@ -18,12 +19,12 @@
         <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'quotation:editquote' quote.id %}">Edit Quote</a>
          {% endif %}
 
+        {% if user|user_in_department:"can_approve_quote" and not quote.approveby %}
 
-        {% if request.user.username in 'khadimhusen,firoj,admin' and not quote.approvedby %}
         <form action="{% url 'quotation:quoteapproval' quote.id %}" method="post">
             {% csrf_token %}
             <div hidden>{{quoteapprovalform}}</div>
-            <button class="btn btn-warning btn-sm m-2 p-2" type="submit">Quote approval
+            <button class="btn btn-warning btn-sm m-2 p-2" type="submit">Quote Approval
             </button>
         </form>
         {% endif %}

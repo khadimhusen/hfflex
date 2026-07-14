@@ -13,21 +13,23 @@ from django.utils import timezone
 from planning.models import MachineSchedule
 from production.models import Stockdetail, ProdInput
 from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute, JobCoa, JobColor
-from .forms import OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetailEditForm, JobProcessForm, JobImageForm, \
-    JobItemAttributeForm, JobCoaForm, JobColorForm
+from .forms import (OrderForm, JobForm, JobFormdetail, JobMaterialForm, JobDetailEditForm, JobProcessForm,
+                    JobImageForm, JobItemAttributeForm, JobCoaForm, JobColorForm)
 from customer.models import Address, Customer
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 from task.models import Task
 
+from django.http import JsonResponse
+
+
 @login_required(login_url='/login/')
 @forceview
 @accessview
 def joblist(request):
-
-    context={}
+    context = {}
     param = request.get_full_path().replace(request.path, "")
-    context['param']=param
+    context['param'] = param
     q = request.GET.get('q', None)
     if q != None:
         job_list = Job.objects.filter(jobstatus=q)
@@ -35,7 +37,6 @@ def joblist(request):
         job_list = Job.objects.all()
 
     myFilter = JobFilter(request.GET, job_list)
-
 
     job_list = myFilter.qs.select_related('joborder', 'itemmaster', 'unit',
                                           'joborder__customer').prefetch_related('jobprocess__process')
@@ -51,9 +52,9 @@ def joblist(request):
     except EmptyPage:
         jobs = paginator.page(paginator.num_pages)
 
-    context['jobs']=jobs
-    context['myFilter']=myFilter
-    context['kgsum']= kgsum
+    context['jobs'] = jobs
+    context['myFilter'] = myFilter
+    context['kgsum'] = kgsum
 
     if request.session.pop('show_pending_tasks', False):
         pending_tasks = Task.objects.filter(
@@ -91,7 +92,6 @@ def jobdetail(request, id):
         ), id=id)
     plans = MachineSchedule.objects.filter(jobprocess__job=job).order_by('start_time')
 
-
     # build inputdetail for waste breakdown table
     inputdetail = {}
     for a in job.jobprocess.all():
@@ -103,8 +103,8 @@ def jobdetail(request, id):
                 if key not in inputdetail:
                     inputdetail[key] = {"qty": qty, "input": round((-c.inputqty or 0), 3), "amount": amt}
                 else:
-                    inputdetail[key]["qty"]    += qty
-                    inputdetail[key]["input"]  += round((-c.inputqty or 0), 3)
+                    inputdetail[key]["qty"] += qty
+                    inputdetail[key]["input"] += round((-c.inputqty or 0), 3)
                     inputdetail[key]["amount"] += amt
 
             for d in b.output.all():
@@ -113,74 +113,74 @@ def jobdetail(request, id):
                 if key not in inputdetail:
                     inputdetail[key] = {"qty": qty, "input": qty, "amount": 0}
                 else:
-                    inputdetail[key]["qty"]   += qty
+                    inputdetail[key]["qty"] += qty
                     inputdetail[key]["input"] += qty
 
-    netinput      = 0
+    netinput = 0
     totalwaitgain = 0
-    wastekg       = 0
+    wastekg = 0
     for key, val in inputdetail.items():
         if val["qty"] < -0.0001:
-            netinput      = round(netinput + val["qty"], 3)
+            netinput = round(netinput + val["qty"], 3)
             totalwaitgain = round(totalwaitgain + val["input"], 3)
         elif val["qty"] > 0.0001 and 'WASTE' in key:
             wastekg = round(wastekg + val["qty"], 3)
 
     # call _production_cost_summary ONCE — avoids 4 separate DB round trips
     cost, netoutput = job._production_cost_summary()
-    salecost    = round(netoutput * job.kgrate, 3)
-    difference  = round(salecost - cost, 3)
+    salecost = round(netoutput * job.kgrate, 3)
+    difference = round(salecost - cost, 3)
     diff_per_kg = round(difference / netoutput, 3) if netoutput else 0
 
     wastepercent = 0
     if netinput != 0:
         wastepercent = round((netinput + netoutput) * 100 / netinput, 3)
 
-    first   = Job.objects.values('id').first()
-    last    = Job.objects.values('id').last()
+    first = Job.objects.values('id').first()
+    last = Job.objects.values('id').last()
     nextjob = Job.objects.values('id').filter(id__gt=id).order_by('-id').last()
     prevjob = Job.objects.values('id').filter(id__lt=id).order_by('-id').first()
 
     context = {
-        'job'          : job,
-        'plans'        : plans,
-        'next'         : nextjob,
-        'prev'         : prevjob,
-        'first'        : first,
-        'last'         : last,
-        'waste'        : inputdetail,
+        'job': job,
+        'plans': plans,
+        'next': nextjob,
+        'prev': prevjob,
+        'first': first,
+        'last': last,
+        'waste': inputdetail,
         'totalwaitgain': totalwaitgain,
-        'netinput'     : netinput,
-        'netoutput'    : netoutput,
-        'grossoutput'  : wastekg + netoutput,
-        'wastepercent' : wastepercent,
-        'cost'         : cost,
-        'salecost'     : salecost,
-        'difference'   : difference,
-        'diff_per_kg'  : diff_per_kg,
+        'netinput': netinput,
+        'netoutput': netoutput,
+        'grossoutput': wastekg + netoutput,
+        'wastepercent': wastepercent,
+        'cost': cost,
+        'salecost': salecost,
+        'difference': difference,
+        'diff_per_kg': diff_per_kg,
     }
 
     parentform = modelform_factory(Job, fields=('jobstatus', 'account_clearance_date', 'approvedby'))
 
     if request.method == 'POST':
-        status_form           = parentform(request.POST, instance=job)
+        status_form = parentform(request.POST, instance=job)
         accountclearance_form = parentform(request.POST, instance=job,
                                            initial={"jobstatus": "Unplanned",
                                                     "account_clearance_date": datetime.now(),
                                                     "approvedby": request.user})
-        context['status_form']           = status_form
+        context['status_form'] = status_form
         context['accountclearance_form'] = accountclearance_form
 
         if status_form.is_valid():
-            st=status_form.save(commit = False)
-            st.editedby=request.user
+            st = status_form.save(commit=False)
+            st.editedby = request.user
             st.save()
             messages.success(request, 'status save sucessfully.')
             return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
         elif accountclearance_form.is_valid():
             a = accountclearance_form.save(commit=False)
             a.account_clearance_date = timezone.now()
-            a.editedby=request.user
+            a.editedby = request.user
             a.save()
             messages.success(request, 'order save sucessfully.')
             return redirect('/order/joblist/?q=Account clearance')
@@ -188,24 +188,24 @@ def jobdetail(request, id):
             return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': job.id}))
     else:
         jobcoacount = job.jobcoa.count()
-        context ['jobcoacount']=jobcoacount
-        context['status_form']           = parentform(instance=job)
+        context['jobcoacount'] = jobcoacount
+        context['status_form'] = parentform(instance=job)
         context['accountclearance_form'] = parentform(instance=job,
-                                                       initial={"jobstatus": "Unplanned",
-                                                                "account_clearance_date": datetime.now(),
-                                                                "approvedby": request.user})
+                                                      initial={"jobstatus": "Unplanned",
+                                                               "account_clearance_date": datetime.now(),
+                                                               "approvedby": request.user})
 
     finished_list = []
     for item in job.job_disptached.all():
         first_dispatch = item.dispached.all().first()
         finished_list.append({
-            "id"           : item.id,
-            "object_id"    : item.object_id,
-            "grosswt"      : item.gross_wt,
-            "tarewt"       : item.tare_wt,
-            "netwt"        : item.recieved,
-            "nos"          : item.nos,
-            "remark"       : item.remark,
+            "id": item.id,
+            "object_id": item.object_id,
+            "grosswt": item.gross_wt,
+            "tarewt": item.tare_wt,
+            "netwt": item.recieved,
+            "nos": item.nos,
+            "remark": item.remark,
             "dispatched_id": first_dispatch.id if first_dispatch else 0,
         })
 
@@ -218,9 +218,9 @@ def jobdetail(request, id):
 def jobprint(request, id=None):
     job = get_object_or_404(
         Job.objects.select_related('itemmaster', 'unit', 'joborder')
-                   .prefetch_related('jobimages'), id=id)
+        .prefetch_related('jobimages'), id=id)
     context = {
-        'job'   : job,
+        'job': job,
         'images': job.jobimages.all(),
     }
     return render(request, 'print/jobdetailprint.html', context)
@@ -263,6 +263,11 @@ def orderadd(request):
             ord.createdby = request.user
             ord.status = "Pending"
             ord.save()
+            marketing_person = order_form.cleaned_data.get('marketing_person')
+            if marketing_person and ord.customer.marketing_person_id != marketing_person.id:
+                ord.customer.marketing_person = marketing_person
+                ord.customer.save(update_fields=['marketing_person'])
+
             return HttpResponseRedirect(reverse('order:orderdetailedit', kwargs={'id': ord.id}))
         else:
             return render(request, 'order/add.html', context)
@@ -369,8 +374,8 @@ def jobdetailedit(request, id):
         if formset1.is_valid() and mainform.is_valid() and formset2.is_valid() \
                 and formset3.is_valid() and formset4.is_valid() and formset5.is_valid() and formset6.is_valid():
             try:
-                j=mainform.save(commit=False)
-                j.editedby=request.user
+                j = mainform.save(commit=False)
+                j.editedby = request.user
                 j.save()
                 formset1.save()
                 formset2.save()
@@ -380,8 +385,8 @@ def jobdetailedit(request, id):
                 formset6.save()
 
                 return HttpResponseRedirect(reverse('order:jobdetail', kwargs={'id': id}))
-            except Exception  as e:
-                print ('error : ', e)
+            except Exception as e:
+                print('error : ', e)
                 messages.warning(request, 'something gone wrong')
 
                 return render(request, 'job/edit.html', context)
@@ -395,7 +400,6 @@ def jobdetailedit(request, id):
         formset4 = subformset4(prefix='jobattr', instance=job)
         formset5 = subformset5(prefix='jobcoa', instance=job)
         formset6 = subformset6(prefix='jobcolor', instance=job)
-
 
         context['mainform'] = mainform
         context['subforms1'] = formset1
@@ -578,9 +582,10 @@ def removedisptachapproval(request, id=None):
     return HttpResponseRedirect(reverse('production:dispatchapprovalpending'))
 
 
-#-----------------
+# -----------------
 
 from .forms import AssignMarketingPersonForm
+
 
 @login_required
 def assign_marketing_person(request):
@@ -590,7 +595,7 @@ def assign_marketing_person(request):
     if request.method == 'POST':
         form = AssignMarketingPersonForm(request.POST)
         if form.is_valid():
-            customer         = form.cleaned_data['customer']
+            customer = form.cleaned_data['customer']
             marketing_person = form.cleaned_data['marketing_person']
 
             # Update jobs where itemmaster belongs to this customer
@@ -613,3 +618,19 @@ def assign_marketing_person(request):
         'form': form,
         'updated_count': updated_count,
     })
+
+from django.http import JsonResponse
+
+@login_required(login_url='/login/')
+def get_marketing_person(request):
+    customer_id = request.GET.get('customer_id')
+    data = {'marketing_person_id': None, 'marketing_person_name': None}
+    if customer_id:
+        try:
+            customer = Customer.objects.select_related('marketing_person').get(id=customer_id)
+            if customer.marketing_person:
+                data['marketing_person_id'] = customer.marketing_person.id
+                data['marketing_person_name'] = customer.marketing_person.get_full_name() or customer.marketing_person.username
+        except Customer.DoesNotExist:
+            pass
+    return JsonResponse(data)

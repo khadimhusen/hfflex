@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from datetime import datetime
 
+from employee.models import Department
 from .filters import QuotationFilter
 from .forms import QuotationForm, QuoteItemForm, QuoteApprovalForm, AdditionTermForm
 from .models import Quotation, QuotationItem, MaterialRate, Term, AdditionTerm, PreDefinedMaterial, MaterialStructure
@@ -48,7 +49,7 @@ def addquotation(request):
 @accessview
 def quotationlist(request):
     context = {}
-    if request.user.username not in ["khadimhusen", "firoj", "admin"]:
+    if not Department.objects.filter(department_name="all_quote_list", user=request.user).exists():
 
         param = request.get_full_path().replace(request.path, "")
         q = request.GET.get('deleted', None)
@@ -155,7 +156,8 @@ def editquote(request, id=None):
     else:
 
         if quote.approvedby:
-            if request.user.username == "firoj" or request.user.username == "khadimhusen":
+
+            if not Department.objects.filter(department_name="can_approve_quote", user=request.user).exists():
                 mainform = QuotationForm(instance=quote)
                 quoteitemform = quoteitemformset(prefix="quoteitemform", instance=quote)
                 additiontermform = additiontermformset(prefix="additiontermform", instance=quote)

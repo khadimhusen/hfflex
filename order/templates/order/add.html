@@ -31,11 +31,12 @@
             <a class="btn btn-primary" href="{% url 'customer:customerdetailadd' %}?next={{request.path}}">
                 <strong>+</strong></a>
         </div>
-    </div>
-    <div class="form-row">
         <div class="form-group col-md-2 mb-0">
             {{ order_form.po|as_crispy_field }}
         </div>
+    </div>
+    <div class="form-row">
+
         <div class="form-group col-md-2 mb-0">
             {{ order_form.podate|as_crispy_field }}
         </div>
@@ -50,6 +51,9 @@
         </div>
         <div class="form-group col-md-2 mb-0">
             {{ order_form.tax2|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-2 mb-0">
+            {{ order_form.marketing_person|as_crispy_field }}
         </div>
     </div>
     <div class="form-row">
@@ -111,4 +115,32 @@
       });
     });
 </script>
+
+<script>
+$(document).ready(function() {
+    $('#id_customer').on('change', function() {
+        var customerId = $(this).val();
+        var $marketingSelect = $('#id_marketing_person');
+
+        if (!customerId) {
+            $marketingSelect.val('');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "order:get_marketing_person" %}',
+            data: { 'customer_id': customerId },
+            dataType: 'json',
+            success: function(data) {
+                if (data.marketing_person_id) {
+                    $marketingSelect.val(data.marketing_person_id);
+                } else {
+                    $marketingSelect.val('');
+                }
+            }
+        });
+    });
+});
+</script>
+
 {% endblock javascripts%}
