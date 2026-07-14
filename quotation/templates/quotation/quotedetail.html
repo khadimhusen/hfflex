@@ -11,15 +11,13 @@
 <div class="container">
 
     <div class="row ">
-        {% if  quote.approvedby %}
+        {% if quote.approvedby %}
 
         <button class="btn btn-primary btn-sm m-2 p-2" onclick="downloadimage()">Download Qoute Image</button>
         <a class="btn btn-warning btn-sm m-2 p-2" href="{% url 'quotation:quotepdf' quote.id %}">Download Quote Pdf</a>
-            {% else %}
+        {% else %}
         <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'quotation:editquote' quote.id %}">Edit Quote</a>
-         {% endif %}
-
-        {% if user|user_in_department:"can_approve_quote" and not quote.approveby %}
+        {% if user|user_in_department:"can_approve_quote" %}
 
         <form action="{% url 'quotation:quoteapproval' quote.id %}" method="post">
             {% csrf_token %}
@@ -28,6 +26,9 @@
             </button>
         </form>
         {% endif %}
+        {% endif %}
+
+
     </div>
 
 
@@ -61,8 +62,8 @@
                         <div class="col-7 side-border" id="client">
 
                             <h4 class="name">Name:- {{quote.partyname|upper }}</h4>
-                            <h5 >Address:- {{quote.add}}</h5>
-                            <h5 >Contact:- {{quote.contact}}</h5>
+                            <h5>Address:- {{quote.add}}</h5>
+                            <h5>Contact:- {{quote.contact}}</h5>
                         </div>
 
                     </div>
@@ -117,14 +118,18 @@
                                         Rs. {{quote.totalmaterialcost|floatformat }}</b></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-right" colspan="2">Cylinder Gst {{quote.cylinder_gst|floatformat}} %</td>
+                                    <td class="text-right" colspan="2">Cylinder Gst {{quote.cylinder_gst|floatformat}}
+                                        %
+                                    </td>
                                     <td class="text-center">Rs. {{quote.cylindergst|floatformat }}</td>
                                     <td class="text-center"></td>
-                                    <td class="text-right" colspan="2">Material Gst {{quote.material_gst|floatformat}} %</td>
+                                    <td class="text-right" colspan="2">Material Gst {{quote.material_gst|floatformat}}
+                                        %
+                                    </td>
                                     <td class="text-right px-4" colspan="2">
                                         Rs. {{quote.materialgst|floatformat }}</b></td>
                                 </tr>
-                                   <tr>
+                                <tr>
                                     <td class="text-right" colspan="2">Gross Cylinder Cost</td>
                                     <td class="text-center">Rs. {{quote.grosscylindercost|floatformat }}</td>
                                     <td class="text-center"></td>
@@ -143,12 +148,13 @@
                                 <tr>
                                     <th>Gross Material Cost:- Rs. {{quote.grossmaterialcost|floatformat }}</th>
                                 </tr>
-                                 <tr>
+                                <tr>
                                     <th>Design Development Cost:- Rs. {{quote.designcost|floatformat }}</th>
                                 </tr>
-                                 <tr>
+                                <tr>
                                     <th colspan="8">Total Quotation Cost:- Rs. {{quote.totalquotationcost|floatformat }}
-                                        ( {{quote.amountinword}} )</th>
+                                        ( {{quote.amountinword}} )
+                                    </th>
                                 </tr>
 
                                 </tfoot>
@@ -192,19 +198,20 @@
         </div>
 
     </div>
-        {% if  quote.approvedby %}
-                     <a class="btn btn-danger btn-sm m-2 p-2" href="{% url 'quotation:letterheadquotepdf' quote.id %}">for letterhead Quote Pdf</a>
-        {% endif %}
+    {% if quote.approvedby %}
+    <a class="btn btn-danger btn-sm m-2 p-2" href="{% url 'quotation:letterheadquotepdf' quote.id %}">for letterhead
+        Quote Pdf</a>
+    {% endif %}
 
     <form method="post" action="{% url 'quotation:copyquote' quote.id %}"
-      onsubmit="return confirm('Are you sure you want to copy this quotation?');">
-    {% csrf_token %}
-    <label>Type Quote ID <strong>{{ quote.id }}</strong> to confirm:</label>
-    <input type="text" name="confirm_id" required class="form-control col-2">
-    <button type="submit" class="btn btn-primary mt-2">
-        <i class="fa fa-copy"></i> Copy Quote
-    </button>
-</form>
+          onsubmit="return confirm('Are you sure you want to copy this quotation?');">
+        {% csrf_token %}
+        <label>Type Quote ID <strong>{{ quote.id }}</strong> to confirm:</label>
+        <input type="text" name="confirm_id" required class="form-control col-2">
+        <button type="submit" class="btn btn-primary mt-2">
+            <i class="fa fa-copy"></i> Copy Quote
+        </button>
+    </form>
 </div>
 
 
@@ -227,6 +234,7 @@
                 link.click();
             });
         }
+
 
 
 
