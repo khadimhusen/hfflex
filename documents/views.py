@@ -10,21 +10,30 @@ from django.contrib import messages
 from .models import Document
 from .forms import DocumentUploadForm, ManageViewersForm
 
+from documents.search_indexes import DocumentIndex
 
-@login_required(login_url='/login/')
+@login_required
 def document_list(request):
-    docs = Document.objects.filter(
-        models.Q(uploaded_by=request.user) | models.Q(viewers=request.user)
-    ).distinct().select_related('uploaded_by')
-
     query = request.GET.get('q', '').strip()
-    if query:
-        docs = docs.filter(title__icontains=query)
 
-    return render(request, 'documents/list.html', {
-        'documents': docs,
-        'query': query,
-    })
+    if query:
+        es_results = DocumentIndex.search().query(
+            'multi_match', query=query, fields=['title^2', 'description'], fuzziness='AUTO'
+        )
+        pks = [hit.meta.id for hit in es_results]
+        docs = list(Document.objects.filter(pk__in=pks))
+        docs.sort(key=lambda d: pks.index(str(d.pk)))
+    else:
+        docs = list(Document.objects.all())
+
+    docs = [
+        d for d in docs
+        if d.uploaded_by_id == request.user.id
+        or d.viewers.filter(pk=request.user.pk).exists()
+        or request.user.is_superuser
+    ]
+
+    return render(request, 'documents/list.html', {'documents': docs, 'query': query})
 
 @login_required(login_url='/login/')
 def document_upload(request):

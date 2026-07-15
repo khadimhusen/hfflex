@@ -1,6 +1,7 @@
 *.log
 local_settings.py
 db.sqlite3
+elasticsearch.zip
 
 myprojectenv/
 pepeoijlsdkf/
