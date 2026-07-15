@@ -18,8 +18,10 @@ def document_list(request):
 
     if query:
         es_results = DocumentIndex.search().query(
-            'multi_match', query=query, fields=['title^2', 'description'], fuzziness='AUTO'
-        )
+            'multi_match', query=query,
+            fields=['title^2', 'description','uploaded_by_username'],
+            fuzziness='AUTO')
+
         pks = [hit.meta.id for hit in es_results]
         docs = list(Document.objects.filter(pk__in=pks))
         docs.sort(key=lambda d: pks.index(str(d.pk)))

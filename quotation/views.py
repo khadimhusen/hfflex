@@ -157,7 +157,7 @@ def editquote(request, id=None):
 
         if quote.approvedby:
 
-            if not Department.objects.filter(department_name="can_approve_quote", user=request.user).exists():
+            if  Department.objects.filter(department_name="can_approve_quote", user=request.user).exists():
                 mainform = QuotationForm(instance=quote)
                 quoteitemform = quoteitemformset(prefix="quoteitemform", instance=quote)
                 additiontermform = additiontermformset(prefix="additiontermform", instance=quote)

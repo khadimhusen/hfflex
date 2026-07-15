@@ -97,7 +97,7 @@ def jobdetail(request, id):
     for a in job.jobprocess.all():
         for b in a.jobreport.all():
             for c in b.prodinput.all():
-                key = c.material.mate_name
+                key = c.material.full_name
                 qty = round((-c.wtgain or 0), 3)
                 amt = round(((c.material.rate or 0) * (c.inputqty or 0)), 3)
                 if key not in inputdetail:
@@ -108,7 +108,7 @@ def jobdetail(request, id):
                     inputdetail[key]["amount"] += amt
 
             for d in b.output.all():
-                key = d.mate_name
+                key = d.full_name
                 qty = round((d.recieved or 0), 3)
                 if key not in inputdetail:
                     inputdetail[key] = {"qty": qty, "input": qty, "amount": 0}

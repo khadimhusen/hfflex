@@ -76,12 +76,6 @@ class Stockdetail(models.Model):
             if self.balance!=0 and self.qc_status=="Nil" :
                 self.qc_status = "Ok"
 
-            # if self.dispached.all().exists() == True:
-            #     if self.dispached.all().first().lock == True:
-            #         self.qc_status = "Dispatched"
-            # if self.qc_status=="Dispatched" and self.dispached.all().exists() == False:
-            #     self.qc_status = "Finished"
-
         super(Stockdetail, self).save(*args, **kwargs)
 
 
@@ -93,10 +87,24 @@ class Stockdetail(models.Model):
             self.created.day or 0) + "-" + str(self.created.month or 0) + "-" + str(
             self.created.year or 0)
 
+
+
     @property
     def full_name(self):
-        return str(self.materialname) + "-" + str(self.item_mat_type) + "-" + str(
-            self.item_grade) + " " + str(self.size) + " mm X " + str(self.micron)
+        base = f"{self.materialname}"
+        dims = []
+        if str(self.item_mat_type) != "-":
+            dims.append(f' - {self.item_mat_type}')
+        if str(self.item_grade) != "-":
+            dims.append(f' - {self.item_grade}')
+        if self.size is not None:
+            dims.append(f" ({self.size}mm")
+        if self.micron is not None:
+            dims.append(f' X {self.micron}Mic)')
+        if dims:
+            base += " ".join(dims)
+        return base
+
 
     @property
     def used(self):
@@ -112,6 +120,7 @@ class Stockdetail(models.Model):
     def mate_name(self):
         return str(self.materialname) + " - " + str(self.item_mat_type) + " - " + str(
             self.item_grade) + "-" + str(self.size) + "mm X " + str(self.micron) + "mic"
+
 
     @property
     def dispatched(self):
