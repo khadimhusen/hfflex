@@ -1,7 +1,7 @@
 {% extends 'home.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-
+{% load extra_tag %}
 {% block customcss%}
 <style>
     .table{
@@ -36,7 +36,7 @@
                                 {{myFilter.form.createdby|as_crispy_field}}
                             </div>
                         </div>
-			<div class="form-row">
+			            <div class="form-row">
 
                             <div class="form-group col-md-1 mb-0 ">
                                 {{myFilter.form.active|as_crispy_field}}
@@ -71,7 +71,8 @@
                             </div>
                             <div class=" col-md-1 mb-0 ">
                                 <button class="btn btn-primary" type="submit">search</button>
-                                {% if request.user.username == "khadimhusen" %}
+                                {% if user|user_in_department:"directors" %}
+
                                 <button class="btn btn-warning btn-sm" type="submit"
                                         formaction="{% url 'itemmaster:itemlistexcel' %}?{{param}}">Download to excel
                                 </button>

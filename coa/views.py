@@ -198,7 +198,7 @@ def coa_reopen(request, pk):
 
     return render(request, 'coa/coa_reopen_confirm.html', {'coa': coa})
 
-@login_required
+@login_required(login_url='/login/')
 def coa_admin_edit(request, pk):
     """Administrative fields — always editable, even after approval."""
     coa = get_object_or_404(Coa, pk=pk)

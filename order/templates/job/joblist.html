@@ -1,5 +1,6 @@
 {% extends 'home.html' %}
 {% load static %}
+{% load extra_tag %}
 {% load crispy_forms_tags %}
 
 {% block customcss%}
@@ -264,7 +265,7 @@
 
                                     </td>
                                     <td class=" text-center">
-                                        {% if request.user.username == "khadimhusen" %}
+                                        {% if user|user_in_department:"directors"  %}
                                         <a class="btn btn-warning btn-sm"
                                            href="{% url 'order:jobdetailedit' job.id %}">Edit</a>
                                         {% endif %}

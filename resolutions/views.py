@@ -72,7 +72,7 @@ def resolution_detail(request, pk):
 
 
 # ── Create ────────────────────────────────────────────────────────────────────
-@login_required
+@login_required(login_url='/login/')
 def resolution_create(request):
     if not can_edit(request.user):
         messages.error(request, "You don't have permission to create resolutions.")
@@ -107,7 +107,7 @@ def resolution_create(request):
 
 
 # ── Edit ──────────────────────────────────────────────────────────────────────
-@login_required
+@login_required(login_url='/login/')
 def resolution_edit(request, pk):
     resolution = get_object_or_404(Resolution, pk=pk)
     if not can_edit(request.user):
@@ -144,7 +144,7 @@ def resolution_edit(request, pk):
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────
-@login_required
+@login_required(login_url='/login/')
 def resolution_delete(request, pk):
     resolution = get_object_or_404(Resolution, pk=pk)
     if not (request.user.is_staff or request.user.is_superuser):

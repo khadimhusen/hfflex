@@ -11,8 +11,6 @@
 
 <div class="container">
 
-
-
     <div class="row ">
         {% if first %}
         <button class="btn btn-warning m-0"><a href="{% url 'order:jobdetail' first.id %}">First< </a></button>
@@ -539,7 +537,31 @@
         </div>
         <div id="menu6" class="container tab-pane fade"><br>
             <div class="row">
-                <h2>Input</h2>
+                 <h3>Std Waste</h3>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                        <th>Printed_waste</th>
+                        <th>Trim_waste</th>
+                        <th>Pouching_waste</th>
+                        <th>Other_waste</th>
+                        <th>Std Waste Percentage</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{{job.printed_waste}}Kg</td>
+                        <td>{{job.trim_waste}}Kg</td>
+                        <td>{{job.pouching_waste}}Kg</td>
+                        <td>{{job.other_waste}}Kg</td>
+                        <td>{{job.std_waste_percentage}}%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+
+                <h3>Input</h3>
                 <table class="table table-bordered table-sm">
                     <thead>
                     <tr>
@@ -554,7 +576,9 @@
                     {% if value.qty < -0.0001 %}
                     <tr>
                         <td>{{key}}</td>
-                        <td>{% if request.user.username in 'khadimhusen,firoj' %}{{value.amount|abs }}{% endif %}</td>
+                        <td>
+                            {% if user|user_in_department:"directors"  %}{{value.amount|abs }}{% endif %}
+                        </td>
                         <td>{{value.qty|abs }}</td>
                         <td>{{value.input|abs }}</td>
                     </tr>
@@ -563,13 +587,19 @@
                     {% endfor %}
                     <tr>
                         <td align="right"><strong>Total Input</strong></td>
-                        <td ><strong>{% if request.user.username in 'khadimhusen,firoj' %}{{job.cost}}{% endif %}</strong></td>
+                        <td >
+                            <strong>
+                                {% if user|user_in_department:"directors"  %}
+                                {{job.cost}}
+                                {% endif %}
+                            </strong>
+                        </td>
                         <td><strong>{{netinput|abs}}</strong></td>
                         <td><strong>{{totalwaitgain|abs}}</strong></td>
 
                     </tr>
 
-                    {% if request.user.username in 'khadimhusen,firoj' %}
+                    {% if user|user_in_department:"directors"  %}
                     <tr>
                         <td align="right"><strong>Net Output</strong></td>
                         <td ><strong>{{job.salecost}}</strong></td>
@@ -587,7 +617,7 @@
 
             <div class="row">
 
-                <h2>OutPut</h2>
+                <h3>OutPut</h3>
                 <table class="table table-bordered table-sm">
                     <thead>
                     <tr>

@@ -12,8 +12,7 @@ from .forms import DocumentUploadForm, ManageViewersForm
 
 from documents.search_indexes import DocumentIndex
 
-@login_required
-def document_list(request):
+@login_required(login_url='/login/')def document_list(request):
     query = request.GET.get('q', '').strip()
 
     if query:

@@ -63,7 +63,7 @@ class Job(models.Model):
     approvedby = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     marketing_person = models.ForeignKey(User, on_delete=models.PROTECT, null=True, related_name="jobs",
                                          limit_choices_to={'department__department_name': 'marketing',
-                                                           'is_active':True})
+                                                           'is_active': True})
     dispatch_approval = models.BooleanField(default=False, blank=True)
     dispatch_approval_date = models.DateTimeField(null=True, blank=True)
     dispatch_remark = models.CharField(max_length=256, null=True, blank=True)
@@ -165,7 +165,7 @@ class Job(models.Model):
                 self.kgqty = round(self.quantity * self.pouch_weight / 1000, 0)
                 self.totalpouch = self.quantity
 
-            self.marketing_person= self.itemmaster.itemcustomer.marketing_person
+            self.marketing_person = self.itemmaster.itemcustomer.marketing_person
 
             self.pouch_per_kg = round(1000 / (self.pouch_weight), 1)
             self.totalmeter = round(
@@ -284,6 +284,38 @@ class Job(models.Model):
     def pouchqty(self):
         newresult = (self.kgqty or 0) * (self.pouch_per_kg or 0)
         return newresult
+
+    @property
+    def trim_waste(self):
+        return  round(15 * self.kgqty / self.film_size,2)  or 0
+
+
+    @property
+    def pouching_waste(self):
+        if self.jobprocess.filter(process__process="Pouching").exists():
+            return  round(float(self.kgqty+200)*0.01 or 0,2)
+        else:
+            return 0
+
+    @property
+    def other_waste(self):
+        return (0.01 *  float(self.kgqty or 0)) + 2
+
+    @property
+    def printed_waste(self):
+        if self.jobprocess.filter(process__process="Printing").exists():
+            printingfilm=self.jobmaterial.filter(materialname__name="PET").first()
+
+            if printingfilm:
+                    printwaste=round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0002 + 4,2)
+                    return printwaste or 0
+        else:
+            return 0
+    @property
+    def std_waste_percentage(self):
+        return round((float(self.printed_waste) + float(self.pouching_waste)+
+                      float(self.other_waste) +
+                      float(self.trim_waste))*100/float(self.kgqty),2)
 
     @property
     def jobwaste(self):
@@ -617,5 +649,3 @@ class JobChangeLog(models.Model):
 
     def __str__(self):
         return f"{self.job_id} • {self.field_name} • {self.changed_at:%Y-%m-%d %H:%M}"
-
-

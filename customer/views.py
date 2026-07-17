@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
+
+from employee.models import Department
 from .models import Customer, Address, Person
 from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -179,8 +181,10 @@ def customerdetailedit(request, id=None):
         else:
             return render(request, 'customer/edit_customer.html', context)
     else:
-        userlist = ["admin","khadimhusen","firoj","sarfaraj",customer.createdby.username]
-        if request.user.username in userlist:
+
+        if Department.objects.filter(department_name="directors",
+                                     user=request.user).exists() or customer.createdby.username:
+
             cust = CustomerForm(instance=customer)
             formset1 = addressformset(instance=customer, prefix='addressformset')
             formser2 = personformset(instance=customer, prefix='personformset')
@@ -189,7 +193,7 @@ def customerdetailedit(request, id=None):
             context['person_forms'] = formser2
             return render(request, 'customer/edit_customer.html', context)
         else:
-            messages.success(request, 'You are not Authorise to change detail of this customer. ' )
+            messages.success(request, 'You are not Authorise to change detail of this customer. ')
             return HttpResponseRedirect(reverse('customer:customerlist'))
 
 

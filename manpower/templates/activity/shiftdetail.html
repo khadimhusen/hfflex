@@ -27,7 +27,7 @@
                 {% if instance.is_approved %}
                 <h4 class="text-success"> This Shift is Approved </h4>
                 {% else %}
-                {% if request.user.username in 'cmshaikh,khadimhusen' %}
+                {% if user|user_in_department:"directors" %}
                 <form action="{% url 'manpower:approveshift' instance.id %}" method="post">
                     {% csrf_token %}
                     <input class="btn btn-danger" type="submit" value="Approve Shift">

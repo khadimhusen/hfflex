@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.forms import modelformset_factory, inlineformset_factory
+
+from employee.models import Department
 from .models import ItemMaster, RawMaterial, ItemImage, ItemProcess, ItemColor, ItemAttribute, ItemStandardParameter
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
@@ -229,7 +231,9 @@ def itemmasterdetailedit(request, id=None):
             context['something'] = "something"
             return render(request, 'itemmaster/edit_itemmaster.html', context)
     else:
-        if request.user == itemmaster.createdby or request.user.username == "admin" or request.user.username == 'khadimhusen' or request.user.username == 'namira':
+        if Department.objects.filter(department_name="can_edit_all_itemmaster",
+                                     user=request.user).exists() or request.user == itemmaster.createdby:
+
             item = ItemMasterForm(instance=itemmaster)
             formset1 = imageformset(instance=itemmaster, prefix='imageformset')
             formset2 = rawmaterialformset(instance=itemmaster, prefix='rawmaterialformset')

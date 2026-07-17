@@ -10,6 +10,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import datetime
 from django.utils import timezone
 
+from employee.models import Department
 from planning.models import MachineSchedule
 from production.models import Stockdetail, ProdInput
 from .models import Order, Job, JobMaterial, JobProcess, JobImage, JobItemAttribute, JobCoa, JobColor
@@ -333,7 +334,8 @@ def orderdetailedit(request, id):
             messages.success(request, 'order not save ')
             return render(request, 'order/edit_order.html', context)
     else:
-        if user == order.createdby or user.username == "admin":
+        if user == order.createdby or Department.objects.filter(department_name="directors",
+                                     user=request.user).exists():
             ord = OrderForm(instance=order, prefix='orderform')
             formset1 = jobformset(instance=order, prefix='jobformset',
                                   form_kwargs={'customerid': customerid, 'createdby': user})
@@ -483,7 +485,9 @@ def load_address(request):
 
 @login_required(login_url='/login/')
 def jobdcancel(request, id=None):
-    if request.user.username == "admin" or request.user.username == "khadimhusen":
+
+    if Department.objects.filter(department_name="directors",
+                                 user=request.user).exists():
         job = get_object_or_404(Job, id=id)
         deletematerial = job.jobmaterial.all()
         deleteprocess = job.jobprocess.all()
@@ -591,8 +595,7 @@ def removedisptachapproval(request, id=None):
 from .forms import AssignMarketingPersonForm
 
 
-@login_required
-def assign_marketing_person(request):
+@login_required(login_url='/login/')def assign_marketing_person(request):
     form = AssignMarketingPersonForm()
     updated_count = None
 
