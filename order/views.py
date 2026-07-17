@@ -595,7 +595,8 @@ def removedisptachapproval(request, id=None):
 from .forms import AssignMarketingPersonForm
 
 
-@login_required(login_url='/login/')def assign_marketing_person(request):
+@login_required(login_url='/login/')
+def assign_marketing_person(request):
     form = AssignMarketingPersonForm()
     updated_count = None
 
