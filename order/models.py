@@ -338,11 +338,13 @@ class Job(models.Model):
 
     @property
     def std_waste_percentage(self):
-        return round((float(self.printed_waste) + float(self.pouching_waste) +
+        if self.kgqty :
+            return round((float(self.printed_waste) + float(self.pouching_waste) +
                       float(self.other_waste) + float(self.trim_waste) + float(self.standy_punch_waste) +
                       float(self.D_punch_waste)
                       ) * 100 / float(self.kgqty), 2)
-
+        else:
+            return 0
     @property
     def jobwaste(self):
 
