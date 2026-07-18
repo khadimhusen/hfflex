@@ -299,7 +299,7 @@ class Job(models.Model):
     @property
     def standy_punch_waste(self):
         if "standy" in str(self.pouch_type).lower():
-            return round(float(self.pouchqty) * float(self.total_gsm) * 3.14 * 0.0008 * 0.0008 * 2, 2)
+            return round(float(self.pouchqty or 0) * float(self.total_gsm or 0) * 3.14 * 0.0008 * 0.0008 * 2, 2)
         else:
             return 0
 
@@ -322,6 +322,8 @@ class Job(models.Model):
             if printingfilm:
                 printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0004 + 2, 2)
                 return printwaste or 0
+            else:
+                return 0
         else:
             return 0
 
