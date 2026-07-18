@@ -338,15 +338,16 @@ class Job(models.Model):
 
     @property
     def std_waste_percentage(self):
-        if self.kgqty :
+        if self.kgqty:
             return round((float(self.printed_waste) + float(self.pouching_waste) +
-                      float(self.other_waste) + float(self.trim_waste) + float(self.standy_punch_waste) +
-                      float(self.D_punch_waste)
-                      ) * 100 / float(self.kgqty), 2)
+                          float(self.other_waste) + float(self.trim_waste) + float(self.standy_punch_waste) +
+                          float(self.D_punch_waste)
+                          ) * 100 / float(self.kgqty), 2)
         else:
             return 0
+
     @property
-    def jobwaste(self):
+    def jobwaste_old_func(self):
 
         from production.models import ProdInput, Stockdetail, ProdReport
 
@@ -383,6 +384,75 @@ class Job(models.Model):
             wastepercent = round(netwaste * 100 / netinput, 3)
         context['wastepercent'] = wastepercent
         return context['wastepercent']
+
+    def _waste_summary(self):
+        """
+        Single source of truth for waste calculations, shared by the
+        `jobwaste` property and the jobdetail view — avoids the two
+        drifting apart from separate calculation paths.
+
+        Returns a dict with:
+            inputdetail   — breakdown table {material_name: {qty, input, amount}}
+            netinput      — sum of negative (consumed) quantities
+            netoutput     — sum of positive non-waste quantities, from cost summary
+            wastekg       — sum of positive quantities tagged 'WASTE'
+            totalwaitgain — sum of raw input quantities (pre-yield-loss)
+            wastepercent  — (netinput + netoutput) * 100 / netinput
+            cost          — from _production_cost_summary()
+        """
+        inputdetail = {}
+
+        for a in self.jobprocess.all():
+            for b in a.jobreport.all():
+                for c in b.prodinput.all():
+                    key = c.material.full_name
+                    qty = round((-c.wtgain or 0), 3)
+                    amt = round(((c.material.rate or 0) * (c.inputqty or 0)), 3)
+                    if key not in inputdetail:
+                        inputdetail[key] = {"qty": qty, "input": round((-c.inputqty or 0), 3), "amount": amt}
+                    else:
+                        inputdetail[key]["qty"] += qty
+                        inputdetail[key]["input"] += round((-c.inputqty or 0), 3)
+                        inputdetail[key]["amount"] += amt
+
+                for d in b.output.all():
+                    key = d.full_name
+                    qty = round((d.recieved or 0), 3)
+                    if key not in inputdetail:
+                        inputdetail[key] = {"qty": qty, "input": qty, "amount": 0}
+                    else:
+                        inputdetail[key]["qty"] += qty
+                        inputdetail[key]["input"] += qty
+
+        netinput = 0
+        totalwaitgain = 0
+        wastekg = 0
+        for key, val in inputdetail.items():
+            if val["qty"] < -0.0001:
+                netinput = round(netinput + val["qty"], 3)
+                totalwaitgain = round(totalwaitgain + val["input"], 3)
+            elif val["qty"] > 0.0001 and 'WASTE' in key:
+                wastekg = round(wastekg + val["qty"], 3)
+
+        cost, netoutput = self._production_cost_summary()
+
+        wastepercent = 0
+        if netinput != 0:
+            wastepercent = round((netinput + netoutput) * 100 / netinput, 3)
+
+        return {
+            'inputdetail': inputdetail,
+            'netinput': netinput,
+            'netoutput': netoutput,
+            'wastekg': wastekg,
+            'totalwaitgain': totalwaitgain,
+            'wastepercent': wastepercent,
+            'cost': cost,
+        }
+
+    @property
+    def jobwaste(self):
+        return self._waste_summary()['wastepercent']
 
     @property
     def job_disptached(self):

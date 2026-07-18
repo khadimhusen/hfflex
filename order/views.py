@@ -93,49 +93,15 @@ def jobdetail(request, id):
         ), id=id)
     plans = MachineSchedule.objects.filter(jobprocess__job=job).order_by('start_time')
 
-    # build inputdetail for waste breakdown table
-    inputdetail = {}
-    for a in job.jobprocess.all():
-        for b in a.jobreport.all():
-            for c in b.prodinput.all():
-                key = c.material.full_name
-                qty = round((-c.wtgain or 0), 3)
-                amt = round(((c.material.rate or 0) * (c.inputqty or 0)), 3)
-                if key not in inputdetail:
-                    inputdetail[key] = {"qty": qty, "input": round((-c.inputqty or 0), 3), "amount": amt}
-                else:
-                    inputdetail[key]["qty"] += qty
-                    inputdetail[key]["input"] += round((-c.inputqty or 0), 3)
-                    inputdetail[key]["amount"] += amt
+    waste = job._waste_summary()
+    netinput = waste['netinput']
+    netoutput = waste['netoutput']
+    wastekg = waste['wastekg']
+    cost = waste['cost']
 
-            for d in b.output.all():
-                key = d.full_name
-                qty = round((d.recieved or 0), 3)
-                if key not in inputdetail:
-                    inputdetail[key] = {"qty": qty, "input": qty, "amount": 0}
-                else:
-                    inputdetail[key]["qty"] += qty
-                    inputdetail[key]["input"] += qty
-
-    netinput = 0
-    totalwaitgain = 0
-    wastekg = 0
-    for key, val in inputdetail.items():
-        if val["qty"] < -0.0001:
-            netinput = round(netinput + val["qty"], 3)
-            totalwaitgain = round(totalwaitgain + val["input"], 3)
-        elif val["qty"] > 0.0001 and 'WASTE' in key:
-            wastekg = round(wastekg + val["qty"], 3)
-
-    # call _production_cost_summary ONCE — avoids 4 separate DB round trips
-    cost, netoutput = job._production_cost_summary()
     salecost = round(netoutput * job.kgrate, 3)
     difference = round(salecost - cost, 3)
     diff_per_kg = round(difference / netoutput, 3) if netoutput else 0
-
-    wastepercent = 0
-    if netinput != 0:
-        wastepercent = round((netinput + netoutput) * 100 / netinput, 3)
 
     first = Job.objects.values('id').first()
     last = Job.objects.values('id').last()
@@ -149,17 +115,17 @@ def jobdetail(request, id):
         'prev': prevjob,
         'first': first,
         'last': last,
-        'waste': inputdetail,
-        'totalwaitgain': totalwaitgain,
+        'waste': waste['inputdetail'],
+        'totalwaitgain': waste['totalwaitgain'],
         'netinput': netinput,
         'netoutput': netoutput,
         'grossoutput': wastekg + netoutput,
-        'wastepercent': wastepercent,
+        'wastepercent': waste['wastepercent'],
         'cost': cost,
         'salecost': salecost,
         'difference': difference,
         'diff_per_kg': diff_per_kg,
-        'totalwastekg':- netinput - netoutput
+        'totalwastekg': -netinput - netoutput,
     }
 
     parentform = modelform_factory(Job, fields=('jobstatus', 'account_clearance_date', 'approvedby'))
