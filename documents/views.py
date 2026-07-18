@@ -3,14 +3,15 @@ import os
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
-from .models import Document
+from .models import Document, DocumentDownloadLog
 from .forms import DocumentUploadForm, ManageViewersForm
 
 from documents.search_indexes import DocumentIndex
+
 
 @login_required(login_url='/login/')
 def document_list(request):
@@ -19,7 +20,7 @@ def document_list(request):
     if query:
         es_results = DocumentIndex.search().query(
             'multi_match', query=query,
-            fields=['title^2', 'description','uploaded_by_username'],
+            fields=['title^2', 'description', 'uploaded_by_username'],
             fuzziness='AUTO')
 
         pks = [hit.meta.id for hit in es_results]
@@ -31,11 +32,12 @@ def document_list(request):
     docs = [
         d for d in docs
         if d.uploaded_by_id == request.user.id
-        or d.viewers.filter(pk=request.user.pk).exists()
-        or request.user.is_superuser
+           or d.viewers.filter(pk=request.user.pk).exists()
+           or request.user.is_superuser
     ]
 
     return render(request, 'documents/list.html', {'documents': docs, 'query': query})
+
 
 @login_required(login_url='/login/')
 def document_upload(request):
@@ -95,7 +97,9 @@ def manage_viewers(request, pk):
         form = ManageViewersForm(instance=doc)
     return render(request, 'documents/manage_viewers.html', {'form': form, 'document': doc})
 
+
 from django.views.decorators.http import require_POST
+
 
 @login_required(login_url='/login/')
 @require_POST
@@ -113,3 +117,36 @@ def document_delete(request, pk):
     doc.delete()
     messages.success(request, f'"{title}" was deleted.')
     return redirect('documents:list')
+
+
+def get_client_ip(request):
+    real_ip = request.META.get('HTTP_X_REAL_IP')
+    if real_ip:
+        return real_ip
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+@login_required
+def document_download(request, pk):
+    doc = get_object_or_404(Document, pk=pk)
+    if not doc.has_access(request.user):
+        raise PermissionDenied
+
+    if not doc.file:
+        raise Http404("File not found")
+
+    # log the download before serving the file
+    DocumentDownloadLog.objects.create(
+        document=doc,
+        downloaded_by=request.user,
+        ip_address=get_client_ip(request),
+    )
+
+    response = HttpResponse()
+    response['Content-Type'] = ''
+    response['X-Accel-Redirect'] = f'/media/{doc.file.name}'
+    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(doc.file.name)}"'
+    return response

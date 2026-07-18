@@ -28,6 +28,20 @@ class Document(models.Model):
             return True
         return self.uploaded_by_id == user.id or self.viewers.filter(pk=user.pk).exists()
 
-
     def get_absolute_url(self):
         return reverse('documents:detail', args=[self.pk])
+
+
+class DocumentDownloadLog(models.Model):
+    document = models.ForeignKey(
+        Document, on_delete=models.CASCADE, related_name='download_logs'
+    )
+    downloaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    downloaded_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-downloaded_at']
+
+    def __str__(self):
+        return f"{self.downloaded_by} downloaded {self.document} at {self.downloaded_at}"

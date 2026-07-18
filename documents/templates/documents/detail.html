@@ -29,24 +29,50 @@
     </p>
 
     {% if document.description %}
-        <p>{{ document.description }}</p>
+    <p>{{ document.description }}</p>
     {% endif %}
 
     {% if document.uploaded_by_id == request.user.id %}
     <div class="mt-3">
         <strong>Current viewers:</strong>
         {% if document.viewers.all %}
-            <ul>
+        <ul>
             {% for v in document.viewers.all %}
-                <li>{{ v.get_full_name|default:v.username }}</li>
+            <li>{{ v.get_full_name|default:v.username }}</li>
             {% endfor %}
-            </ul>
+        </ul>
         {% else %}
-            <p class="text-muted">No viewers assigned yet — only you can see this.</p>
+        <p class="text-muted">No viewers assigned yet — only you can see this.</p>
         {% endif %}
     </div>
     {% endif %}
-
+    {% if document.uploaded_by_id == request.user.id or request.user.is_superuser %}
+    <div class="mt-4">
+        <h6>Download History</h6>
+        {% if document.download_logs.all %}
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Date</th>
+                <th>IP</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for log in document.download_logs.all|slice:":20" %}
+            <tr>
+                <td>{{ log.downloaded_by.get_full_name|default:log.downloaded_by.username }}</td>
+                <td>{{ log.downloaded_at|date:"d M Y, h:i A" }}</td>
+                <td>{{ log.ip_address|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No downloads yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
     <a href="{% url 'documents:list' %}" class="btn btn-link">&larr; Back to list</a>
 </div>
 {% endblock %}
