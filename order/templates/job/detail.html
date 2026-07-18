@@ -544,7 +544,11 @@
                         <th>Printed_waste</th>
                         <th>Trim_waste</th>
                         <th>Pouching_waste</th>
+                        <th>Standy Punch waste</th>
+                        <th>D cut waste</th>
                         <th>Other_waste</th>
+                        <th>Std Waste Kg</th>
+                        <th>Actual Waste Kg</th>
                         <th>Std Waste Percentage</th>
                     </tr>
                     </thead>
@@ -553,7 +557,11 @@
                         <td>{{job.printed_waste}}Kg</td>
                         <td>{{job.trim_waste}}Kg</td>
                         <td>{{job.pouching_waste}}Kg</td>
+                        <td>{{job.standy_punch_waste}}Kg</td>
+                        <td>{{job.D_punch_waste}}Kg</td>
                         <td>{{job.other_waste}}Kg</td>
+                        <td>{{job.std_waste_kg}}Kg</td>
+                        <td><span class="text-danger"> {{totalwastekg}}Kg</span></td>
                         <td>{{job.std_waste_percentage}}%</td>
                     </tr>
                     </tbody>

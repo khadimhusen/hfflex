@@ -134,7 +134,7 @@
                                     </td>
                                     <td>{{job.kgqty}}</td>
                                     <td>{{job.film_size}}mm</td>
-                                    <td>{{job.job_waste}} % </td>
+                                    <td>{{job.job_waste}}/{{job.jobwaste1}} % </td>
                                     <td>
                                         {% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Printing' %}

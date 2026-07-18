@@ -287,35 +287,59 @@ class Job(models.Model):
 
     @property
     def trim_waste(self):
-        return  round(15 * self.kgqty / self.film_size,2)  or 0
-
+        return round(15 * self.kgqty / self.film_size, 2) or 0
 
     @property
     def pouching_waste(self):
         if self.jobprocess.filter(process__process="Pouching").exists():
-            return  round(float(self.kgqty+200)*0.01 or 0,2)
+            return round(float(self.kgqty + 800) * 0.004 or 0, 2)
+        else:
+            return 0
+
+    @property
+    def standy_punch_waste(self):
+        if "standy" in str(self.pouch_type).lower():
+            return round(float(self.pouchqty) * float(self.total_gsm) * 3.14 * 0.0008 * 0.0008 * 2, 2)
+        else:
+            return 0
+
+    @property
+    def D_punch_waste(self):
+        if "d cut" in str(self.pouch_type).lower():
+            return round(float(self.pouchqty) * float(self.total_gsm) * 0.05 * 0.02 * 2 / 1000, 2)
         else:
             return 0
 
     @property
     def other_waste(self):
-        return (0.01 *  float(self.kgqty or 0)) + 2
+        return round(0.005 * float(self.kgqty or 2)) + 2
 
     @property
     def printed_waste(self):
         if self.jobprocess.filter(process__process="Printing").exists():
-            printingfilm=self.jobmaterial.filter(materialname__name="PET").first()
+            printingfilm = self.jobmaterial.filter(materialname__name="PET").first()
 
             if printingfilm:
-                    printwaste=round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0002 + 4,2)
-                    return printwaste or 0
+                printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0004 + 2, 2)
+                return printwaste or 0
         else:
             return 0
+
+    @property
+    def std_waste_kg(self):
+        return round(float(self.printed_waste) +
+                     float(self.pouching_waste) +
+                     float(self.other_waste) +
+                     float(self.trim_waste) +
+                     float(self.standy_punch_waste) +
+                     float(self.D_punch_waste), 2)
+
     @property
     def std_waste_percentage(self):
-        return round((float(self.printed_waste) + float(self.pouching_waste)+
-                      float(self.other_waste) +
-                      float(self.trim_waste))*100/float(self.kgqty),2)
+        return round((float(self.printed_waste) + float(self.pouching_waste) +
+                      float(self.other_waste) + float(self.trim_waste) + float(self.standy_punch_waste) +
+                      float(self.D_punch_waste)
+                      ) * 100 / float(self.kgqty), 2)
 
     @property
     def jobwaste(self):

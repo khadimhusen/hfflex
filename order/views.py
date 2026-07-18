@@ -159,6 +159,7 @@ def jobdetail(request, id):
         'salecost': salecost,
         'difference': difference,
         'diff_per_kg': diff_per_kg,
+        'totalwastekg':- netinput - netoutput
     }
 
     parentform = modelform_factory(Job, fields=('jobstatus', 'account_clearance_date', 'approvedby'))
