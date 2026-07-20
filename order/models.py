@@ -299,7 +299,7 @@ class Job(models.Model):
     @property
     def standy_punch_waste(self):
         if "standy" in str(self.pouch_type).lower():
-            return round(float(self.pouchqty or 0) * float(self.total_gsm or 0) * 3.14 * 0.0008 * 0.0008 * 2, 2)
+            return round(float(self.pouchqty or 0) * float(self.total_gsm / 1000 or 0) * 3.14 * 0.01 * 0.01 * 2, 2)
         else:
             return 0
 
@@ -339,10 +339,8 @@ class Job(models.Model):
     @property
     def std_waste_percentage(self):
         if self.kgqty:
-            return round((float(self.printed_waste) + float(self.pouching_waste) +
-                          float(self.other_waste) + float(self.trim_waste) + float(self.standy_punch_waste) +
-                          float(self.D_punch_waste)
-                          ) * 100 / float(self.kgqty), 2)
+
+            return round(float(self.std_waste_kg or 0) * 100 / float(self.kgqty), 2)
         else:
             return 0
 

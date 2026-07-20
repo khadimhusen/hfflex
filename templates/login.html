@@ -43,5 +43,39 @@
     </div>
 </div>
 {% include 'footer.html' %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("form").forEach(function (form) {
+
+        let submitted = false;
+
+        form.addEventListener("submit", function (e) {
+            if (submitted) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
+
+            submitted = true;
+
+            const buttons = form.querySelectorAll(
+                "button[type='submit'], input[type='submit']"
+            );
+
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.tagName === "BUTTON") {
+                    btn.innerText = "Submitting...";
+                } else {
+                    btn.value = "Submitting...";
+                }
+            });
+        });
+
+    });
+});
+
+</script>
+
 </body>
 </html>

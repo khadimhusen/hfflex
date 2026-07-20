@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}"/>
     <!--fixed css -->
     {% block fixedcss %}
     <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootstrap.min.css' %}">
@@ -24,6 +24,7 @@
         input[type=number] {
         -moz-appearance: textfield;
         }
+
     </style>
     {% endblock fixedcss %}
 
@@ -34,15 +35,16 @@
     <!-- fixed scripts -->
     {% block fixedscript %}
     <script src="{% static 'bootadmin.net/js/jquery.min.js' %}"></script>
-        <script src="https://unpkg.com/htmx.org@1.5.0"
-        integrity="sha384-oGA+prIp5Vchu6we2YkI51UtVzN9Jpx2Z7PnR1I78PnZlN8LkrCT4lqqqmDkyrvI"
-        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx.org@1.5.0"
+            integrity="sha384-oGA+prIp5Vchu6we2YkI51UtVzN9Jpx2Z7PnR1I78PnZlN8LkrCT4lqqqmDkyrvI"
+            crossorigin="anonymous"></script>
     <script>
         window.onpageshow = function(event) {
             if (event.persisted) {
                 window.location.reload();
             }
         };
+
 
     </script>
 
@@ -55,24 +57,24 @@
 </head>
 
 <body class="bg-light">
-    {% include 'boottopnavbar.html' %}
-    <div class="d-flex">
+{% include 'boottopnavbar.html' %}
+<div class="d-flex">
 
-        {% include 'bootsidenavbar.html' %}
+    {% include 'bootsidenavbar.html' %}
 
-        <div class="content p-4">
-            {% block content %}
-            {% endblock content %}
-        </div>
+    <div class="content p-4">
+        {% block content %}
+        {% endblock content %}
     </div>
+</div>
 
 
-    {% block scripts %}
+{% block scripts %}
 
-    <script src="{% static 'bootadmin.net/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'bootadmin.net/js/bootadmin.min.js' %}"></script>
-    <script>$(document).ready(function () { $("#sidebarhide").trigger('click'); });</script>
-	<script>
+<script src="{% static 'bootadmin.net/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'bootadmin.net/js/bootadmin.min.js' %}"></script>
+<script>$(document).ready(function () { $("#sidebarhide").trigger('click'); });</script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("form").forEach(function (form) {
 
@@ -103,12 +105,13 @@
 
     });
 });
+
 </script>
 
-    {% endblock scripts %}
+{% endblock scripts %}
 
-    {% block javascripts %}
-    {% endblock javascripts %}
+{% block javascripts %}
+{% endblock javascripts %}
 
 
 </body>
