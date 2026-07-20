@@ -134,15 +134,14 @@
                                     </td>
                                     <td>{{job.kgqty}}</td>
                                     <td>{{job.film_size}}mm</td>
-                                    <td>{{job.job_waste}}/{{job.std_waste_percentage}} % </td>
+                                    <td>{{job.job_waste}}
+                                        /{{job.calculated_waste_percentage|default_if_none:""}} % </td>
                                     <td>
                                         {% for pro in job.jobprocess.all %}
                                         {% if pro.process.process == 'Printing' %}
                                        <strong>
                                            <p>
                                             {{ pro.status }}
-
-
 
                                             {% for i in pro.schedules.all  %}
                                            {% if not forloop.first %}

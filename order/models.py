@@ -94,11 +94,12 @@ class Job(models.Model):
     unwind_direction = models.CharField(max_length=32, choices=DIRECTION, default="ANY")
     lami_rubber = models.ForeignKey(LamiRubber, related_name='jobitemmaster', on_delete=models.SET_NULL, null=True,
                                     blank=True)
-    totalpouch = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True, default=0)  #
-    totalmeter = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True, default=0)  #
+    totalpouch = models.DecimalField(max_digits=10, decimal_places=0, blank=True, null=True, default=0)
+    totalmeter = models.DecimalField(max_digits=10, decimal_places=1, blank=True, null=True, default=0)
     job_waste = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, default=0)
     job_repeat_status = models.CharField(max_length=16, choices=[("New", "New"), ("Repeat", "Repeat")], default="New",
                                          blank=True, null=True)
+    calculated_waste_percentage = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT, related_name='jobcreated')
     edited = models.DateTimeField(auto_now=True)
@@ -171,6 +172,8 @@ class Job(models.Model):
             self.totalmeter = round(
                 self.kgqty * 1000000 * ((self.waste / 100) + 1) / (self.total_gsm * self.film_size), 0)
 
+        self.calculated_waste_percentage = round(self.std_waste_percentage,2)
+        print("job",self.id)
         super(Job, self).save(*args, **kwargs)
 
         if flag:
