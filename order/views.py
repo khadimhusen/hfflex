@@ -67,6 +67,12 @@ def joblist_old(request):
         context['pending_tasks_popup'] = pending_tasks
 
     return render(request, 'job/joblist.html', context)
+
+
+
+@login_required(login_url='/login/')
+@forceview
+@accessview
 def joblist(request):
     context = {}
     param = request.get_full_path().replace(request.path, "")
