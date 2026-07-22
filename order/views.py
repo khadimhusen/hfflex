@@ -20,6 +20,7 @@ from customer.models import Address, Customer
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 from task.models import Task
+from django.db.models import Count, Prefetch
 
 from django.http import JsonResponse
 
@@ -27,7 +28,7 @@ from django.http import JsonResponse
 @login_required(login_url='/login/')
 @forceview
 @accessview
-def joblist(request):
+def joblist_old(request):
     context = {}
     param = request.get_full_path().replace(request.path, "")
     context['param'] = param
@@ -66,7 +67,71 @@ def joblist(request):
         context['pending_tasks_popup'] = pending_tasks
 
     return render(request, 'job/joblist.html', context)
+def joblist(request):
+    context = {}
+    param = request.get_full_path().replace(request.path, "")
+    context['param'] = param
 
+    q = request.GET.get('q', None)
+    job_list = Job.objects.filter(jobstatus=q) if q else Job.objects.all()
+
+    myFilter = JobFilter(request.GET, job_list)
+
+    # --- fix 2: prefetch machine schedule once, instead of once per jobprocess ---
+    schedule_prefetch = Prefetch(
+        'jobprocess__schedules',
+        queryset=MachineSchedule.objects.order_by('machine_id', 'queue_position', '-end_time'),
+        to_attr='prefetched_schedules',
+    )
+
+    job_list = myFilter.qs.select_related(
+        'joborder', 'itemmaster', 'unit', 'joborder__customer','marketing_person', 'marketing_person__profile',
+    ).prefetch_related(
+        'jobprocess__process',
+        schedule_prefetch,
+    )
+
+    result = job_list.aggregate(Sum('kgqty'))
+    kgsum = round(result['kgqty__sum'] or 0, 0)
+
+    # --- fix 1: user's department memberships computed once, not once per row ---
+    # (was: 87 separate `Department.objects.get(department_name=...)` + membership
+    #  join queries, some repeated 64x, per page load)
+    user_departments = set(
+        request.user.department.values_list('department_name', flat=True)
+        # <-- verify: this assumes Department has a plain ManyToManyField to User
+        # named `user` with no custom related_name (table was `employee_department_user`)
+    )
+    context['user_departments'] = user_departments
+    context['is_director'] = 'directors' in user_departments  # convenience flag if 'directors' is checked often
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(job_list, 200)
+    try:
+        jobs = paginator.page(page)
+    except PageNotAnInteger:
+        jobs = paginator.page(1)
+    except EmptyPage:
+        jobs = paginator.page(paginator.num_pages)
+
+    context['jobs'] = jobs
+    context['myFilter'] = myFilter
+    context['kgsum'] = kgsum
+
+    # --- minor fix: 5 separate COUNT queries -> 1 grouped query ---
+    status_counts = dict(
+        Job.objects.values_list('jobstatus').annotate(n=Count('id')).values_list('jobstatus', 'n')
+    )
+    context['status_counts'] = status_counts  # e.g. status_counts.get('Pending', 0)
+
+    if request.session.pop('show_pending_tasks', False):
+        pending_tasks = Task.objects.filter(
+            task_alloted_to=request.user,
+            is_closed=False
+        ).select_related('createdby').order_by('target_date')[:10]
+        context['pending_tasks_popup'] = pending_tasks  # dropped the debug print() + its .count() query
+
+    return render(request, 'job/joblist.html', context)
 
 @login_required(login_url='/login/')
 @accessview

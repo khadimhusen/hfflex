@@ -143,7 +143,7 @@
                                            <p>
                                             {{ pro.status }}
 
-                                            {% for i in pro.schedules.all  %}
+                                            {% for i in pro.prefetched_schedules %}
                                            {% if not forloop.first %}
                                             <hr class="border-top border-primary">
                                             {% endif %}
@@ -161,7 +161,7 @@
                                         <strong>
                                             <p>
                                         {{ pro.status }}
-                                        {% for i in pro.schedules.all  %}
+                                        {% for i in pro.prefetched_schedules %}
 
                                             {% if not forloop.first %}
                                             <hr class="border-top border-primary">
@@ -181,7 +181,7 @@
                                         <strong>
                                             <p>
                                         {{ pro.status }}
-                                         {% for i in pro.schedules.all  %}
+                                         {% for i in pro.prefetched_schedules %}
                                                 {% if not forloop.first %}
                                             <hr class="border-top border-primary">
                                             {% endif %}
@@ -203,14 +203,11 @@
                                         <strong>
                                             <p>
                                         {{ pro.status }}
-                                         {% for i in pro.schedules.all  %}
+                                         {% for i in pro.prefetched_schedules %}
                                                 {% if not forloop.first %}
                                             <hr class="border-top border-primary">
                                             {% endif %}
                                             {{i.start_time }}
-
-
-
                                             {% endfor %}
 
                                             </p>
@@ -223,7 +220,7 @@
                                         <strong>
                                             <p>
                                         {{ pro.status }}
-                                         {% for i in pro.schedules.all  %}
+                                         {% for i in pro.prefetched_schedules %}
                                                 {% if not forloop.first %}
                                             <hr class="border-top border-primary">
                                             {% endif %}
@@ -243,7 +240,7 @@
                                         <strong>
                                             <p>
                                         {{ pro.status }}
-                                         {% for i in pro.schedules.all  %}
+                                         {% for i in pro.prefetched_schedules %}
                                                 {% if not forloop.first %}
                                             <hr class="border-top border-primary">
                                             {% endif %}
@@ -264,7 +261,7 @@
 
                                     </td>
                                     <td class=" text-center">
-                                        {% if user|user_in_department:"directors"  %}
+                                        {% if is_director %}
                                         <a class="btn btn-warning btn-sm"
                                            href="{% url 'order:jobdetailedit' job.id %}">Edit</a>
                                         {% endif %}

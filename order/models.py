@@ -127,7 +127,7 @@ class Job(models.Model):
                 self.pouch_per_kg = round(1000 / (self.pouch_weight), 1)
                 self.totalmeter = round(
                     self.kgqty * 1000000 * ((self.waste / 100) + 1) / (self.total_gsm * self.film_size), 0)
-            self.calculated_waste_percentage = round(self.std_waste_percentage,2)
+            self.calculated_waste_percentage = round(self.std_waste_percentage, 2)
 
         else:
             flag = True
@@ -173,7 +173,6 @@ class Job(models.Model):
             self.pouch_per_kg = round(1000 / (self.pouch_weight), 1)
             self.totalmeter = round(
                 self.kgqty * 1000000 * ((self.waste / 100) + 1) / (self.total_gsm * self.film_size), 0)
-
 
         super(Job, self).save(*args, **kwargs)
 
@@ -343,8 +342,7 @@ class Job(models.Model):
     @property
     def std_waste_percentage(self):
         if self.kgqty:
-
-            return round(float(self.std_waste_kg or 0) * 100 / float(self.kgqty), 2)
+            return round(float(self.std_waste_kg or 0) * 100 / (float(self.kgqty) + float(self.std_waste_kg)), 2)
         else:
             return 0
 
