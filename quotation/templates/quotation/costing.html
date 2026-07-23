@@ -18,180 +18,188 @@
 
 <div class="container" id="app">
 
-        <div id="costing" class="container tab-pane active">
+    <div id="costing" class="container tab-pane active">
 
-            <div class="container py-2">
-                <div class="row">
-                    <div class="col-md-12 mx-auto">
+        <div class="container py-2">
+            <div class="row">
+                <div class="col-md-12 mx-auto">
 
-                        <div class="form-group row py-3" style="background-color:pink">
-                            <div class="col-sm-2">
-                                <label for="repeatLength">Repeat Length</label>
-                                <input v-model="repeatLength" type="number" class="form-control" id="repeatLength"
-                                       placeholder="Repeat Length" min="10" max="1000">
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="openWidth">Open Width</label>
-                                <input v-model="openWidth"
-                                       type="number" class="form-control"
-                                       id="openWidth"
-                                       placeholder="Open Width" min="10" max="1000">
-                            </div>
-                            <div class="col-sm-1">
-                                <label for="no_of_repeat">Repeat</label>
-                                <input v-model="no_of_repeat" type="number" class="form-control" id="no_of_repeat"
-                                       placeholder="No of Repeat" min="1" max="25">
-                            </div>
-                            <div class="col-sm-1">
-                                <label for="no_of_ups">Ups.</label>
-                                <input v-model="no_of_ups" type="number" class="form-control" id="no_of_ups"
-                                       placeholder="No of Ups." min="1" max="25">
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="no_of_ups">Supply Type</label>
-                                <select v-model="supplyType" name="supplyType" class="select form-control"
-                                        id="supplyType">
-                                    <option value=""> --------</option>
-                                    <option value="CenterSeal">CenterSeal</option>
-                                    <option value="Roll">Roll</option>
-                                    <option value="Standy">Standy</option>
-                                    <option value="Standy with Zipper">Standy with Zipper</option>
-                                    <option value="Three Side Seal">Three Side Seal</option>
-                                    <option value="Three side zipper">Three side zipper</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-1">
-                                <label for="waste">Waste %</label>
-                                <input class="form-control" type="number" name="waste" id="waste" v-model="waste">
-                            </div>
+                    <div class="form-group row py-3" style="background-color:pink">
+                        <div class="col-sm-2">
+                            <label for="repeatLength">Repeat Length</label>
+                            <input v-model="repeatLength"
+                                   @blur="evalExpression('repeatLength')"
+                                   type="text"
+                                   class="form-control"
+                                   id="repeatLength"
+                                   placeholder="Repeat Length">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="openWidth">Open Width</label>
+                            <input v-model="openWidth"
+                                   @blur="evalExpression('openWidth')"
+                                   type="text"
+                                   class="form-control"
+                                   id="openWidth"
+                                   placeholder="Open Width"
+                                   min="10"
+                                   max="1000">
+                        </div>
+                        <div class="col-sm-1">
+                            <label for="no_of_repeat">Repeat</label>
+                            <input v-model="no_of_repeat" type="number" class="form-control" id="no_of_repeat"
+                                   placeholder="No of Repeat" min="1" max="25">
+                        </div>
+                        <div class="col-sm-1">
+                            <label for="no_of_ups">Ups.</label>
+                            <input v-model="no_of_ups" type="number" class="form-control" id="no_of_ups"
+                                   placeholder="No of Ups." min="1" max="25">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="no_of_ups">Supply Type</label>
+                            <select v-model="supplyType" name="supplyType" class="select form-control"
+                                    id="supplyType">
+                                <option value=""> --------</option>
+                                <option value="CenterSeal">CenterSeal</option>
+                                <option value="Roll">Roll</option>
+                                <option value="Standy">Standy</option>
+                                <option value="Standy with Zipper">Standy with Zipper</option>
+                                <option value="Three Side Seal">Three Side Seal</option>
+                                <option value="Three side zipper">Three side zipper</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-1">
+                            <label for="waste">Waste %</label>
+                            <input class="form-control" type="number" name="waste" id="waste" v-model="waste">
+                        </div>
 
 
-                            <div class="col-sm-2">
-                                <label for="qty">Qty.</label>
-                                <input v-model="qty" type="number" class="form-control" id="qty">
-                            </div>
-                            <div class="col-sm-1">
-                                <label for="unit">Unit</label>
-                                <select v-model="unit" class="select form-control" id="unit">
-                                    <option value="Kg">Kg</option>
-                                    <option value="Nos.">Nos.</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="kgQty">kgQty.</label>
-                                <input v-model="kgQty" type="number" class="form-control" id="kgQty">
-                            </div>
-                             <div class="col-sm-2">
-                                <label for="totalPouch">Total Pouch</label>
-                                <input class="form-control" type="number" name="totalPouch" id="totalPouch"
-                                       v-model="totalPouch">
-                            </div>
-                            <div class="col-sm-6">
-                                <p class="h4 text-danger "> [[circumError]] </p>
-                                <p class="h4 text-danger "> [[cylinderLengthError]] </p>
+                        <div class="col-sm-2">
+                            <label for="qty">Qty.</label>
+                            <input v-model="qty" type="number" class="form-control" id="qty">
+                        </div>
+                        <div class="col-sm-1">
+                            <label for="unit">Unit</label>
+                            <select v-model="unit" class="select form-control" id="unit">
+                                <option value="Kg">Kg</option>
+                                <option value="Nos.">Nos.</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="kgQty">kgQty.</label>
+                            <input v-model="kgQty" type="number" class="form-control" id="kgQty">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="totalPouch">Total Pouch</label>
+                            <input class="form-control" type="number" name="totalPouch" id="totalPouch"
+                                   v-model="totalPouch">
+                        </div>
+                        <div class="col-sm-6">
+                            <p class="h4 text-danger "> [[circumError]] </p>
+                            <p class="h4 text-danger "> [[cylinderLengthError]] </p>
 
+                        </div>
+
+                    </div>
+                    <hr style="background-color:blue">
+                    <div class="form-group row">
+                        <div class="col-sm-1">
+                            <button class="btn btn-primary m-1" @click="getStructure('Unprinted2ply')">Plain2py</button>
+                        </div>
+                        <div class="col-sm-1">
+                            <label for="pouching">Pouching</label>
+                            <input class="form-control" type="number" name="pouching" id="pouching"
+                                   v-model="pouchingCost">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="cylinderCost">CylinderCost</label>
+                            <input v-model="cylinderCost" type="number" class="form-control" id="cylinderCost"
+                                   style="background-color:yellow">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="totalCost">Material rate Rs./Kg</label>
+                            <input class="form-control" type="number" name="totalCost" id="totalCost"
+                                   v-model="totalCost" style="background-color:yellow">
+                        </div>
+
+
+                        <div class="col-sm-2">
+                            <label for="pouchCost">Cost/Pouch Rs. </label>
+                            <input v-model="pouchCost" class="form-control" type="number" v-model="pouchCost"
+                                   id="pouchCost" style="background-color:yellow">
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="no_of_repeat">Pouch/Kg.</label>
+                            <input v-model="pouchPerKg" type="number" class="form-control" id="pouchPerKg">
+                        </div>
+
+
+                        <div class="col-sm-1">
+                            <button class="btn btn-primary m-1" @click="getStructure('2ply')">2ply</button>
+                        </div>
+                        <div class="col-sm-1">
+                            <button class="btn btn-primary m-1" @click="getStructure('3ply')">3ply</button>
+                        </div>
+                        <div class="col-sm-1">
+                            <button class="btn btn-primary m-1" @click="getStructure('4ply')">4ply</button>
+                        </div>
+
+
+                    </div>
+                    <hr style="background-color:blue">
+                    <div class="form-group row">
+                        <div class="col-2 border">
+                            <div class="col-sm-12">
+                                <label for="circum">Cyl.Circum</label>
+                                <input class="form-control" type="number" v-model="circum" id="circum">
+                            </div>
+                            <div class="col-sm-12">
+                                <label for="cylinderLength">Cyl.Length</label>
+                                <input v-model="cylinderLength" class="form-control" type="number"
+                                       v-model="cylinderLength" id="cylinderLength">
+                            </div>
+                            <div class="col-sm-12">
+                                <label for="filmSize">Film size</label>
+                                <input v-model="filmSize" class="form-control" type="number" v-model="filmSize"
+                                       id="filmSize">
                             </div>
 
                         </div>
-                        <hr style="background-color:blue">
-                        <div class="form-group row">
-                            <div class="col-sm-1">
-                                <button class="btn btn-primary m-1" @click="getStructure('Unprinted2ply')">Plain2py</button>
+                        <div class="col-2 border">
+                            <div class="col-sm-12">
+                                <label for="no_of_repeat">Gsm</label>
+                                <input v-model="totalGsm" type="number" class="form-control" id="totalGsm">
                             </div>
-                            <div class="col-sm-1">
-                                <label for="pouching">Pouching</label>
-                                <input class="form-control" type="number" name="pouching" id="pouching"
-                                       v-model="pouchingCost">
-                            </div>
-                              <div class="col-sm-2">
-                                <label for="cylinderCost">CylinderCost</label>
-                                <input v-model="cylinderCost" type="number" class="form-control" id="cylinderCost"
-                                       style="background-color:yellow">
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="totalCost">Material rate Rs./Kg</label>
-                                <input class="form-control" type="number" name="totalCost" id="totalCost"
-                                       v-model="totalCost" style="background-color:yellow">
-                            </div>
-
-
-                            <div class="col-sm-2">
-                                <label for="pouchCost">Cost/Pouch Rs. </label>
-                                <input v-model="pouchCost" class="form-control" type="number" v-model="pouchCost"
-                                       id="pouchCost" style="background-color:yellow">
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="no_of_repeat">Pouch/Kg.</label>
-                                <input v-model="pouchPerKg" type="number" class="form-control" id="pouchPerKg">
-                            </div>
-
-
-                            <div class="col-sm-1">
-                                <button class="btn btn-primary m-1" @click="getStructure('2ply')">2ply</button>
-                            </div>
-                            <div class="col-sm-1">
-                                <button class="btn btn-primary m-1" @click="getStructure('3ply')">3ply</button>
-                            </div>
-                            <div class="col-sm-1">
-                                <button class="btn btn-primary m-1" @click="getStructure('4ply')">4ply</button>
+                            <div class="col-sm-12">
+                                <label for="no_of_repeat">Pouch wt.</label>
+                                <input v-model="pouchWt" type="number" class="form-control" id="pouchWt">
                             </div>
 
 
                         </div>
-                        <hr style="background-color:blue">
-                        <div class="form-group row">
-                            <div class="col-2 border">
-                                <div class="col-sm-12">
-                                    <label for="circum">Cyl.Circum</label>
-                                    <input class="form-control" type="number" v-model="circum" id="circum">
-                                </div>
-                                <div class="col-sm-12">
-                                    <label for="cylinderLength">Cyl.Length</label>
-                                    <input v-model="cylinderLength" class="form-control" type="number"
-                                           v-model="cylinderLength" id="cylinderLength">
-                                </div>
-                                <div class="col-sm-12">
-                                    <label for="filmSize">Film size</label>
-                                    <input v-model="filmSize" class="form-control" type="number" v-model="filmSize"
-                                           id="filmSize">
-                                </div>
 
-                            </div>
-                            <div class="col-2 border">
-                                <div class="col-sm-12">
-                                    <label for="no_of_repeat">Gsm</label>
-                                    <input v-model="totalGsm" type="number" class="form-control" id="totalGsm">
+                        <div class="col-4 border">
+                            <div v-for="(layer, index) in layers" :key="index" class="row">
+                                <div class="col-sm-8">
+                                    <select class="select form-control" v-model="layer.film">
+                                        <option v-for="(material, index) in newdata" :value=material.material>
+                                            [[material.material]]
+                                        </option>
+                                    </select>
+
                                 </div>
-                                <div class="col-sm-12">
-                                    <label for="no_of_repeat">Pouch wt.</label>
-                                    <input v-model="pouchWt" type="number" class="form-control" id="pouchWt">
-                                </div>
-
-
-                            </div>
-
-                            <div class="col-4 border">
-                                <div v-for="(layer, index) in layers" :key="index" class="row">
-                                    <div class="col-sm-8">
-                                        <select class="select form-control" v-model="layer.film">
-                                            <option v-for="(material, index) in newdata" :value=material.material>
-                                                [[material.material]]
-                                            </option>
-                                        </select>
-
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <input class="form-control" type="number" id="mic1" min="0" max="200"
-                                               v-model="layer.mic">
-                                    </div>
+                                <div class="col-sm-4">
+                                    <input class="form-control" type="number" id="mic1" min="0" max="200"
+                                           v-model="layer.mic">
                                 </div>
                             </div>
-
                         </div>
+
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
 </div>
 
@@ -289,6 +297,29 @@
                     return 0
                 }
 
+            },
+            evalExpression(field) {
+                let val = this[field];
+                if (typeof val !== 'string') return;
+
+                val = val.trim();
+                if (val === '') return;
+
+                // only allow digits, decimal point, whitespace, and + - * / ( )
+                if (!/^[0-9+\-*/.() \s]+$/.test(val)) {
+                    console.warn(`Invalid characters in ${field}:`, val);
+                    return;
+                }
+
+                try {
+                    // eslint-disable-next-line no-new-func
+                    const result = Function('"use strict"; return (' + val + ')')();
+                    if (typeof result === 'number' && isFinite(result)) {
+                        this[field] = +result.toFixed(2);
+                    }
+                } catch (e) {
+                    console.warn(`Could not evaluate ${field}:`, val, e);
+                }
             },
 
 
@@ -496,6 +527,7 @@
     });
 
     app.mount('#app')
+
 
 </script>
 
