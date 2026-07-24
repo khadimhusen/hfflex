@@ -2,8 +2,76 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load extra_tag %}
-{% block customcss%}
+{% block customcss %}
+<style>
+    .section-highlight {
+        background-color: #fdeef1; /* was inline pink */
+    }
+    .field-readonly {
+        background-color: #fff8dc; /* was inline yellow */
+    }
+    .form-control.field-readonly[readonly] {
+        background-color: #fff8dc !important;
+        opacity: 1;
+    }
+    .field-highlight-yellow {
+        background-color: #ffeb3b;
+    }
+    .form-control.field-highlight-yellow[readonly] {
+        background-color: #ffeb3b !important;
+        opacity: 1;
+    }
+    .section-divider {
+        background-color: #0d6efd; /* was inline blue */
+    }
 
+    /* ---- Mobile-friendly adjustments ---- */
+    @media (max-width: 767.98px) {
+        /* Extra breathing room between stacked fields/boxes when everything is full-width */
+        #costing .form-group.row > [class*="col-"] {
+            margin-bottom: 0.75rem;
+        }
+        #costing .border {
+            margin-bottom: 1rem;
+        }
+        /* Bigger tap targets on phones */
+        #costing .form-control,
+        #costing .select {
+            min-height: 44px;
+            font-size: 1rem;
+        }
+        #costing .btn {
+            min-height: 44px;
+            flex: 1 1 auto;
+        }
+        /* Leave room at the bottom so the sticky summary bar doesn't cover the last field */
+        #costing {
+            padding-bottom: 72px;
+        }
+    }
+
+    .action-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .action-toolbar .btn {
+        margin: 0;
+    }
+
+    .mobile-summary-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1030;
+        background: #fff;
+        border-top: 1px solid #dee2e6;
+        box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+        padding: 0.5rem 1rem;
+    }
+
+</style>
 {% endblock customcss %}
 {% block fixedscript %}
 
@@ -24,39 +92,39 @@
             <div class="row">
                 <div class="col-md-12 mx-auto">
 
-                    <div class="form-group row py-3" style="background-color:pink">
-                        <div class="col-sm-2">
+                    <div class="form-group row py-3 section-highlight g-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="repeatLength">Repeat Length</label>
                             <input v-model="repeatLength"
                                    @blur="evalExpression('repeatLength')"
                                    type="text"
+                                   inputmode="decimal"
                                    class="form-control"
                                    id="repeatLength"
                                    placeholder="Repeat Length">
                         </div>
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="openWidth">Open Width</label>
                             <input v-model="openWidth"
                                    @blur="evalExpression('openWidth')"
                                    type="text"
+                                   inputmode="decimal"
                                    class="form-control"
                                    id="openWidth"
-                                   placeholder="Open Width"
-                                   min="10"
-                                   max="1000">
+                                   placeholder="Open Width">
                         </div>
-                        <div class="col-sm-1">
+                        <div class="col-6 col-sm-3 col-md-1">
                             <label for="no_of_repeat">Repeat</label>
-                            <input v-model="no_of_repeat" type="number" class="form-control" id="no_of_repeat"
-                                   placeholder="No of Repeat" min="1" max="25">
+                            <input v-model="no_of_repeat" type="number" inputmode="numeric" class="form-control"
+                                   id="no_of_repeat" placeholder="No of Repeat" min="1" max="25">
                         </div>
-                        <div class="col-sm-1">
+                        <div class="col-6 col-sm-3 col-md-1">
                             <label for="no_of_ups">Ups.</label>
-                            <input v-model="no_of_ups" type="number" class="form-control" id="no_of_ups"
-                                   placeholder="No of Ups." min="1" max="25">
+                            <input v-model="no_of_ups" type="number" inputmode="numeric" class="form-control"
+                                   id="no_of_ups" placeholder="No of Ups." min="1" max="25">
                         </div>
-                        <div class="col-sm-2">
-                            <label for="no_of_ups">Supply Type</label>
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label for="supplyType">Supply Type</label>
                             <select v-model="supplyType" name="supplyType" class="select form-control"
                                     id="supplyType">
                                 <option value=""> --------</option>
@@ -68,133 +136,147 @@
                                 <option value="Three side zipper">Three side zipper</option>
                             </select>
                         </div>
-                        <div class="col-sm-1">
+                        <div class="col-6 col-sm-3 col-md-1">
                             <label for="waste">Waste %</label>
-                            <input class="form-control" type="number" name="waste" id="waste" v-model="waste">
+                            <input class="form-control" type="number" inputmode="decimal" name="waste" id="waste"
+                                   v-model="rates.waste">
                         </div>
 
-
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="qty">Qty.</label>
-                            <input v-model="qty" type="number" class="form-control" id="qty">
+                            <input v-model="qty" type="number" inputmode="decimal" class="form-control" id="qty">
                         </div>
-                        <div class="col-sm-1">
+                        <div class="col-6 col-sm-3 col-md-1">
                             <label for="unit">Unit</label>
                             <select v-model="unit" class="select form-control" id="unit">
                                 <option value="Kg">Kg</option>
                                 <option value="Nos.">Nos.</option>
                             </select>
                         </div>
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="kgQty">kgQty.</label>
-                            <input v-model="kgQty" type="number" class="form-control" id="kgQty">
+                            <input :value="kgQty" readonly class="form-control" type="number" id="kgQty">
                         </div>
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="totalPouch">Total Pouch</label>
-                            <input class="form-control" type="number" name="totalPouch" id="totalPouch"
-                                   v-model="totalPouch">
+                            <input :value="totalPouch" readonly class="form-control" type="number" id="totalPouch">
                         </div>
-                        <div class="col-sm-6">
-                            <p class="h4 text-danger "> [[circumError]] </p>
-                            <p class="h4 text-danger "> [[cylinderLengthError]] </p>
-
+                        <div class="col-12">
+                            <p class="h5 text-danger mb-1" v-if="circumError"> [[circumError]] </p>
+                            <p class="h5 text-danger mb-1" v-if="cylinderLengthError"> [[cylinderLengthError]] </p>
                         </div>
 
                     </div>
-                    <hr style="background-color:blue">
-                    <div class="form-group row">
-                        <div class="col-sm-1">
-                            <button class="btn btn-primary m-1" @click="getStructure('Unprinted2ply')">Plain2py</button>
+                    <hr class="section-divider">
+
+                    <!-- Structure shortcut buttons: Plain2py/4ply on the left, 2ply/3ply grouped
+                         separately on the right -->
+                    <div class="action-toolbar mb-3 justify-content-between">
+                        <div class="action-toolbar">
+                            <button class="btn btn-primary" @click="getStructure('Unprinted2ply')">Plain2py</button>
+                            <button class="btn btn-primary" @click="getStructure('4ply')">4ply</button>
                         </div>
-                        <div class="col-sm-1">
-                            <label for="pouching">Pouching</label>
-                            <input class="form-control" type="number" name="pouching" id="pouching"
-                                   v-model="pouchingCost">
-                        </div>
-                        <div class="col-sm-2">
+
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="cylinderCost">CylinderCost</label>
-                            <input v-model="cylinderCost" type="number" class="form-control" id="cylinderCost"
-                                   style="background-color:yellow">
+                            <input :value="cylinderCost" readonly class="form-control field-highlight-yellow"
+                                   type="number"
+                                   id="cylinderCost">
                         </div>
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="totalCost">Material rate Rs./Kg</label>
-                            <input class="form-control" type="number" name="totalCost" id="totalCost"
-                                   v-model="totalCost" style="background-color:yellow">
+                            <input :value="totalCost" readonly class="form-control field-highlight-yellow"
+                                   type="number"
+                                   id="totalCost">
                         </div>
-
-
-                        <div class="col-sm-2">
+                        <div class="col-6 col-sm-4 col-md-2">
                             <label for="pouchCost">Cost/Pouch Rs. </label>
-                            <input v-model="pouchCost" class="form-control" type="number" v-model="pouchCost"
-                                   id="pouchCost" style="background-color:yellow">
+                            <input :value="pouchCost" readonly class="form-control field-highlight-yellow"
+                                   type="number"
+                                   id="pouchCost">
                         </div>
-                        <div class="col-sm-2">
-                            <label for="no_of_repeat">Pouch/Kg.</label>
-                            <input v-model="pouchPerKg" type="number" class="form-control" id="pouchPerKg">
-                        </div>
-
-
-                        <div class="col-sm-1">
-                            <button class="btn btn-primary m-1" @click="getStructure('2ply')">2ply</button>
-                        </div>
-                        <div class="col-sm-1">
-                            <button class="btn btn-primary m-1" @click="getStructure('3ply')">3ply</button>
-                        </div>
-                        <div class="col-sm-1">
-                            <button class="btn btn-primary m-1" @click="getStructure('4ply')">4ply</button>
+                        <div class="col-6 col-sm-4 col-md-2">
+                            <label for="pouchPerKg">Pouch/Kg.</label>
+                            <input :value="pouchPerKg" readonly class="form-control field-highlight-yellow"
+                                   type="number" id="pouchPerKg">
                         </div>
 
-
+                        <div class="action-toolbar">
+                            <button class="btn btn-primary" @click="getStructure('2ply')">2ply</button>
+                            <button class="btn btn-primary" @click="getStructure('3ply')">3ply</button>
+                        </div>
                     </div>
-                    <hr style="background-color:blue">
-                    <div class="form-group row">
-                        <div class="col-2 border">
-                            <div class="col-sm-12">
-                                <label for="circum">Cyl.Circum</label>
-                                <input class="form-control" type="number" v-model="circum" id="circum">
-                            </div>
-                            <div class="col-sm-12">
-                                <label for="cylinderLength">Cyl.Length</label>
-                                <input v-model="cylinderLength" class="form-control" type="number"
-                                       v-model="cylinderLength" id="cylinderLength">
-                            </div>
-                            <div class="col-sm-12">
-                                <label for="filmSize">Film size</label>
-                                <input v-model="filmSize" class="form-control" type="number" v-model="filmSize"
-                                       id="filmSize">
-                            </div>
 
+                    <hr class="section-divider">
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6 col-md-3 border py-2">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-12">
+                                    <label for="circum">Cyl.Circum</label>
+                                    <input :value="circum" readonly class="form-control" type="number" id="circum">
+                                </div>
+                                <div class="col-6 col-md-12">
+                                    <label for="cylinderLength">Cyl.Length</label>
+                                    <input :value="cylinderLength" readonly class="form-control" type="number"
+                                           id="cylinderLength">
+                                </div>
+                                <div class="col-6 col-md-12">
+                                    <label for="filmSize">Film size</label>
+                                    <input :value="filmSize" readonly class="form-control" type="number" id="filmSize">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-2 border">
-                            <div class="col-sm-12">
-                                <label for="no_of_repeat">Gsm</label>
-                                <input v-model="totalGsm" type="number" class="form-control" id="totalGsm">
+                        <div class="col-12 col-sm-6 col-md-3 border py-2">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-12">
+                                    <label for="totalGsm">Gsm</label>
+                                    <input :value="totalGsm" readonly class="form-control" type="number" id="totalGsm">
+                                </div>
+                                <div class="col-6 col-md-12">
+                                    <label for="pouchWt">Pouch wt.</label>
+                                    <input :value="pouchWt" readonly class="form-control" type="number" id="pouchWt">
+                                </div>
+                                <div class="col-6 col-md-12">
+                                    <label for="pouching">Pouching</label>
+                                    <input :value="pouchingCost" readonly class="form-control"
+                                           type="number" id="pouching">
+                                </div>
                             </div>
-                            <div class="col-sm-12">
-                                <label for="no_of_repeat">Pouch wt.</label>
-                                <input v-model="pouchWt" type="number" class="form-control" id="pouchWt">
-                            </div>
-
-
                         </div>
 
-                        <div class="col-4 border">
-                            <div v-for="(layer, index) in layers" :key="index" class="row">
-                                <div class="col-sm-8">
+                        <div class="col-12 col-md-6 border py-2">
+                            <!-- film stays side-by-side with its micron input even on phones, so the
+                                 layer list doesn't turn into 10 stacked full-width rows -->
+                            <div v-for="(layer, index) in layers" :key="index" class="row g-2 mb-2">
+                                <div class="col-8">
                                     <select class="select form-control" v-model="layer.film">
-                                        <option v-for="(material, index) in newdata" :value=material.material>
+                                        <option v-for="material in newdata" :key="material.material"
+                                                :value="material.material">
                                             [[material.material]]
                                         </option>
                                     </select>
-
                                 </div>
-                                <div class="col-sm-4">
-                                    <input class="form-control" type="number" id="mic1" min="0" max="200"
-                                           v-model="layer.mic">
+                                <div class="col-4">
+                                    <input class="form-control" type="number" inputmode="numeric"
+                                           :id="`mic-${index}`" min="0" max="200" v-model="layer.mic">
                                 </div>
                             </div>
                         </div>
+                    </div>
 
+                    <!-- Always-visible key numbers on mobile, so you don't have to scroll back up
+                         after adjusting a field further down the form -->
+                    <div class="mobile-summary-bar d-md-none">
+                        <div class="row text-center g-2">
+                            <div class="col-6">
+                                <div class="small text-muted">Cost/Pouch</div>
+                                <div class="fw-bold">[[pouchCost]]</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted">Material Rs./Kg</div>
+                                <div class="fw-bold">[[totalCost]]</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,42 +285,56 @@
 
 </div>
 
-
 {% endblock %}
 
 
 {% block javascripts %}
 <script src="{% static 'vue/forms.js' %}"></script>
 <script>
+    // ---- Named constants (previously magic numbers scattered through computed properties) ----
+    const ZIPPER_WEIGHT_PER_MM = 0.0065;   // extra gsm-equivalent weight per mm of repeat length for zippered pouches
+    const ZIPPER_POUCHING_RATE = 0.0060;   // pouching cost rate per mm of repeat length for zippered pouches
+    const CYLINDER_COST_PER_MM2 = 2.4 / 100;
+    const CYLINDER_BASE_COST = 500;
+    const CYLINDER_MIN_COST = 5500;
+    const STANDY_POUCHING_TIERS = [
+        { maxRepeat: 135, rate: 0.15 },
+        { maxRepeat: 160, rate: 0.20 },
+        { maxRepeat: 210, rate: 0.25 },
+        { maxRepeat: Infinity, rate: 0.30 },
+    ];
+
     let data = {
         repeatLength: "",
-        openWidth: "" ,
+        openWidth: "",
         no_of_repeat: "",
-        no_of_ups:"",
-        circumError:"",
-        cylinderLengthError:"",
+        no_of_ups: "",
+        circumError: "",
+        cylinderLengthError: "",
         qty: "",
-        unit: "",
-        waste: 10,
-        manpower: 17,
-        electricity: 6,
-        packing: 2,
-        pouching: 10,
-        transport: 7,
-        margin: 8,
-        supplyType: "" ,
-        solventCost:0,
+        unit: "Kg",
+        supplyType: "",
+        solventCost: 0,
+
+        rates: {
+            waste: 10,
+            manpower: 17,
+            electricity: 6,
+            packing: 2,
+            transport: 7,
+            margin: 8,
+        },
+
         layers: [
-            { "film": "PET", "mic": 12 },
-            { "film": "METPET", "mic": 12 },
-            { "film": "NAT_GPE", "mic": 60 },
-            { "film": "INK", "mic": 2 },
-            { "film": "ADHESIVE", "mic": 5 },
+            { film: "PET", mic: 12 },
+            { film: "METPET", mic: 12 },
+            { film: "NAT_GPE", mic: 60 },
+            { film: "INK", mic: 2 },
+            { film: "ADHESIVE", mic: 5 },
         ],
 
         newdata: [],
         quotation: [],
-
     }
 
 
@@ -249,55 +345,24 @@
             return data
         },
         components: {
-        'text-input': TextInput,
-        'select-input': SelectInput,
-        'check-input': CheckInput,
+            'text-input': TextInput,
+            'select-input': SelectInput,
+            'check-input': CheckInput,
         },
 
         methods: {
 
-            async getStructure(structure) {
-                fetch(`{% base_url %}/quotation/getstructure/${structure}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.layers = data;
-                    })
+            // Safe numeric parse — every computed property should read fields through this
+            // instead of relying on JS's loose +/- coercion on strings, which silently
+            // produces NaN for blank fields or in-progress expressions like "240+".
+            num(value) {
+                const n = parseFloat(value);
+                return isNaN(n) ? 0 : n;
             },
 
-            getGsm(layer) {
-
-                let obj = this.newdata.find(o => o.material == layer.film)
-
-                if (obj != null) {
-                    return (obj.density * layer.mic).toFixed(2)
-                }
-                else {
-                    return 0
-                }
-
-            },
-
-            getRate(layer) {
-                let obj = this.newdata.find(o => o.material == layer.film)
-
-                if (obj != null) {
-                    return (obj.rate)
-                }
-                else {
-                    return 0
-                }
-            },
-            getCost(layer) {
-                let obj = this.newdata.find(o => o.material == layer.film)
-
-                if (obj != null) {
-                    return (obj.density * obj.rate * 100 / obj.solid * layer.mic / this.totalGsm).toFixed(2)
-                }
-                else {
-                    return 0
-                }
-
-            },
+            // Evaluates a typed arithmetic expression (e.g. "240+460") on blur and commits
+            // the numeric result back into the field. Blanks the field on anything invalid
+            // or negative rather than guessing at a fallback value.
             evalExpression(field) {
                 let val = this[field];
                 if (typeof val !== 'string') return;
@@ -305,223 +370,261 @@
                 val = val.trim();
                 if (val === '') return;
 
-                // only allow digits, decimal point, whitespace, and + - * / ( )
+                // Only allow digits, decimal point, whitespace, and + - * / ( )
                 if (!/^[0-9+\-*/.() \s]+$/.test(val)) {
                     console.warn(`Invalid characters in ${field}:`, val);
+                    this[field] = '';
                     return;
                 }
 
                 try {
                     // eslint-disable-next-line no-new-func
                     const result = Function('"use strict"; return (' + val + ')')();
-                    if (typeof result === 'number' && isFinite(result)) {
-                        this[field] = +result.toFixed(2);
+
+                    if (typeof result !== 'number' || !isFinite(result)) {
+                        console.warn(`Expression did not resolve to a valid number for ${field}:`, val);
+                        this[field] = '';
+                        return;
                     }
+
+                    if (result < 0) {
+                        console.warn(`${field} cannot be negative:`, result);
+                        this[field] = '';
+                        return;
+                    }
+
+                    this[field] = +result.toFixed(2);
                 } catch (e) {
                     console.warn(`Could not evaluate ${field}:`, val, e);
+                    this[field] = '';
                 }
             },
 
+            async getStructure(structure) {
+                try {
+                    const response = await fetch(`{% base_url %}/quotation/getstructure/${structure}/`);
+                    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+                    this.layers = await response.json();
+                } catch (err) {
+                    console.error('Failed to load structure:', err);
+                }
+            },
+
+            getGsm(layer) {
+                const obj = this.newdata.find(o => o.material === layer.film);
+                return obj ? +(obj.density * this.num(layer.mic)).toFixed(2) : 0;
+            },
+
+            getRate(layer) {
+                const obj = this.newdata.find(o => o.material === layer.film);
+                return obj ? obj.rate : 0;
+            },
+
+            // True if any layer's micron field has been cleared out. Used to blank the
+            // material-cost / per-kg figures below rather than silently showing a
+            // misleading 0 while a layer is mid-edit.
+            hasEmptyMicron() {
+                return this.layers.some(l => l.mic === '' || l.mic === null || l.mic === undefined);
+            },
+
+            getCost(layer) {
+                const obj = this.newdata.find(o => o.material === layer.film);
+                if (!obj || !obj.solid || !this.totalGsm) return 0;
+                return +(obj.density * obj.rate * 100 / obj.solid * this.num(layer.mic) / this.totalGsm).toFixed(2);
+            },
 
         },
 
 
         computed: {
             kgQty() {
-                return this.unit === "Kg" ? this.qty : (this.qty / this.pouchPerKg).toFixed(2)
-
+                if (this.unit === "Kg") return this.num(this.qty);
+                if (this.pouchPerKg === '') return '';
+                return this.pouchPerKg > 0 ? +(this.num(this.qty) / this.pouchPerKg).toFixed(2) : 0;
             },
 
             totalPouch() {
-                return (this.kgQty * this.pouchPerKg).toFixed(0)
-
+                if (this.kgQty === '' || this.pouchPerKg === '') return '';
+                return Math.round(this.kgQty * this.pouchPerKg) || 0;
             },
 
             circum() {
+                const result = +(this.num(this.repeatLength) * this.num(this.no_of_repeat)).toFixed(2);
 
-                result=(this.repeatLength * this.no_of_repeat).toFixed(2)
-                if (result < 380 ){
-                this.circumError="Cylinder Circum is less Than 380mm, Increase Repeat. ";
-                 }
-                else if (result > 1200 ){
-                this.circumError="Cylinder Circum is higher Than 1200mm, Decrease Repeat. ";
-
+                if (result === 0) {
+                    this.circumError = "";
+                } else if (result < 380) {
+                    this.circumError = "Cylinder Circum is less than 380mm, increase Repeat.";
+                } else if (result > 1200) {
+                    this.circumError = "Cylinder Circum is higher than 1200mm, decrease Repeat.";
+                } else {
+                    this.circumError = "";
                 }
-                else{
-                this.circumError="";
-                 }
 
-                 return result
+                return result;
             },
 
             cylinderLength() {
-                result=(this.openWidth * this.no_of_ups + 100).toFixed(0)
-                if (result < 440){
-                this.cylinderLengthError="Length is less than 440mm, Increase Ups. "
-                }
-                else if (result > 1100){
-                this.cylinderLengthError="Length is Higher than 1100mm, Decrease Ups. "}
+                const result = Math.round(this.num(this.openWidth) * this.num(this.no_of_ups) + 100);
 
-                else {
-                this.cylinderLengthError=""
+                if (result <= 100) {
+                    this.cylinderLengthError = "";
+                } else if (result < 440) {
+                    this.cylinderLengthError = "Length is less than 440mm, increase Ups.";
+                } else if (result > 1100) {
+                    this.cylinderLengthError = "Length is higher than 1100mm, decrease Ups.";
+                } else {
+                    this.cylinderLengthError = "";
                 }
 
-                return result
+                return result;
             },
 
             filmSize() {
-                return (this.openWidth * this.no_of_ups + 15).toFixed()
+                return Math.round(this.num(this.openWidth) * this.num(this.no_of_ups) + 15);
             },
 
             totalGsm() {
+                if (this.hasEmptyMicron()) return '';
+
                 let sum = 0;
                 for (const item of this.layers) {
-                    if (this.getGsm(item)!= 0){
-                    sum += +this.getGsm(item);}
-                    else{return 0}
+                    const g = this.getGsm(item);
+                    if (g === 0) return 0;
+                    sum += g;
                 }
-                return sum.toFixed(2);
+                return +sum.toFixed(2);
             },
 
             totalCost() {
+                if (this.supplyType === "") return 0;
+                if (this.hasEmptyMicron()) return '';
 
-            if ( this.supplyType !== "" ){
                 let sum = 0;
                 for (const item of this.layers) {
-                    sum += +this.getCost(item) * (1 + this.waste / 100);
+                    sum += this.getCost(item) * (1 + this.rates.waste / 100);
                 }
-                let ethyl = this.newdata.find(o => o.material == 'ETHYL')
-                ethylrate = 0
-                if (ethyl != null) {
-                    ethylrate = ethyl.rate
-                }
-                 this.solventCost = ethylrate * this.solvent
 
-                return ((sum + (this.solventCost) + this.manpower + this.electricity + this.packing
-                    + (+this.pouchingCost) + this.transport) * (1 + this.margin / 100)).toFixed(2);
-            }
+                const ethyl = this.newdata.find(o => o.material === 'ETHYL');
+                const ethylRate = ethyl ? ethyl.rate : 0;
+                this.solventCost = ethylRate * this.solvent;
 
-            else {
+                const total = (sum + this.solventCost + this.rates.manpower + this.rates.electricity
+                    + this.rates.packing + this.num(this.pouchingCost) + this.rates.transport)
+                    * (1 + this.rates.margin / 100);
 
-            return 0
-            }
-            }
-            ,
+                return +total.toFixed(2);
+            },
 
             pouchWt() {
+                if (this.hasEmptyMicron()) return '';
+
+                const base = this.totalGsm * this.num(this.repeatLength) * this.num(this.openWidth) / 1000000;
 
                 if (this.supplyType.toLowerCase().includes("zipper")) {
-                    return ((+this.totalGsm * this.repeatLength * this.openWidth / 1000000) + (this.repeatLength * 0.0065))
-                        .toFixed(2)
-                        .toString()
+                    return +(base + this.num(this.repeatLength) * ZIPPER_WEIGHT_PER_MM).toFixed(2);
                 }
-                else {
-                    return (this.totalGsm * this.repeatLength * this.openWidth / 1000000).toFixed(2)
-                }
+                return +base.toFixed(2);
             },
 
             pouchPerKg() {
-                return (1000 / this.pouchWt).toFixed(2)
+                if (this.hasEmptyMicron()) return '';
+                return this.pouchWt > 0 ? +(1000 / this.pouchWt).toFixed(2) : 0;
             },
 
             pouchCost() {
-                return (this.totalCost / this.pouchPerKg).toFixed(2)
+                if (this.hasEmptyMicron()) return '';
+                return this.pouchPerKg > 0 ? +(this.totalCost / this.pouchPerKg).toFixed(2) : 0;
             },
 
             cylinderCost() {
-
-            if (this.repeatLength >= 10 && this.openWidth >= 10 && this.no_of_repeat > 0 && this.no_of_ups > 0 ){
-
-                return Math.max(((this.circum * this.cylinderLength * 2.3 / 100) + (500)).toFixed(), 5500)
-            }
-            else {
-            return 0
-            }
+                if (this.num(this.repeatLength) >= 10 && this.num(this.openWidth) >= 10
+                    && this.num(this.no_of_repeat) > 0 && this.num(this.no_of_ups) > 0) {
+                    const raw = Math.round(this.circum * this.cylinderLength * CYLINDER_COST_PER_MM2 + CYLINDER_BASE_COST);
+                    return Math.max(raw, CYLINDER_MIN_COST);
+                }
+                return 0;
             },
 
+            // NOTE: preserved as two independent `if` blocks to match the original behavior —
+            // a supply type like "Standy with Zipper" matches BOTH the zipper and standy checks,
+            // so its cost is the zipper formula PLUS the standy tier rate, added together.
+            // Flagging this in case it wasn't intentional — worth confirming against real quotes.
             pouchingCost() {
+                if (this.supplyType === "Roll") return 0;
 
-                cost = 0
-                if (this.supplyType === "Roll") {
-                    return cost
-                }
-                if (this.supplyType.toLowerCase().includes("zipper")) {
-                    cost = this.repeatLength * 0.0060 * this.pouchPerKg
-                }
-                if (this.supplyType.toLowerCase().includes("standy")) {
-                    if (this.repeatLength <= 135) {
+                const supply = this.supplyType.toLowerCase();
+                let cost = 0;
 
-                        cost += this.pouchPerKg * 0.15
-                    }
-                    else if (this.repeatLength <= 160) {
-                        cost += this.pouchPerKg * 0.2
-                    }
-                    else if (this.repeatLength <= 210) {
-                        cost += this.pouchPerKg * 0.25
-                    }
-                    else {
-                        cost += this.pouchPerKg * 0.3
-                    }
-                }
-                else {
-                    cost += 10
+                if (supply.includes("zipper")) {
+                    cost = this.num(this.repeatLength) * ZIPPER_POUCHING_RATE * this.pouchPerKg;
                 }
 
-                return +cost.toFixed()
+                if (supply.includes("standy")) {
+                    const tier = STANDY_POUCHING_TIERS.find(t => this.num(this.repeatLength) <= t.maxRepeat)
+                        || STANDY_POUCHING_TIERS[STANDY_POUCHING_TIERS.length - 1];
+                    cost += this.pouchPerKg * tier.rate;
+                } else {
+                    cost += 10;
+                }
+
+                return +cost.toFixed(0);
             },
 
             solvent() {
                 let sum = 0;
 
                 for (const item of this.layers) {
-                    let materialsolid = this.newdata.find(o => o.material == item.film)
-                    console.log("material solid : ", materialsolid)
-                    if (item.film === "INK" || item.film === "ADHESIVE" && materialsolid !== undefined && materialsolid.solid != undefined) {
-                        sum += +this.getGsm(item) * 100 / materialsolid.solid;
-
+                    const materialSolid = this.newdata.find(o => o.material === item.film);
+                    // Parenthesized correctly: only INK or ADHESIVE layers count, and only
+                    // when the material's solid % is actually known. (Original code's missing
+                    // parentheses meant INK layers skipped the "materialSolid defined" check
+                    // entirely, risking a crash if an INK material wasn't found in newdata.)
+                    if ((item.film === "INK" || item.film === "ADHESIVE")
+                        && materialSolid && materialSolid.solid != null) {
+                        sum += this.getGsm(item) * 100 / materialSolid.solid;
                     }
                 }
-                return (sum * 1.2 / this.totalGsm).toFixed(2);
+
+                return this.totalGsm > 0 ? +(sum * 1.2 / this.totalGsm).toFixed(2) : 0;
             },
         },
 
-        beforeMount() {
+        async beforeMount() {
+            try {
+                const structureResponse = await fetch("{% base_url %}/quotation/getstructure/2ply");
+                if (!structureResponse.ok) throw new Error(`Request failed: ${structureResponse.status}`);
+                this.layers = await structureResponse.json();
+            } catch (err) {
+                console.error('Failed to load default structure:', err);
+            }
 
-            fetch("{% base_url %}/quotation/getstructure/2ply")
-                .then(response => response.json())
-                .then(data => {
-                    this.layers = data;
-                    console.log(this.layers, 'beforemount')
-                })
-
-
-            fetch("{% base_url %}/quotation/materialjson")
-                .then(response => response.json())
-                .then(data => {
-                    this.newdata = data;
-                })
-
+            try {
+                const materialResponse = await fetch("{% base_url %}/quotation/materialjson");
+                if (!materialResponse.ok) throw new Error(`Request failed: ${materialResponse.status}`);
+                this.newdata = await materialResponse.json();
+            } catch (err) {
+                console.error('Failed to load material data:', err);
+            }
         },
 
-        mounted(){
+        mounted() {
             (function () {
-            'use strict'
+                'use strict'
 
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.querySelectorAll('.needs-validation')
+                var forms = document.querySelectorAll('.needs-validation')
 
-            // Loop over them and prevent submission
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    }
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }
 
-                    form.classList.add('was-validated')
-                }, false)
-                })
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
             })()
         },
     });

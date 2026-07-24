@@ -121,9 +121,9 @@ def editquote(request, id=None):
     context = {}
 
     quote = get_object_or_404(Quotation, id=id)
-    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=12,
+    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=20,
                                              can_delete=True)
-    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=12,
+    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=20,
                                                 can_delete=True)
 
     if request.method == 'POST':
@@ -218,9 +218,9 @@ def quoteapproval(request, id=None):
 def clonequote(request, id=None):
     context = {}
     quote = get_object_or_404(Quotation, id=id)
-    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=2,
+    quoteitemformset = inlineformset_factory(Quotation, QuotationItem, QuoteItemForm, extra=12, max_num=20,
                                              can_delete=True)
-    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=2,
+    additiontermformset = inlineformset_factory(Quotation, AdditionTerm, AdditionTermForm, extra=3, max_num=20,
                                                 can_delete=True)
 
     if request.method == 'POST':
