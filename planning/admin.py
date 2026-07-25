@@ -88,12 +88,12 @@ class MachineScheduleAdmin(admin.ModelAdmin):
     actions = [set_to_pending]
     list_display = [
         'machine', 'schedule_type', 'jobprocess',
-        'queue_position', 'status',
+        'queue_position', 'status','qty','unit','speed',
         'makeready_duration', 'running_duration',
         'downtime_duration', 'estimated_duration','start_time','end_time'
     ]
     list_editable = ('queue_position', 'status',
-        'makeready_duration', 'running_duration',
+        'makeready_duration', 'running_duration','qty','unit','speed',
         'downtime_duration', 'estimated_duration','start_time','end_time')
 
 
