@@ -98,6 +98,7 @@
                     <div class="form-row">Disptach
                         <div class="form-group col-md-12 mb-0 " style="height: 400px;  overflow:scroll;">
                             {% if not disp.lock %}
+
                             {{ dispatch_form.dispatch_material|as_crispy_field }}
 
                             {% for mate in pendingmaterial %}
@@ -168,5 +169,41 @@
       });
     });
 
+</script>
+<script>
+(function () {
+  const wrapper = document.getElementById("div_id_dispatch_material");
+  const boxes = wrapper.querySelectorAll('input[name="dispatch_material"]');
+  const label = wrapper.querySelector("label");
+
+  // build the master checkbox
+  const master = document.createElement("input");
+  master.type = "checkbox";
+  master.id = "select-all-dispatch-material";
+  master.style.marginLeft = "8px";
+
+  const masterLabel = document.createElement("label");
+  masterLabel.htmlFor = master.id;
+  masterLabel.style.fontWeight = "normal";
+  masterLabel.style.marginLeft = "4px";
+  masterLabel.textContent = "(select all)";
+
+  label.after(masterLabel);
+  label.after(master);
+
+  function syncMaster() {
+    const checked = [...boxes].filter(b => b.checked).length;
+    master.checked = checked === boxes.length && boxes.length > 0;
+    master.indeterminate = checked > 0 && checked < boxes.length;
+  }
+
+  master.addEventListener("change", function () {
+    boxes.forEach(b => { b.checked = master.checked; });
+    master.indeterminate = false;
+  });
+
+  boxes.forEach(b => b.addEventListener("change", syncMaster));
+  syncMaster();
+})();
 </script>
 {% endblock javascripts%}
