@@ -20,6 +20,13 @@ class Coa(models.Model):
     year = models.PositiveIntegerField(editable=False, db_index=True, null=True)
     serial = models.PositiveIntegerField(editable=False, null=True)
 
+    # shelf_life FIELDS
+    shelf_life_months = models.PositiveIntegerField(default=18)
+    storage_conditions = models.TextField(
+        default="Store in cool, dry place. Temperature below 30°C, "
+                "RH 50-65%, away from direct sunlight."
+    )
+
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='coacreated')

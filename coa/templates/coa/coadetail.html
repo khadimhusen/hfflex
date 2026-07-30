@@ -155,11 +155,30 @@
                     {% endfor %}
                     <tr>
                         <td colspan="6">
-                            <pre class="border-0">{{coa.remark}}</pre>
+                            <pre class="border-0">{{coa.remark|default_if_none:""}}</pre>
                         </td>
                     </tr>
                     </tbody>
 
+                </table>
+            </div>
+        </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Shelf Life & Storage</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tbody>
+                    <tr>
+                        <th width="30%">Shelf Life:</th>
+                        <td><strong>{{ coa.shelf_life_months }} months</strong> from date of manufacture</td>
+                    </tr>
+                    <tr>
+                        <th>Storage Conditions:</th>
+                        <td>{{ coa.storage_conditions|linebreaksbr }}</td>
+                    </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

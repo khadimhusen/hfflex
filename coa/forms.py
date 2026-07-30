@@ -11,7 +11,8 @@ from itemmaster.models import StdParameter, ItemStandardParameter
 class CoaForm(forms.ModelForm):
     class Meta:
         model = Coa
-        fields = ["work_order", "delivery_challan", "invoice_no", "qty","remark",]
+        fields = ["work_order", "delivery_challan", "invoice_no", "qty","remark",
+                  "shelf_life_months", "storage_conditions"]
         widgets = {
         "remark": forms.Textarea(attrs={'rows': 1, 'cols': 80,
                                              'style': 'overflow: hidden',

@@ -321,7 +321,6 @@ class Job(models.Model):
     def printed_waste(self):
         if self.jobprocess.filter(process__process="Printing").exists():
             printingfilm = self.jobmaterial.filter(materialname__name="PET").first()
-
             if printingfilm:
                 printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0004 + 2, 2)
                 return printwaste or 0
@@ -723,8 +722,6 @@ class JobCoa(models.Model):
     standard_parameter = models.ForeignKey(StdParameter, on_delete=models.PROTECT)
     value = models.CharField(max_length=128)
 
-
-# order/models.py (or a new app like `audit`)
 
 class JobChangeLog(models.Model):
     job = models.ForeignKey(Job, related_name='change_logs', on_delete=models.CASCADE)

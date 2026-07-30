@@ -58,7 +58,9 @@
         <div class="form-group col-md-2 mb-0">
             {{ coaform.qty|as_crispy_field }}
         </div>
+
     </div>
+
 
     <hr>
     <div class="form-row">
@@ -73,7 +75,7 @@
     {% for form in testform %}
     <div class="form-row">
         <div class="form-group col-md-4 mb-0">
-             {{ form.id }}
+            {{ form.id }}
             {{ form.standard_parameter|as_crispy_field }}
         </div>
         <div class="form-group col-md-4 mb-0">
@@ -82,9 +84,16 @@
     </div>
     {% endfor %}
     <hr>
-
     <div class="form-row">
-        <div class="form-group col-md-12 mb-0" >
+        <div class="form-group col-md-2 mb-0">
+            {{ coaform.shelf_life_months|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-12 mb-0">
+            {{ coaform.storage_conditions|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12 mb-0">
             {{ coaform.remark|as_crispy_field }}
         </div>
     </div>
