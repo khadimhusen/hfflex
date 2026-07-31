@@ -202,14 +202,25 @@ class NewRate(models.Model):
 class PreDefinedMaterial(models.Model):
     structure=models.CharField(max_length=64)
 
+
     def __str__(self):
         return self.structure
+
+
 
 class MaterialStructure(models.Model):
     predefined=models.ForeignKey(PreDefinedMaterial,related_name='materialstructure',
                                  on_delete=models.PROTECT)
     material=models.ForeignKey(MaterialRate,on_delete=models.PROTECT)
     micron=models.DecimalField(max_digits=5,decimal_places=2,blank=True,null=True)
+    sequence = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.predefined} {self.material} {self.sequence}'
+
+    class Meta:
+        ordering = ['sequence']
+
 
 
 

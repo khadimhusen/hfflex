@@ -71,6 +71,20 @@
         padding: 0.5rem 1rem;
     }
 
+    .field-mic-blank {
+    animation: pulse-glow 1.5s ease-in-out infinite;
+    border: 1px solid #dc3545 !important;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 8px 3px rgba(220, 53, 69, 0.5);
+    }
+}
+
 </style>
 {% endblock customcss %}
 {% block fixedscript %}
@@ -256,8 +270,11 @@
                                         </option>
                                     </select>
                                 </div>
+
                                 <div class="col-4">
-                                    <input class="form-control" type="number" inputmode="numeric"
+                                    <input class="form-control"
+                                           :class="{ 'field-mic-blank': layer.mic === '' || layer.mic === null || layer.mic === undefined }"
+                                           type="number" inputmode="numeric"
                                            :id="`mic-${index}`" min="0" max="200" v-model="layer.mic">
                                 </div>
                             </div>

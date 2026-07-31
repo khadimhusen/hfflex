@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from myproject.access import accessview, forceview
 from .serializers import QuotationSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from django.db import transaction
 
 @login_required(login_url='/login/')
 @forceview
@@ -270,7 +270,7 @@ def clonequote(request, id=None):
         return render(request, 'quotation/editquote.html', context)
 
 
-from django.db import transaction
+
 
 
 @login_required(login_url='/login/')
