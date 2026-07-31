@@ -322,7 +322,21 @@ class Job(models.Model):
         if self.jobprocess.filter(process__process="Printing").exists():
             printingfilm = self.jobmaterial.filter(materialname__name="PET").first()
             if printingfilm:
-                printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) * 0.0004 + 2, 2)
+                printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) *
+                                   0.0005*(1+float(self.totalmeter or 0)/15000) + 2, 2)
+                return printwaste or 0
+            else:
+                return 0
+        else:
+            return 0
+
+    @property
+    def printed_waste1(self):
+        if self.jobprocess.filter(process__process="Printing").exists():
+            printingfilm = self.jobmaterial.filter(materialname__name="PET").first()
+            if printingfilm:
+                printwaste = round(float(printingfilm.gsm) * float(printingfilm.size) *
+                                   0.0004+ 2, 2)
                 return printwaste or 0
             else:
                 return 0
