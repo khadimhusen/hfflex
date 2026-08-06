@@ -31,6 +31,8 @@ class Customer(models.Model):
     def save(self, *args, **kwargs):
         self.name = self.name.upper()
         super(Customer, self).save(*args, **kwargs)
+        if self.active == False:
+            self.itemmasters.all().update(active=False)
 
     # @property
     # def can_order(self):
