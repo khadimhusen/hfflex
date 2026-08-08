@@ -1,0 +1,62 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>{{ asset.name }}</h3>
+        <div>
+            <a href="{% url 'employee:asset_update' asset.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+            {% if asset.is_active %}
+                <a href="{% url 'employee:asset_dispose' asset.pk %}" class="btn btn-outline-danger btn-sm">Dispose</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <table class="table table-bordered w-auto">
+        <tr><th>Cost</th><td>{{ asset.cost }}</td></tr>
+        <tr><th>Description</th><td>{{ asset.description|default:"—" }}</td></tr>
+        <tr><th>Purchase Date</th><td>{{ asset.date_of_purchase }}</td></tr>
+        <tr><th>Status</th><td>{% if asset.is_active %}Active{% else %}Disposed{% endif %}</td></tr>
+        <tr><th>Availability</th><td>{% if asset.is_available %}Available{% else %}Issued{% endif %}</td></tr>
+        {% if not asset.is_active %}
+        <tr><th>Disposal Date</th><td>{{ asset.disposal_date }}</td></tr>
+        <tr><th>Disposal Reason</th><td>{{ asset.get_disposal_reason_display }}</td></tr>
+        {% endif %}
+    </table>
+
+    <h5 class="mt-4">Assignment History</h5>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Employee</th>
+                <th>Issued</th>
+                <th>Returned</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr>
+                <td>{{ a.employee }}</td>
+                <td>{{ a.issuing_date }}</td>
+                <td>
+                    {% if a.return_date %}
+                        {{ a.return_date }}
+                    {% else %}
+                        <span class="badge bg-warning">Not returned</span>
+                        <a href="{% url 'employee:asset_return' a.pk %}" class="btn btn-link btn-sm p-0 ms-2">Return</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No assignment history.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

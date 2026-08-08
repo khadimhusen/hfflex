@@ -121,6 +121,19 @@
             </ul>
         </li>
         {% endif %}
+       {% if user|user_in_department:"sidecompanyasset" %}
+
+        <!--CompanyAsset nav-->
+        <li>
+            <a href="#CompanyAsset" data-toggle="collapse"><strong style="color:lightgreen">C</strong>ompanyAsset</a>
+            <ul id="CompanyAsset" class="list-unstyled collapse">
+                <li><a href="{% url 'employee:asset_list' %}">Asset list</a></li>
+                <li><a href="{% url 'employee:assignment_list' %}">Assignment list</a></li>
+
+            </ul>
+        </li>
+        {% endif %}
+
 
         <li>
             <a href="#Inkstore" data-toggle="collapse"><strong style="color:lightgreen">I</strong>nkstore</a>

@@ -34,6 +34,7 @@ class Customer(models.Model):
         if self.active == False:
             self.itemmasters.all().update(active=False)
 
+
     # @property
     # def can_order(self):
     #     return self.credit_cap == 0

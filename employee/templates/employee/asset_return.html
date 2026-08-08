@@ -1,0 +1,29 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Return Asset — {{ assignment.asset.name }}</h3>
+    <p class="text-muted">Issued to {{ assignment.employee }} on {{ assignment.issuing_date }}</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Confirm Return</button>
+        <a href="{% url 'employee:assignment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

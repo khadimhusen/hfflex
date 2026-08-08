@@ -1,0 +1,49 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Assets — {{ employee.get_full_name|default:employee.username }}</h3>
+
+    <h5 class="mt-4">Currently Holding</h5>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Issued On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in current_assignments %}
+            <tr>
+                <td><a href="{% url 'employee:asset_detail' a.asset.pk %}">{{ a.asset.name }}</a></td>
+                <td>{{ a.issuing_date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center">No assets currently held.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h5 class="mt-4">Past Assignments</h5>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Issued On</th>
+                <th>Returned On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in past_assignments %}
+            <tr>
+                <td><a href="{% url 'employee:asset_detail' a.asset.pk %}">{{ a.asset.name }}</a></td>
+                <td>{{ a.issuing_date }}</td>
+                <td>{{ a.return_date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No past assignments.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.core.exceptions import ValidationError
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
@@ -101,3 +102,66 @@ class Department(models.Model):
 
 
 
+
+class CompanyAsset(models.Model):
+    class DisposalReason(models.TextChoices):
+        DAMAGED = 'damaged', 'Damaged'
+        LOST = 'lost', 'Lost'
+        OBSOLETE = 'obsolete', 'Obsolete'
+        SOLD = 'sold', 'Sold'
+        OTHER = 'other', 'Other'
+
+    name = models.CharField(max_length=64)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(null=True, blank=True)
+    date_of_purchase = models.DateField()
+    is_active = models.BooleanField(default=True)
+    disposal_date = models.DateField(null=True, blank=True)
+    disposal_reason = models.CharField(max_length=20, choices=DisposalReason.choices, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.name}-{self.id}'
+
+    @property
+    def is_available(self):
+        return not self.assignments.filter(return_date__isnull=True).exists()
+
+    def clean(self):
+        # Block disposing an asset that's currently issued
+        if not self.is_active and self.pk and not self.is_available:
+            raise ValidationError(
+                f'{self.name} is currently issued to an employee and must be returned before disposal.'
+            )
+
+
+class AssetAssignment(models.Model):
+    asset = models.ForeignKey(CompanyAsset, on_delete=models.CASCADE, related_name='assignments')
+    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='asset_assignments')
+    issuing_date = models.DateField()
+    return_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-issuing_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['asset'],
+                condition=models.Q(return_date__isnull=True),
+                name='unique_open_assignment_per_asset'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.asset.name} → {self.employee}'
+
+    def clean(self):
+        # Block issuing a disposed/inactive asset
+        if self.return_date is None and not self.asset.is_active:
+            raise ValidationError(f'{self.asset} is disposed/inactive and cannot be issued.')
+
+        # Block double-issuing (open assignment already exists for this asset)
+        if self.return_date is None:
+            open_qs = AssetAssignment.objects.filter(asset=self.asset, return_date__isnull=True)
+            if self.pk:
+                open_qs = open_qs.exclude(pk=self.pk)
+            if open_qs.exists():
+                raise ValidationError(f'{self.asset} is already issued and not yet returned.')

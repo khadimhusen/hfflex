@@ -1,0 +1,77 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Asset Assignments</h3>
+        <a href="{% url 'employee:asset_issue' %}" class="btn btn-primary">+ Issue Asset</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-auto">
+            <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search asset name">
+        </div>
+        <div class="col-auto">
+            <input type="text" name="employee_name" value="{{ employee_name }}" class="form-control" placeholder="Search employee name">
+        </div>
+        <div class="col-auto">
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                <option value="issued" {% if status == 'issued' %}selected{% endif %}>Issued</option>
+                <option value="returned" {% if status == 'returned' %}selected{% endif %}>Returned</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary">Filter</button>
+            <a href="{% url 'employee:assignment_list' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Employee</th>
+                <th>Issued</th>
+                <th>Returned</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in page_obj %}
+            <tr>
+                <td><a href="{% url 'employee:asset_detail' a.asset.pk %}">{{ a.asset.name }}</a></td>
+                <td>
+                    <a href="{% url 'employee:employee_asset_detail' a.employee.id %}">
+                    {{ a.employee.get_full_name|default:a.employee.username }}
+                    </a>
+                </td>
+                <td>{{ a.issuing_date }}</td>
+                <td>
+                    {% if a.return_date %}
+                        {{ a.return_date }}
+                    {% else %}
+                        <span class="badge bg-warning">Not returned</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not a.return_date %}
+                        <a href="{% url 'employee:asset_return' a.pk %}" class="btn btn-sm btn-outline-secondary">Return</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No assignments found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'employee/_pagination.html' with page_obj=page_obj %}
+</div>
+{% endblock %}
