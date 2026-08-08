@@ -19,6 +19,12 @@ class CoaForm(forms.ModelForm):
                                              'oninput': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
                                              'onfocus': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
                                              'list': 'itemlist'
+                                             }),
+        "storage_conditions":forms.Textarea(attrs={'rows': 2, 'cols': 80,
+                                             'style': 'overflow: hidden',
+                                             'oninput': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                             'onfocus': "this.style.height='auto'; this.style.height=`${this.scrollHeight}px`",
+                                             'list': 'itemlist'
                                              })
     }
 

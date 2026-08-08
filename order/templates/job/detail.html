@@ -415,7 +415,6 @@
                         <div class="col-4">
                         </div>
                         {% if jobcoacount and user|user_in_department:"can_create_coa" %}
-
                         <div class="col-4">
                         <a class="text-right"  href="{% url 'coa:addcoadc' job.id packer.grouper %}">
                         Add coa
@@ -426,6 +425,11 @@
                     </div>
                     {% else %}
                     <h3>Pending For Dispatch</h3>
+                    {% if jobcoacount and user|user_in_department:"can_create_coa" %}
+                    <a class="text-right"  href="{% url 'coa:addcoa' job.id %}">
+                        Add coa
+                    </a>
+                    {% endif %}
                     {% endif %}
                     {% for pack in packer.list %}
                     <tr>
@@ -541,7 +545,6 @@
                 <table class="table table-bordered table-sm">
                     <thead>
                     <tr>
-
                         <th>Printed_waste</th>
                         <th>Trim_waste</th>
                         <th>Pouching_waste</th>
