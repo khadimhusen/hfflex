@@ -295,7 +295,7 @@ class Job(models.Model):
     @property
     def pouching_waste(self):
         if self.jobprocess.filter(process__process="Pouching").exists():
-            return round(float(self.kgqty + 800) * 0.004 or 0, 2)
+            return round((float(self.kgqty) * 0.003) + float(self.pouch_weight) * 0.15 or 0, 2) # 3% waste + 150 pouch waste
         else:
             return 0
 

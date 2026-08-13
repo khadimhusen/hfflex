@@ -36,11 +36,12 @@ urlpatterns = [
                   path('api-auth/', include('rest_framework.urls')),
                   path('returnable/', include('returnable.urls')),
                   path('planning/', include('planning.urls')),
+                  path('api/crm/', include('crm.urls')),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
-# urls.py
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
