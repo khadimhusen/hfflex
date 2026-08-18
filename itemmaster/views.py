@@ -65,6 +65,22 @@ def itemdetail(request, id):
     formset4 = itemcolorformset(prefix='colorformset', instance=itemmaster)
     formset6 = coa_parameter_formset(prefix='coaformset', instance=itemmaster)
 
+    cylindermovementform = CylinderMovementForm(request.POST or None, itemmaster=itemmaster)
+    if request.method == 'POST':
+        cylindermovementform = CylinderMovementForm(request.POST or None, itemmaster=itemmaster)
+        if cylindermovementform.is_valid():
+            itemform = cylindermovementform.save(commit=False)
+            itemform.item = itemmaster
+            itemform.createdby = request.user
+            itemform.save()
+            messages.success(request, "Cylinder detail updated successfully")
+            cylindermovementform = CylinderMovementForm(itemmaster=itemmaster)
+
+        else:
+
+            messages.success(request, "Cylinder detail NOT updated")
+
+
     context['item_form'] = item
     context['image_forms'] = formset1
     context['rawmaterial_forms'] = formset2
@@ -72,6 +88,7 @@ def itemdetail(request, id):
     context['color_forms'] = formset4
     context['attribute_forms'] = formset5
     context['coa_parameter_forms'] = formset6
+    context['cylindermovementform'] = cylindermovementform
 
     return render(request, 'itemmaster/itemdetail.html', context)
 

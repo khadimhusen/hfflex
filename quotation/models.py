@@ -41,7 +41,7 @@ class Quotation(models.Model):
     quotedate = models.DateField(default=date.today)
     remark = models.CharField(max_length=256, null=True, blank=True)
     status= models.CharField(max_length=32 ,choices=quotation_status, default="Pending")
-    design_rate = models.PositiveIntegerField(default=2000)
+    design_rate = models.PositiveIntegerField(default=2500)
     no_of_design = models.PositiveSmallIntegerField(default=0)
     approvedby= models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
                                   related_name='quotationapproved')
