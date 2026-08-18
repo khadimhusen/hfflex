@@ -284,6 +284,8 @@
         </div>
         <div id="menu7" class="container tab-pane">
             <div class="row">
+
+                {% if user|user_in_department:"can_edit_cylinder_location" %}
                 <form method="post" autocomplete="off">
                     {% csrf_token %}
                     <div class="form-row">
@@ -298,9 +300,9 @@
                         <div class="form-group col-md-12 mb-0">{{ cylindermovementform.remark|as_crispy_field }}</div>
 
                     </div>
-
-
                 </form>
+                {% endif %}
+
                 <table class="table table-sm table-striped table-bordered">
                     <thead>
                     <tr>
