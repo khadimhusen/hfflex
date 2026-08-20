@@ -66,11 +66,13 @@ class ContactSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
 
 
 class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
-    expected_revenue = serializers.ReadOnlyField()  # exposes the @property from the model
+    expected_revenue = serializers.ReadOnlyField()
     account_name = serializers.CharField(source='account.name', read_only=True, default=None)
     contact_name = serializers.CharField(source='contact.name', read_only=True, default=None)
     stage_name = serializers.CharField(source='stage.dealstagename.name', read_only=True)
     pipeline_name = serializers.CharField(source='pipeline.name', read_only=True)
+    is_won = serializers.BooleanField(source='stage.is_won', read_only=True)
+    is_lost = serializers.BooleanField(source='stage.is_lost', read_only=True)
     stage_entered_at = serializers.DateTimeField(read_only=True)
     is_stalled = serializers.BooleanField(read_only=True)
     days_in_stage = serializers.SerializerMethodField()
@@ -79,7 +81,8 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
         model = Deal
         fields = [
             'id', 'zoho_record_id', 'name', 'pipeline', 'pipeline_name',
-            'stage', 'stage_name', 'account', 'account_name', 'contact', 'contact_name',
+            'stage', 'stage_name', 'is_won', 'is_lost',
+            'account', 'account_name', 'contact', 'contact_name',
             'amount', 'expected_revenue', 'deal_type', 'city', 'lost_reason', 'lead_source',
             'closing_date', 'owner', 'owner_name', 'description', 'created_at', 'updated_at',
             'stage_entered_at', 'is_stalled', 'days_in_stage',
@@ -93,8 +96,6 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
         return (timezone.now() - entered).days
 
     def validate(self, attrs):
-        # Trust nothing from the client about stage/pipeline consistency —
-        # a Deal's stage must actually belong to the Deal's own pipeline.
         pipeline = attrs.get('pipeline', getattr(self.instance, 'pipeline', None))
         stage = attrs.get('stage', getattr(self.instance, 'stage', None))
         if pipeline and stage and stage.pipeline_id != pipeline.id:
@@ -102,7 +103,6 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
                 {'stage': f'"{stage}" does not belong to pipeline "{pipeline}".'}
             )
         return attrs
-
 
 class DealStageChangeSerializer(serializers.Serializer):
     """Used only by the custom stage-change action below — a Deal's normal

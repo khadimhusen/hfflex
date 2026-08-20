@@ -8,6 +8,8 @@ from django.db.models import (OuterRef, Subquery, F, Q, ExpressionWrapper, DateT
                               DecimalField)
 from django.db.models.functions import Coalesce
 
+from .querysets import crm_users
+
 
 class DealDashboardView(APIView):
     permission_classes = [IsAuthenticated]
@@ -195,10 +197,12 @@ class MeView(APIView):
 
     def get(self, request):
         u = request.user
+        is_crm = u.is_staff or u.is_superuser or crm_users().filter(id=u.id).exists()
         return Response({
             'id': u.id,
             'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
             'is_staff': u.is_staff or u.is_superuser,
+            'is_crm_user':is_crm
         })
 
 

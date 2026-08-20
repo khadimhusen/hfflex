@@ -21,7 +21,9 @@
             <div class="card">
                 <div class="card-header d-flex">
                     <h2 class="card-title text-center">Job list</h2>
+                    {% if user|user_in_department:"can_add_order" %}
                     <a class="btn btn-danger btn ml-auto" href="{% url 'order:orderadd' %}">+ Add new order</a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <h4>No. of job {{jobs.paginator.count}} Total Kg = <span> {{kgsum}} </span></h4>
