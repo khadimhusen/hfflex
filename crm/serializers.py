@@ -113,13 +113,16 @@ class DealStageChangeSerializer(serializers.Serializer):
 class DealStageHistorySerializer(serializers.ModelSerializer):
     from_stage_name = serializers.CharField(source='from_stage.dealstagename.name', read_only=True, default=None)
     to_stage_name = serializers.CharField(source='to_stage.dealstagename.name', read_only=True)
+    to_stage_is_won = serializers.BooleanField(source='to_stage.is_won', read_only=True)
+    to_stage_is_lost = serializers.BooleanField(source='to_stage.is_lost', read_only=True)
     changed_by_name = serializers.CharField(source='changed_by.get_full_name', read_only=True, default=None)
 
     class Meta:
         model = DealStageHistory
         fields = ['id', 'deal', 'from_stage', 'from_stage_name', 'to_stage', 'to_stage_name',
+                  'to_stage_is_won', 'to_stage_is_lost',
                   'changed_by', 'changed_by_name', 'changed_at']
-        read_only_fields = fields  # this table is an audit trail — never hand-edited via API
+        read_only_fields = fields
 
 
 class LeadSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
