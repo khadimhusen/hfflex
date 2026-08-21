@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     Pipeline, DealStageName, DealStage, DealStageHistory,
-    Account, Contact, Deal, Lead, DealAttachment, Note,
+    Account, Contact, Deal, Lead, DealAttachment, Note, DealTask,
 )
 from .querysets import crm_users
 from django.utils import timezone
@@ -182,3 +182,17 @@ class DealAttachmentSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+
+class DealTaskSerializer(serializers.ModelSerializer):
+    owner_name = serializers.CharField(source='owner.get_full_name', read_only=True, default=None)
+    deal_name = serializers.CharField(source='deal.name', read_only=True, default=None)
+
+    class Meta:
+        model = DealTask
+        fields = [
+            'id', 'deal', 'deal_name', 'subject', 'due_date', 'priority',
+            'owner', 'owner_name', 'is_closed',
+            'reminder_enabled', 'reminder_at', 'reminder_dismissed',
+            'created_by', 'created_at',
+        ]
+        read_only_fields = ['created_by', 'created_at', 'reminder_dismissed']

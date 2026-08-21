@@ -4,14 +4,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
     Pipeline, DealStageName, DealStage, DealStageHistory,
-    Account, Contact, Deal, Lead, Note, DealAttachment
+    Account, Contact, Deal, Lead, Note, DealAttachment, DealTask
 )
 from django.db.models import Sum, DecimalField
 from .serializers import (
     PipelineSerializer, DealStageNameSerializer, DealStageSerializer,
     AccountSerializer, ContactSerializer, DealSerializer,
     DealStageChangeSerializer, DealStageHistorySerializer, LeadSerializer, CrmUserSerializer,
-    NoteSerializer, DealAttachmentSerializer
+    NoteSerializer, DealAttachmentSerializer, DealTaskSerializer
 )
 from .filters import DealFilter, LeadFilter, AccountFilter, ContactFilter
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -276,3 +276,33 @@ class DealAttachmentViewSet(viewsets.ModelViewSet):
             uploaded_by=self.request.user,
             original_filename=uploaded_file.name if uploaded_file else '',
         )
+
+
+class DealTaskViewSet(viewsets.ModelViewSet):
+    queryset = DealTask.objects.select_related('owner', 'deal')
+    serializer_class = DealTaskSerializer
+    filterset_fields = ['deal', 'is_closed', 'owner']
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def due_reminders(self, request):
+        """Polled by the frontend — reminders that have hit their time,
+        belong to the current user, and haven't been dismissed yet."""
+        now = timezone.now()
+        due = DealTask.objects.filter(
+            owner=request.user,
+            reminder_enabled=True,
+            reminder_dismissed=False,
+            reminder_at__lte=now,
+        ).select_related('deal')
+        serializer = self.get_serializer(due, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def dismiss_reminder(self, request, pk=None):
+        task = self.get_object()
+        task.reminder_dismissed = True
+        task.save(update_fields=['reminder_dismissed'])
+        return Response({'status': 'dismissed'})

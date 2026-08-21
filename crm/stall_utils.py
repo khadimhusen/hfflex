@@ -19,7 +19,10 @@ def annotate_deal_stall_fields(queryset):
     )
     qs = qs.annotate(
         is_stalled=ExpressionWrapper(
-            Q(stage__max_stall_time__isnull=False) & Q(stall_deadline__lt=now),
+            Q(stage__max_stall_time__isnull=False)
+            & Q(stage__is_won=False)
+            & Q(stage__is_lost=False)
+            & Q(stall_deadline__lt=now),
             output_field=BooleanField(),
         )
     )

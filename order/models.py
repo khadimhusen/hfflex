@@ -178,19 +178,20 @@ class Job(models.Model):
 
         if flag:
             obj = RawMaterial.objects.filter(itemmaster=self.itemmaster)
-            for ob in obj:
-                JobMaterial.objects.create(job=self,
-                                           materialname=ob.materialname,
-                                           item_mat_type=ob.item_mat_type,
-                                           item_grade=ob.item_grade, size=ob.size,
-                                           micron=ob.micron,
-                                           gsm=ob.gsm,
-                                           req=round((ob.required / ob.materialname.solid) * 100 * self.kgqty * (
-                                                   (self.waste + 100) / 100), 1),
-                                           length=round(
-                                               ob.required * self.kgqty * ((self.waste + 100) / 100) * 1000000 / (
-                                                       ob.size * ob.gsm), 1)
-                                           )
+            if self.quantity > 0:
+                for ob in obj:
+                    JobMaterial.objects.create(job=self,
+                                               materialname=ob.materialname,
+                                               item_mat_type=ob.item_mat_type,
+                                               item_grade=ob.item_grade, size=ob.size,
+                                               micron=ob.micron,
+                                               gsm=ob.gsm,
+                                               req=round((ob.required / ob.materialname.solid) * 100 * self.kgqty * (
+                                                       (self.waste + 100) / 100), 1),
+                                               length=round(
+                                                   ob.required * self.kgqty * ((self.waste + 100) / 100) * 1000000 / (
+                                                           ob.size * ob.gsm), 1)
+                                               )
 
             colors = ItemColor.objects.filter(itemmaster=self.itemmaster)
             for colo in colors:
@@ -206,23 +207,24 @@ class Job(models.Model):
                                                 item_attirbuate=att.item_attirbuate, attri_value=att.attri_value)
 
             proc = ItemProcess.objects.filter(itemmaster=self.itemmaster)
-            for pro in proc:
-                prounit = pro.unit.unit
-                if prounit == "NOS.":
-                    processqty = self.totalpouch
-                elif prounit == "KG.":
-                    processqty = self.kgqty
-                elif prounit == "MTR.":
-                    if pro.process.process == "Printing":
-                        processqty = self.totalmeter + 200
+            if self.quantity > 0:
+                for pro in proc:
+                    prounit = pro.unit.unit
+                    if prounit == "NOS.":
+                        processqty = self.totalpouch
+                    elif prounit == "KG.":
+                        processqty = self.kgqty
+                    elif prounit == "MTR.":
+                        if pro.process.process == "Printing":
+                            processqty = self.totalmeter + 200
+                        else:
+                            processqty = self.totalmeter
+
                     else:
-                        processqty = self.totalmeter
+                        processqty = self.kgqty
 
-                else:
-                    processqty = self.kgqty
-
-                JobProcess.objects.create(job=self, process=pro.process, unit=pro.unit,
-                                          qty=processqty)
+                    JobProcess.objects.create(job=self, process=pro.process, unit=pro.unit,
+                                              qty=processqty)
 
             from itemmaster.models import ItemStandardParameter
 
@@ -289,13 +291,13 @@ class Job(models.Model):
         return newresult
 
     @property
-    def trim_waste(self):
-        return round(15 * self.kgqty / self.film_size, 2) or 0
+    def trim_waste(self): #trim taken 17mm instead of 15mm to compensate waste qty.
+        return round(17 * self.kgqty / self.film_size, 2) or 0
 
     @property
     def pouching_waste(self):
-        if self.jobprocess.filter(process__process="Pouching").exists():
-            return round((float(self.kgqty) * 0.003) + float(self.pouch_weight) * 0.15 or 0, 2) # 3% waste + 150 pouch waste
+        if self.jobprocess.filter(process__process="Pouching").exists(): # 3% waste + 150 pouch waste
+            return round((float(self.kgqty) * 0.003) + float(self.pouch_weight) * 0.15 or 0, 2)
         else:
             return 0
 

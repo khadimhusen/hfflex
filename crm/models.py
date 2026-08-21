@@ -36,9 +36,19 @@ class DealStage(models.Model):
     class Meta:
         unique_together = [('pipeline', 'dealstagename'), ('pipeline', 'order')]
         ordering = ["pipeline", 'order']
+        constraints  = [
+            models.CheckConstraint(
+                check=~models.Q(is_won=True, is_lost=True),
+                name='dealstage_not_won_and_lost',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.pipeline} - {self.dealstagename}'
+
+    @property
+    def is_open(self):
+        return not self.is_won and not self.is_lost
 
 
 class Account(models.Model):
@@ -253,3 +263,29 @@ class DealAttachment(models.Model):
 
     def __str__(self):
         return self.original_filename or self.file.name
+
+class DealTask(models.Model):
+    PRIORITY_CHOICES = [('High', 'High'), ('Normal', 'Normal'), ('Low', 'Low')]
+
+    deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='tasks')
+    subject = models.CharField(max_length=255)
+    due_date = models.DateField(null=True, blank=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='Normal')
+    owner = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='deal_tasks',
+        limit_choices_to={'department__department_name__iexact': 'crm_user'},
+    )
+    is_closed = models.BooleanField(default=False)
+
+    reminder_enabled = models.BooleanField(default=False)
+    reminder_at = models.DateTimeField(null=True, blank=True)
+    reminder_dismissed = models.BooleanField(default=False)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['is_closed', 'due_date']
+
+    def __str__(self):
+        return self.subject

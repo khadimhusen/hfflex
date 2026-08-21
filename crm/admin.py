@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Pipeline, DealStageName, DealStage, DealStageHistory, Account, Contact, Deal, Note, DealAttachment
+from .models import (Pipeline, DealStageName, DealStage, DealStageHistory,
+                     Account, Contact, Deal, Note, DealAttachment,
+                     DealTask)
 
 
 @admin.register(Pipeline)
@@ -16,8 +18,8 @@ class DealStageNameAdmin(admin.ModelAdmin):
 
 @admin.register(DealStage)
 class DealStageAdmin(admin.ModelAdmin):
-    list_display = ('pipeline', 'dealstagename', 'order','max_stall_time' ,'probability', 'is_won', 'is_lost', 'color')
-    list_editable= ( 'order', 'probability', 'max_stall_time' ,'color')
+    list_display = ('pipeline', 'dealstagename', 'order', 'max_stall_time', 'probability', 'is_won', 'is_lost', 'color')
+    list_editable = ('order', 'probability', 'max_stall_time', 'color')
 
     list_filter = ('pipeline', 'is_won', 'is_lost')
     ordering = ('pipeline', 'order')
@@ -96,6 +98,13 @@ class NoteAdmin(admin.ModelAdmin):
     list_display = ('content', 'deal', 'lead', 'contact', 'account', 'created_by', 'created_at')
     list_filter = ('created_by',)
 
+
 @admin.register(DealAttachment)
 class DealAttachmentAdmin(admin.ModelAdmin):
     list_display = ('original_filename', 'deal', 'uploaded_by', 'uploaded_at')
+
+
+@admin.register(DealTask)
+class DealTaskAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'deal', 'owner', 'due_date', 'priority', 'is_closed', 'reminder_enabled')
+    list_filter = ('is_closed', 'priority', 'reminder_enabled')

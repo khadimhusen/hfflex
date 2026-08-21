@@ -5,7 +5,7 @@ from .viewsets import (
     PipelineViewSet, DealStageNameViewSet, DealStageViewSet,
     AccountViewSet, ContactViewSet, DealViewSet,
     DealStageHistoryViewSet, LeadViewSet, CrmUserViewSet,
-    NoteViewSet, DealAttachmentViewSet
+    NoteViewSet, DealAttachmentViewSet, DealTaskViewSet
 )
 from .views_dashboard import DealDashboardView, MeView, MyDashboardView
 
@@ -21,6 +21,7 @@ router.register('leads', LeadViewSet)
 router.register('users', CrmUserViewSet)
 router.register('notes', NoteViewSet)
 router.register('deal-attachments', DealAttachmentViewSet)
+router.register('deal-tasks', DealTaskViewSet)
 
 urlpatterns = router.urls + [
     path('dashboard/', DealDashboardView.as_view(), name='crm-dashboard'),
