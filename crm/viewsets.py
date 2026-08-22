@@ -93,6 +93,7 @@ class DealViewSet(viewsets.ModelViewSet):
         serializer = DealStageChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_stage = serializer.validated_data['stage']
+        lost_reason = serializer.validated_data['lost_reason'].strip()
 
         if new_stage.pipeline_id != deal.pipeline_id:
             return Response(
@@ -100,9 +101,31 @@ class DealViewSet(viewsets.ModelViewSet):
                 status=400,
             )
 
+        if new_stage.is_lost and not lost_reason:
+            return Response(
+                {'lost_reason': 'A reason is required when marking a deal as lost.'},
+                status=400,
+            )
+
         old_stage = deal.stage
         deal.stage = new_stage
-        deal.save(update_fields=['stage', 'updated_at'])
+
+        update_fields = ['stage', 'updated_at']
+        if new_stage.is_won or new_stage.is_lost:
+            deal.closing_date = timezone.now().date()
+            update_fields.append('closing_date')
+        elif old_stage.is_won or old_stage.is_lost:
+            deal.closing_date = None
+            update_fields.append('closing_date')
+
+        if new_stage.is_lost:
+            deal.lost_reason = lost_reason
+            update_fields.append('lost_reason')
+        elif old_stage.is_lost:
+            deal.lost_reason = ''
+            update_fields.append('lost_reason')
+
+        deal.save(update_fields=update_fields)
 
         DealStageHistory.objects.create(
             deal=deal,
@@ -293,6 +316,7 @@ class DealTaskViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         due = DealTask.objects.filter(
             owner=request.user,
+            is_closed=False,
             reminder_enabled=True,
             reminder_dismissed=False,
             reminder_at__lte=now,

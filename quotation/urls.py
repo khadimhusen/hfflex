@@ -1,7 +1,14 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
+
 from . import views , pdfviews
+from .viewsets import QuotationViewSet, TermViewSet
 
 app_name = 'quotation'
+
+router = DefaultRouter()
+router.register('quotations', QuotationViewSet, basename='quotation')
+router.register('terms', TermViewSet)
 
 urlpatterns = [
     path('costing/', views.costing, name='costing'),
@@ -18,4 +25,4 @@ urlpatterns = [
     path('copy/<int:id>/', views.copyquote, name='copyquote'),
 
 
-]
+] + router.urls

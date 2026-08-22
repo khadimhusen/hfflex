@@ -87,7 +87,10 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
             'closing_date', 'owner', 'owner_name', 'description', 'created_at', 'updated_at',
             'stage_entered_at', 'is_stalled', 'days_in_stage',
         ]
-        read_only_fields = ['zoho_record_id', 'created_at', 'updated_at']
+        # `stage` is deliberately excluded from plain writes — see change_stage's
+        # docstring below. It must go through that action so history/closing_date/
+        # lost_reason all stay in sync with the move.
+        read_only_fields = ['zoho_record_id', 'created_at', 'updated_at', 'stage']
 
     def get_days_in_stage(self, obj):
         entered = getattr(obj, 'stage_entered_at', None)
@@ -108,6 +111,7 @@ class DealStageChangeSerializer(serializers.Serializer):
     """Used only by the custom stage-change action below — a Deal's normal
     update should not silently move its stage without writing history."""
     stage = serializers.PrimaryKeyRelatedField(queryset=DealStage.objects.all())
+    lost_reason = serializers.CharField(required=False, allow_blank=True, default='')
 
 
 class DealStageHistorySerializer(serializers.ModelSerializer):
@@ -186,6 +190,16 @@ class DealAttachmentSerializer(serializers.ModelSerializer):
 class DealTaskSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.get_full_name', read_only=True, default=None)
     deal_name = serializers.CharField(source='deal.name', read_only=True, default=None)
+
+    def update(self, instance, validated_data):
+        # A dismissed reminder should fire again once the user deliberately
+        # sets a new time or re-enables it — but not on every unrelated edit
+        # (the frontend always resends reminder_at/reminder_enabled as-is).
+        if 'reminder_at' in validated_data and validated_data['reminder_at'] != instance.reminder_at:
+            validated_data['reminder_dismissed'] = False
+        elif validated_data.get('reminder_enabled') and not instance.reminder_enabled:
+            validated_data['reminder_dismissed'] = False
+        return super().update(instance, validated_data)
 
     class Meta:
         model = DealTask

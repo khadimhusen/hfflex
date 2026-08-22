@@ -184,6 +184,7 @@ def detailquote(request, id=None):
     quote = get_object_or_404(Quotation, id=id)
     context["quoteapprovalform"] = QuoteApprovalForm(instance=quote, initial={'approvedby': request.user})
     context["quote"] = quote
+    context["items"] = quote.quotationitems.order_by('id')
     return render(request, "quotation/quotedetail.html", context)
 
 

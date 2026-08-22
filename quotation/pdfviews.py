@@ -245,7 +245,7 @@ def quotepdf(_, id):
     ]
     data = [tabelheader]
 
-    for i, item in enumerate(quote.quotationitems.all(), 1):
+    for i, item in enumerate(quote.quotationitems.order_by('id'), 1):
         itemdesc = (
             f'{item.jobname}<br/>Size:- {item.dimension}<br/>'
             f'{item.structure}<br/>Supply :- {item.supply}'
@@ -446,7 +446,7 @@ def letterheadquotepdf(_, id):
     ]
     data = [tabelheader]
 
-    for i, item in enumerate(quote.quotationitems.all(), 1):
+    for i, item in enumerate(quote.quotationitems.order_by('id'), 1):
         itemdesc = (
             f'{item.jobname}<br/>Size:- {item.dimension}<br/>'
             f'{item.structure}<br/>Supply :- {item.supply}'
