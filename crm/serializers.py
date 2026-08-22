@@ -69,6 +69,11 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
     expected_revenue = serializers.ReadOnlyField()
     account_name = serializers.CharField(source='account.name', read_only=True, default=None)
     contact_name = serializers.CharField(source='contact.name', read_only=True, default=None)
+    # Declared explicitly (rather than left to Meta.read_only_fields) so it
+    # always has a queryset to validate against — __init__ below flips
+    # read_only on/off per create-vs-update, and a field DRF auto-builds as
+    # read-only never gets a queryset at all, which breaks toggling it later.
+    stage = serializers.PrimaryKeyRelatedField(queryset=DealStage.objects.all())
     stage_name = serializers.CharField(source='stage.dealstagename.name', read_only=True)
     pipeline_name = serializers.CharField(source='pipeline.name', read_only=True)
     is_won = serializers.BooleanField(source='stage.is_won', read_only=True)
@@ -87,10 +92,18 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
             'closing_date', 'owner', 'owner_name', 'description', 'created_at', 'updated_at',
             'stage_entered_at', 'is_stalled', 'days_in_stage',
         ]
-        # `stage` is deliberately excluded from plain writes — see change_stage's
-        # docstring below. It must go through that action so history/closing_date/
-        # lost_reason all stay in sync with the move.
-        read_only_fields = ['zoho_record_id', 'created_at', 'updated_at', 'stage']
+        read_only_fields = ['zoho_record_id', 'created_at', 'updated_at']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance is not None:
+            # Existing deal — stage must go through the change_stage action
+            # (below) so history/closing_date/lost_reason stay in sync with
+            # the move, not through a plain write. A brand-new deal (no
+            # instance yet) has no prior stage to "change", so it stays
+            # writable there — the `stage` field above always keeps its
+            # queryset either way, only read_only toggles.
+            self.fields['stage'].read_only = True
 
     def get_days_in_stage(self, obj):
         entered = getattr(obj, 'stage_entered_at', None)

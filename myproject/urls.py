@@ -38,7 +38,7 @@ urlpatterns = [
                   path('planning/', include('planning.urls')),
                   path('api/crm/', include('crm.urls')),
                   path('crm/', views.serve_crm_spa, name='crm-spa'),
-                  path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
+                  # path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
