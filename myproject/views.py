@@ -1,8 +1,36 @@
+import os
+
+from django.conf import settings
+from django.http import FileResponse, Http404
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+
+CRM_STATIC_DIR = os.path.join(settings.BASE_DIR, 'crm_static')
+
+
+def serve_crm_spa(request, path=''):
+    """Serves the built CRM SPA (crm_static/, produced by `npm run build` in
+    hfflex_frontend) directly from Django — for trying the production build
+    locally. In real deployment this is normally the web server's job
+    (nginx etc. pointed at crm_static), not Django's — nothing else in this
+    project served /crm/ before this.
+    """
+    if path:
+        candidate = os.path.normpath(os.path.join(CRM_STATIC_DIR, path))
+        # Guard against path traversal (e.g. /crm/../../settings.py) — only
+        # ever serve a file that resolves to somewhere inside crm_static.
+        if candidate.startswith(CRM_STATIC_DIR) and os.path.isfile(candidate):
+            return FileResponse(open(candidate, 'rb'))
+
+    # Vue Router here uses hash routing (#/deals/...), so the server only
+    # ever needs to hand back index.html for any non-asset /crm/* path.
+    index_path = os.path.join(CRM_STATIC_DIR, 'index.html')
+    if not os.path.isfile(index_path):
+        raise Http404('CRM build not found — run "npm run build" in hfflex_frontend first.')
+    return FileResponse(open(index_path, 'rb'))
 
 
 def user_login(request):
