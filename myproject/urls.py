@@ -29,7 +29,6 @@ urlpatterns = [
                   path('test2/', views.test2, name='test2'),
                   path('inkstore/', include('inkstore.urls')),
                   path('documents/', include('documents.urls')),
-
                   path('ckeditor5/', include('django_ckeditor_5.urls')),
                   path('resolutions/', include('resolutions.urls')),
                   path('permisiondenid/', views.noaccess, name='noaccess'),
@@ -38,7 +37,7 @@ urlpatterns = [
                   path('planning/', include('planning.urls')),
                   path('api/crm/', include('crm.urls')),
                   path('crm/', views.serve_crm_spa, name='crm-spa'),
-                  # path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
+                  path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
