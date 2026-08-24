@@ -1,0 +1,1 @@
+import{$ as e,_t as t}from"./QBtn-9HZhhSyJ.js";import{t as n}from"./QuotationForm-DE61C1Er.js";var r={__name:`new`,setup(r){return(r,i)=>(t(),e(n))}};export{r as default};
