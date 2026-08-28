@@ -132,7 +132,7 @@ class DealStageHistorySerializer(serializers.ModelSerializer):
     to_stage_name = serializers.CharField(source='to_stage.dealstagename.name', read_only=True)
     to_stage_is_won = serializers.BooleanField(source='to_stage.is_won', read_only=True)
     to_stage_is_lost = serializers.BooleanField(source='to_stage.is_lost', read_only=True)
-    changed_by_name = serializers.CharField(source='changed_by.get_full_name', read_only=True, default=None)
+    changed_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = DealStageHistory
@@ -140,6 +140,15 @@ class DealStageHistorySerializer(serializers.ModelSerializer):
                   'to_stage_is_won', 'to_stage_is_lost',
                   'changed_by', 'changed_by_name', 'changed_at']
         read_only_fields = fields
+
+    def get_changed_by_name(self, obj):
+        if obj.changed_by:
+            return obj.changed_by.get_full_name()
+        if obj.from_stage_id is None:
+            # Backfilled creation entries have no recorded actor —
+            # the deal's owner is the closest honest attribution.
+            return obj.deal.owner.get_full_name()
+        return None
 
 
 class LeadSerializer(OwnerSerializerMixin, serializers.ModelSerializer):

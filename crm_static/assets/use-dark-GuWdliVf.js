@@ -1,1 +1,0 @@
-import{Z as e}from"./QBtn-9HZhhSyJ.js";var t={dark:{type:Boolean,default:null}};function n(t,n){return e(()=>t.dark===null?n.dark.isActive:t.dark)}export{t as n,n as t};

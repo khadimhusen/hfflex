@@ -82,6 +82,21 @@ class DealViewSet(viewsets.ModelViewSet):
         )
         return qs
 
+    def perform_create(self, serializer):
+        deal = serializer.save()
+        DealStageHistory.objects.create(
+            deal=deal,
+            from_stage=None,
+            to_stage=deal.stage,
+            changed_by=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        deal = serializer.instance
+        if deal.owner_id != self.request.user.id and not self.request.user.is_staff:
+            raise PermissionDenied('You can only edit deals you own.')
+        serializer.save()
+
     # ...existing change_stage and summary actions stay exactly as they are
 
     @action(detail=True, methods=['patch'], url_path='change-stage')
@@ -90,6 +105,8 @@ class DealViewSet(viewsets.ModelViewSet):
         DealStageHistory row server-side — the client never gets to
         do this silently through a plain PATCH on `stage`."""
         deal = self.get_object()
+        if deal.owner_id != request.user.id and not request.user.is_staff:
+            raise PermissionDenied('You can only change the stage of deals you own.')
         serializer = DealStageChangeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_stage = serializer.validated_data['stage']
@@ -161,7 +178,7 @@ class DealViewSet(viewsets.ModelViewSet):
 
 class DealStageHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DealStageHistory.objects.select_related(
-        'deal', 'from_stage__dealstagename', 'to_stage__dealstagename', 'changed_by'
+        'deal__owner', 'from_stage__dealstagename', 'to_stage__dealstagename', 'changed_by'
     )
     serializer_class = DealStageHistorySerializer
     filterset_fields = ['deal', 'changed_by']
@@ -243,6 +260,12 @@ class LeadViewSet(viewsets.ModelViewSet):
                     closing_date=deal_data.get('closing_date') or None,
                     description=deal_data.get('description') or lead.description or '',
                     owner=owner,
+                )
+                DealStageHistory.objects.create(
+                    deal=deal,
+                    from_stage=None,
+                    to_stage=stage,
+                    changed_by=request.user,
                 )
 
             lead.is_converted = True

@@ -15,3 +15,7 @@ class AddPreOrderForm(forms.ModelForm):
                   "schedule",
                   "gst"
                   ]
+class RemovePreOrderForm(forms.ModelForm):
+    class Meta:
+        model = PreOrder
+        fields = ["final_submition"]

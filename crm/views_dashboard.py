@@ -1,14 +1,25 @@
+from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Deal, DealStageHistory
 from django.utils import timezone
 
 from django.db.models import (OuterRef, Subquery, F, Q, ExpressionWrapper, DateTimeField, BooleanField, Sum, Count,
                               DecimalField)
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
+from datetime import date
 
 from .querysets import crm_users
+
+
+def _add_months(d, offset):
+    """Shift a date by `offset` whole months, landing on the 1st of the
+    resulting month (avoids a dependency on python-dateutil)."""
+    total = d.month - 1 + offset
+    year = d.year + total // 12
+    month = total % 12 + 1
+    return date(year, month, 1)
 
 
 class DealDashboardView(APIView):
@@ -73,6 +84,41 @@ class DealDashboardView(APIView):
 
         won_agg = won_deals.aggregate(total=Sum('amount'), count=Count('id'))
 
+        # Team-wide breakdown — always all owners, regardless of the `owner`
+        # filter above (that filter narrows the stage cards, not this chart).
+        all_open_deals = Deal.objects.filter(
+            stage__is_won=False, stage__is_lost=False
+        ).exclude(amount__isnull=True)
+        open_amount_by_owner = (
+            all_open_deals
+            .values('owner_id', 'owner__first_name', 'owner__last_name', 'owner__username')
+            .annotate(total=Sum(expected_revenue_expr))
+            .order_by('-total')
+        )
+
+        # Last 12 months of Closed Won amount, for the `owner` filter above —
+        # defaults to the logged-in user when no owner is selected.
+        today = timezone.now().date()
+        current_month_start = today.replace(day=1)
+        months = [
+            _add_months(current_month_start, -offset) for offset in range(11, -1, -1)
+        ]
+        my_won_rows = (
+            Deal.objects.filter(
+                owner_id=owner_id or request.user.id,
+                stage__is_won=True,
+                closing_date__gte=months[0],
+            )
+            .annotate(month=TruncMonth('closing_date'))
+            .values('month')
+            .annotate(total=Sum('amount'))
+        )
+        my_won_by_month = {row['month']: row['total'] or 0 for row in my_won_rows}
+        my_monthly_closed_won = [
+            {'month': m.strftime('%b %Y'), 'total': my_won_by_month.get(m, 0)}
+            for m in months
+        ]
+
         return Response({
             'stage_counts': [
                 {
@@ -92,6 +138,16 @@ class DealDashboardView(APIView):
                 'total': won_agg['total'] or 0,
                 'count': won_agg['count'] or 0,
             },
+            'open_amount_by_owner': [
+                {
+                    'owner_id': row['owner_id'],
+                    'owner_name': f"{row['owner__first_name']} {row['owner__last_name']}".strip()
+                                  or row['owner__username'],
+                    'total': row['total'] or 0,
+                }
+                for row in open_amount_by_owner
+            ],
+            'my_monthly_closed_won': my_monthly_closed_won,
         })
 
 
@@ -192,18 +248,51 @@ from .stall_utils import annotate_deal_stall_fields
 from .models import Lead, Pipeline
 
 
+def me_payload(u):
+    is_crm = u.is_staff or u.is_superuser or crm_users().filter(id=u.id).exists()
+    return {
+        'id': u.id,
+        'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
+        'is_staff': u.is_staff or u.is_superuser,
+        'is_crm_user': is_crm,
+    }
+
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        u = request.user
-        is_crm = u.is_staff or u.is_superuser or crm_users().filter(id=u.id).exists()
-        return Response({
-            'id': u.id,
-            'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
-            'is_staff': u.is_staff or u.is_superuser,
-            'is_crm_user':is_crm
-        })
+        return Response(me_payload(request.user))
+
+
+class LoginView(APIView):
+    """Session-based login for the SPA, mirroring myproject.views.user_login
+    but returning JSON instead of redirecting. No CSRF priming needed —
+    DRF's SessionAuthentication only enforces CSRF once a session already
+    has an authenticated user, so an anonymous login POST isn't checked;
+    django_login() below rotates the token and the response carries a
+    fresh csrftoken cookie for the authenticated requests that follow."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username', '')
+        password = request.data.get('password', '')
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return Response({'detail': 'Invalid username or password.'}, status=400)
+
+        django_login(request, user)
+        return Response(me_payload(user))
+
+
+class LogoutView(APIView):
+    """CRM-specific logout, kept separate from myproject.views.user_logout
+    since that shared view also serves other old-app pages."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        django_logout(request)
+        return Response({'detail': 'Logged out.'})
 
 
 class MyDashboardView(APIView):

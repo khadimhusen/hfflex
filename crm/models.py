@@ -32,6 +32,7 @@ class DealStage(models.Model):
     is_lost = models.BooleanField(default=False)
     max_stall_time = models.DurationField(null=True, blank=True)
     color = models.CharField(max_length=7, default='#1976D2')
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = [('pipeline', 'dealstagename'), ('pipeline', 'order')]

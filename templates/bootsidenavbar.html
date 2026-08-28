@@ -2,6 +2,13 @@
 <div class="sidebar sidebar-dark bg-dark">
 
     <ul class="list-unstyled">
+         {% if user|user_in_department:"crm_user" %}
+        <li>
+            <a href="{% url 'crm-spa' %}"><strong style="color:lightgreen">C</strong>RM</a>
+
+        </li>
+        {% endif %}
+
         <!-- Customer nav-->
         {% if user|user_in_department:"sidecustomer" %}
 

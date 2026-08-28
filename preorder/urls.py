@@ -9,4 +9,5 @@ urlpatterns=[
     path('add/',views.addpreorder,name='addpreorder'),
     path('editpreorder/<int:id>/',views.editpreorder,name='editpreorder'),
     path('editpreorderfinal/<int:id>/',views.finalsubmit,name='finalsubmit'),
+    path('removefinalsubmition/<int:id>/',views.removefinalsubmition,name='removefinalsubmition'),
              ]
