@@ -18,47 +18,54 @@ class StampedCreateUpdateMixin:
         serializer.save(editedby=self.request.user)
 
 
+class NoDeleteMixin:
+    """Master/reference data — other apps' records point at these via
+    ForeignKey (several PROTECT), so deleting isn't a supported operation;
+    DELETE now 405s instead of silently existing behind a removed button."""
+    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+
+
 # No department ever gated this app in the old system — it was managed
 # through the Django admin (see material/admin.py), which is staff-only.
 # IsAdminUser (request.user.is_staff) matches that real access boundary,
 # rather than either the unused/no-nav-link old app views or the global
 # IsCrmUser default, neither of which reflects how this was actually used.
-class MaterialViewSet(StampedCreateUpdateMixin, viewsets.ModelViewSet):
+class MaterialViewSet(NoDeleteMixin, StampedCreateUpdateMixin, viewsets.ModelViewSet):
     queryset = Material.objects.select_related('createdby', 'editedby').order_by('name')
     serializer_class = MaterialSerializer
     permission_classes = [IsAdminUser]
     search_fields = ['name']
 
 
-class MatTypeViewSet(StampedCreateUpdateMixin, viewsets.ModelViewSet):
+class MatTypeViewSet(NoDeleteMixin, StampedCreateUpdateMixin, viewsets.ModelViewSet):
     queryset = MatType.objects.select_related('createdby', 'editedby').order_by('mat_type')
     serializer_class = MatTypeSerializer
     permission_classes = [IsAdminUser]
     search_fields = ['mat_type']
 
 
-class GradeViewSet(StampedCreateUpdateMixin, viewsets.ModelViewSet):
+class GradeViewSet(NoDeleteMixin, StampedCreateUpdateMixin, viewsets.ModelViewSet):
     queryset = Grade.objects.select_related('createdby', 'editedby').order_by('grade')
     serializer_class = GradeSerializer
     permission_classes = [IsAdminUser]
     search_fields = ['grade']
 
 
-class UnitViewSet(StampedCreateUpdateMixin, viewsets.ModelViewSet):
+class UnitViewSet(NoDeleteMixin, StampedCreateUpdateMixin, viewsets.ModelViewSet):
     queryset = Unit.objects.select_related('createdby', 'editedby').order_by('unit')
     serializer_class = UnitSerializer
     permission_classes = [IsAdminUser]
     search_fields = ['unit']
 
 
-class CommodityViewSet(viewsets.ModelViewSet):
+class CommodityViewSet(NoDeleteMixin, viewsets.ModelViewSet):
     queryset = Commodity.objects.order_by('commodity')
     serializer_class = CommoditySerializer
     permission_classes = [IsAdminUser]
     search_fields = ['commodity']
 
 
-class PurchaseMaterialViewSet(viewsets.ModelViewSet):
+class PurchaseMaterialViewSet(NoDeleteMixin, viewsets.ModelViewSet):
     queryset = PurchaseMaterial.objects.order_by('itemname')
     serializer_class = PurchaseMaterialSerializer
     permission_classes = [IsAdminUser]
