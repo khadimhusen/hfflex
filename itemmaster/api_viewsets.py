@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Q
 
 from customer.models import Customer
 from material.models import Material, MatType, Grade, Unit, Commodity
@@ -33,10 +34,26 @@ class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         qs = Customer.objects.order_by('name')
+
         if self.request.query_params.get('cylinder_suppliers') == 'true':
-            qs = qs.filter(
+            return qs.filter(
                 is_supplier=True, active=True, supplier_item__itemname='Cylinder',
             ).distinct()
+
+        # Exact match on CylinderMovementForm's old queryset — GODOWN-1,
+        # GODOWN-2, PRODUCTION, or the item's own customer. Deliberately
+        # exact names, not a substring search, so a real customer like
+        # "Production House Pvt Ltd" can never slip in as a false match.
+        item_id = self.request.query_params.get('cylinder_locations_for_item')
+        if item_id:
+            itemmaster = ItemMaster.objects.filter(pk=item_id).select_related('itemcustomer').first()
+            if not itemmaster:
+                return qs.none()
+            return qs.filter(
+                Q(name='GODOWN-1') | Q(name='GODOWN-2') | Q(name='PRODUCTION')
+                | Q(name=itemmaster.itemcustomer.name)
+            )
+
         return qs
 
 
