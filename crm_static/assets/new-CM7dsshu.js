@@ -1,0 +1,1 @@
+import{J as e,ft as t}from"./use-router-link-QuPu4Y1O.js";import{t as n}from"./QuotationForm-DfrugWOo.js";var r={__name:`new`,setup(r){return(r,i)=>(t(),e(n))}};export{r as default};
