@@ -255,7 +255,7 @@ class RawMaterialViewSet(viewsets.ModelViewSet):
 class ItemProcessViewSet(viewsets.ModelViewSet):
     queryset = ItemProcess.objects.select_related(
         'itemmaster', 'process', 'unit', 'machine', 'createdby', 'editedby',
-    )
+    ).order_by('id')
     serializer_class = ItemProcessSerializer
     permission_classes = [IsItemmasterUser]
     filterset_fields = ['itemmaster']
