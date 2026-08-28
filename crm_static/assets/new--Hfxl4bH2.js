@@ -1,1 +1,0 @@
-import{J as e,mt as t}from"./use-router-link-Rhu-fyfW.js";import{t as n}from"./QuotationForm-D8qwoN6G.js";var r={__name:`new`,setup(r){return(r,i)=>(t(),e(n))}};export{r as default};
