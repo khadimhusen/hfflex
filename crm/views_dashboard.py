@@ -248,6 +248,7 @@ from .stall_utils import annotate_deal_stall_fields
 from .models import Lead, Pipeline
 from customer.querysets import customer_department_users
 from itemmaster.querysets import itemmaster_department_users
+from preorder.querysets import preorder_department_users
 
 
 def me_payload(u):
@@ -255,6 +256,7 @@ def me_payload(u):
     is_crm = is_staff or crm_users().filter(id=u.id).exists()
     is_customer = is_staff or customer_department_users().filter(id=u.id).exists()
     is_itemmaster = is_staff or itemmaster_department_users().filter(id=u.id).exists()
+    is_preorder = is_staff or preorder_department_users().filter(id=u.id).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
@@ -264,6 +266,7 @@ def me_payload(u):
             'crm': is_crm,
             'customer': is_customer,
             'itemmaster': is_itemmaster,
+            'preorder': is_preorder,
         },
     }
 
