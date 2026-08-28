@@ -18,7 +18,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 
 @login_required(login_url='/login/')
-@forceview
 @accessview
 def costing(request):
     context = {}

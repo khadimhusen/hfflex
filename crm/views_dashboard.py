@@ -246,15 +246,22 @@ class PersonalDashboardView(APIView):
 from django.contrib.auth.models import User
 from .stall_utils import annotate_deal_stall_fields
 from .models import Lead, Pipeline
+from customer.querysets import customer_department_users
 
 
 def me_payload(u):
-    is_crm = u.is_staff or u.is_superuser or crm_users().filter(id=u.id).exists()
+    is_staff = u.is_staff or u.is_superuser
+    is_crm = is_staff or crm_users().filter(id=u.id).exists()
+    is_customer = is_staff or customer_department_users().filter(id=u.id).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
-        'is_staff': u.is_staff or u.is_superuser,
-        'is_crm_user': is_crm,
+        'is_staff': is_staff,
+        'is_crm_user': is_crm,  # kept for existing CRM-only checks
+        'modules': {
+            'crm': is_crm,
+            'customer': is_customer,
+        },
     }
 
 
