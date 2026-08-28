@@ -1,1 +1,0 @@
-import{$ as e,J as t,pt as n,yt as r}from"./use-router-link-CLide7n7.js";import{U as i}from"./index-C6QK_WIb.js";import{t as a}from"./QPage-BDhxP8pZ.js";var o={__name:`second`,setup(o){return(o,s)=>(n(),t(a,{class:`flex flex-center`},{default:r(()=>[e(i,{color:`secondary`,to:`/`,label:`Go to Index Page`,"no-caps":``})]),_:1}))}};export{o as default};
