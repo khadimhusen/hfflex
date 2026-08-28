@@ -40,6 +40,7 @@ urlpatterns = [
                   path('api/material/', include('material.api_urls')),
                   path('api/itemmaster/', include('itemmaster.api_urls')),
                   path('api/preorder/', include('preorder.api_urls')),
+                  path('api/purchase/', include('purchase.api_urls')),
                   path('crm/', views.serve_crm_spa, name='crm-spa'),
                   path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
 

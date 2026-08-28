@@ -47,4 +47,4 @@ class PoItemFilter(django_filters.FilterSet):
 
     class Meta:
         model = PoItem
-        fields = ['id', "description","category" ]
+        fields = ['id', "description", "category", "purchaseorder"]

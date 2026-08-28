@@ -6,7 +6,11 @@ def num2words(num):
                 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen',
                 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
     tens = ['Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-    above_100 = {100: 'Hundred', 1000: 'Thousand', 100000: 'Lakhs', 10000000: 'Crores'}
+    # Standard Indian-English convention for spelled-out amounts keeps
+    # 'Lakh'/'Crore' singular regardless of count (same as 'Hundred' and
+    # 'Thousand' just below) — e.g. "One Lakh", "Two Lakh", "Five Crore",
+    # never "...Lakhs"/"...Crores". Previously always pluralized.
+    above_100 = {100: 'Hundred', 1000: 'Thousand', 100000: 'Lakh', 10000000: 'Crore'}
 
     if num < 20:
         return under_20[(int)(num)]
