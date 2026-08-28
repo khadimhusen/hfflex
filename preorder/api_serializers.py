@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from customer.models import Customer
 from material.models import Unit
+from myproject.thumbnails import get_or_create_thumbnail
 from .models import PreOrder, JobName
 from .querysets import can_edit_preorder
 
@@ -40,19 +41,27 @@ class JobNameSerializer(serializers.ModelSerializer):
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
     job_status = serializers.CharField(read_only=True)
     is_done = serializers.SerializerMethodField()
+    preimg_thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = JobName
         fields = [
             'id', 'preorder', 'jobname', 'qty', 'unit', 'unit_display', 'new_cyl_qty',
             'new_cylinder', 'cyl_invoice', 'cyl_cost', 'design_charges', 'rate',
-            'preimg', 'prefile', 'remark', 'job_status', 'is_done',
+            'preimg', 'preimg_thumbnail_url', 'prefile', 'remark', 'job_status', 'is_done',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby', 'edited_by_name',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
 
     def get_is_done(self, obj):
         return hasattr(obj, 'job') and obj.job is not None
+
+    def get_preimg_thumbnail_url(self, obj):
+        url = get_or_create_thumbnail(obj.preimg)
+        if not url:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
 
 
 class PreOrderSerializer(serializers.ModelSerializer):

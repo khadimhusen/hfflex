@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from customer.models import Customer
 from material.models import Material, MatType, Grade, Unit, Commodity
+from myproject.thumbnails import get_or_create_thumbnail
 from .querysets import can_edit_itemmaster
 from .models import (
     Machine, MachineTask, PouchType, LamiRubber, ItemMaster, ItemImage,
@@ -137,11 +138,20 @@ class MachineTaskSerializer(serializers.ModelSerializer):
 # ---- itemmaster sub-resources --------------------------------------------
 
 class ItemImageSerializer(TimestampedSerializerMixin, serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ItemImage
-        fields = ['id', 'imagename', 'itemname', 'created', 'createdby', 'created_by_name',
-                  'edited', 'editedby', 'edited_by_name']
+        fields = ['id', 'imagename', 'thumbnail_url', 'itemname', 'created', 'createdby',
+                  'created_by_name', 'edited', 'editedby', 'edited_by_name']
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
+
+    def get_thumbnail_url(self, obj):
+        url = get_or_create_thumbnail(obj.imagename)
+        if not url:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
 
 
 class RawMaterialSerializer(TimestampedSerializerMixin, serializers.ModelSerializer):
