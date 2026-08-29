@@ -40,6 +40,7 @@ class SupplierLookupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Customer.objects.filter(is_supplier=True).order_by('name')
     serializer_class = SupplierLookupSerializer
     permission_classes = [IsStockUser]
+    search_fields = ['name']
 
 
 class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
