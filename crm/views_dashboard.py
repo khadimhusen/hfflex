@@ -258,13 +258,26 @@ def me_payload(u):
     is_staff = u.is_staff or u.is_superuser
     is_crm = is_staff or crm_users().filter(id=u.id).exists()
     is_customer = is_staff or customer_department_users().filter(id=u.id).exists()
-    is_itemmaster = is_staff or itemmaster_department_users().filter(id=u.id).exists()
-    is_preorder = is_staff or preorder_department_users().filter(id=u.id).exists()
-    is_purchase = is_staff or purchase_department_users().filter(id=u.id).exists()
-    is_order = is_staff or order_department_users().filter(id=u.id).exists()
-    is_production_report = is_staff or report_department_users().filter(id=u.id).exists()
-    is_dispatch = is_staff or dispatch_department_users().filter(id=u.id).exists()
-    is_stock = is_staff or stock_department_users().filter(id=u.id).exists()
+    # TEMPORARY: itemmaster/preorder/purchase/order/production-report/
+    # dispatch/stock restricted to staff/superuser only during rollout —
+    # regular users see only crm/dashboard/costing/quotation for now.
+    # Restore department-based access on each line below by swapping in
+    # its commented-out version once ready for wider access. Matches the
+    # same restriction on each module's own DRF permission class.
+    is_itemmaster = is_staff
+    # is_itemmaster = is_staff or itemmaster_department_users().filter(id=u.id).exists()
+    is_preorder = is_staff
+    # is_preorder = is_staff or preorder_department_users().filter(id=u.id).exists()
+    is_purchase = is_staff
+    # is_purchase = is_staff or purchase_department_users().filter(id=u.id).exists()
+    is_order = is_staff
+    # is_order = is_staff or order_department_users().filter(id=u.id).exists()
+    is_production_report = is_staff
+    # is_production_report = is_staff or report_department_users().filter(id=u.id).exists()
+    is_dispatch = is_staff
+    # is_dispatch = is_staff or dispatch_department_users().filter(id=u.id).exists()
+    is_stock = is_staff
+    # is_stock = is_staff or stock_department_users().filter(id=u.id).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,

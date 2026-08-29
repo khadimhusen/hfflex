@@ -5,6 +5,11 @@ from .querysets import (
 )
 
 
+# TEMPORARY: the whole production module (report/dispatch/stock) is
+# restricted to staff/superuser only during rollout — restore
+# department-based access on each class below by swapping the return
+# for its commented-out line once ready for wider access.
+
 class IsProductionReportUser(BasePermission):
     """Mirrors the old nav's 'sidereport' gate (Production Report section) —
     previously nav-visibility only, now actually enforced."""
@@ -13,9 +18,8 @@ class IsProductionReportUser(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
-        if user.is_staff or user.is_superuser:
-            return True
-        return report_department_users().filter(id=user.id).exists()
+        return user.is_staff or user.is_superuser
+        # return report_department_users().filter(id=user.id).exists()
 
 
 class IsDispatchUser(BasePermission):
@@ -25,9 +29,8 @@ class IsDispatchUser(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
-        if user.is_staff or user.is_superuser:
-            return True
-        return dispatch_department_users().filter(id=user.id).exists()
+        return user.is_staff or user.is_superuser
+        # return dispatch_department_users().filter(id=user.id).exists()
 
 
 class IsStockUser(BasePermission):
@@ -37,9 +40,8 @@ class IsStockUser(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
-        if user.is_staff or user.is_superuser:
-            return True
-        return stock_department_users().filter(id=user.id).exists()
+        return user.is_staff or user.is_superuser
+        # return stock_department_users().filter(id=user.id).exists()
 
 
 class IsProductionUser(BasePermission):
@@ -52,10 +54,9 @@ class IsProductionUser(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
-        if user.is_staff or user.is_superuser:
-            return True
-        return (
-            report_department_users().filter(id=user.id).exists()
-            or dispatch_department_users().filter(id=user.id).exists()
-            or stock_department_users().filter(id=user.id).exists()
-        )
+        return user.is_staff or user.is_superuser
+        # return (
+        #     report_department_users().filter(id=user.id).exists()
+        #     or dispatch_department_users().filter(id=user.id).exists()
+        #     or stock_department_users().filter(id=user.id).exists()
+        # )
