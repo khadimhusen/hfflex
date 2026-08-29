@@ -6,7 +6,7 @@ from material.models import Unit, Material, MatType, Grade
 from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
 from myproject.thumbnails import get_or_create_thumbnail
-from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa, JobChangeLog
 from .querysets import can_edit_order
 
 
@@ -387,3 +387,76 @@ class JobCoaSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobCoa
         fields = ['id', 'job', 'standard_parameter', 'standard_parameter_display', 'unit_of_measure', 'value']
+
+
+# ---- Cross-job reporting (processlist, jobmateriallist) -------------------
+
+class ProcessReportSerializer(serializers.ModelSerializer):
+    """Read-only — mirrors processlist.html exactly (a GET-filtered report
+    table, no inline editing anywhere in it)."""
+    process_display = serializers.CharField(source='process.process', read_only=True)
+    unit_display = serializers.CharField(source='unit.unit', read_only=True, default=None)
+    job_itemname = serializers.CharField(source='job.itemname', read_only=True)
+    job_jobstatus = serializers.CharField(source='job.jobstatus', read_only=True)
+    job_film_size = serializers.IntegerField(source='job.film_size', read_only=True)
+    job_supply_form = serializers.CharField(source='job.supply_form', read_only=True)
+    customer_name = serializers.CharField(source='job.joborder.customer.name', read_only=True)
+    cylinder_status = serializers.CharField(source='job.itemmaster.cylinder_status', read_only=True, default=None)
+    pendingqty = serializers.ReadOnlyField()
+    produced_qty = serializers.ReadOnlyField()
+
+    class Meta:
+        model = JobProcess
+        fields = [
+            'id', 'job', 'job_itemname', 'job_jobstatus', 'job_film_size', 'job_supply_form',
+            'customer_name', 'cylinder_status', 'process', 'process_display', 'qty', 'unit', 'unit_display',
+            'status', 'process_count', 'pendingqty', 'produced_qty', 'created',
+        ]
+
+
+class JobMaterialReportSerializer(serializers.ModelSerializer):
+    """Read-only — mirrors jobmaterial/list.html (a report, same as
+    processlist; edits happen through the job detail page's JobMaterial
+    sub-resource, not here)."""
+    materialname_display = serializers.CharField(source='materialname.name', read_only=True)
+    item_mat_type_display = serializers.CharField(source='item_mat_type.mat_type', read_only=True)
+    item_grade_display = serializers.CharField(source='item_grade.grade', read_only=True)
+    job_itemname = serializers.CharField(source='job.itemname', read_only=True)
+    job_jobstatus = serializers.CharField(source='job.jobstatus', read_only=True)
+    customer_name = serializers.CharField(source='job.joborder.customer.name', read_only=True)
+
+    class Meta:
+        model = JobMaterial
+        fields = [
+            'id', 'job', 'job_itemname', 'job_jobstatus', 'customer_name',
+            'materialname', 'materialname_display', 'item_mat_type', 'item_mat_type_display',
+            'item_grade', 'item_grade_display', 'size', 'micron', 'gsm', 'req', 'available',
+            'to_order', 'orderedqty', 'receivedqty', 'po', 'created',
+        ]
+
+
+class JobChangeLogSerializer(serializers.ModelSerializer):
+    changed_by_name = serializers.CharField(source='changed_by.get_full_name', read_only=True, default=None)
+
+    class Meta:
+        model = JobChangeLog
+        fields = ['id', 'job', 'field_name', 'old_value', 'new_value', 'changed_by', 'changed_by_name',
+                  'changed_at', 'action']
+
+
+class BulkMaterialRateSerializer(serializers.Serializer):
+    """Mirrors the old `rate` view exactly: sets Stockdetail.rate for every
+    matching (materialname, item_mat_type, item_grade) row that's
+    currently unrated or effectively zero (<= 0.1) — a stock-wide backfill,
+    not a single-row edit."""
+    materialname = serializers.IntegerField()
+    item_mat_type = serializers.IntegerField()
+    item_grade = serializers.IntegerField()
+    rate = serializers.DecimalField(max_digits=10, decimal_places=3)
+
+
+class AssignMarketingPersonSerializer(serializers.Serializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    marketing_person = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(department__department_name='marketing', is_active=True),
+    )

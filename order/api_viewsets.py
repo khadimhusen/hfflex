@@ -1,15 +1,18 @@
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from customer.models import Customer, Address
 from material.models import Unit, Material, MatType, Grade
 from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
-from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa
+from production.models import Stockdetail
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa, JobChangeLog
 from .api_serializers import (
     OrderSerializer, JobSerializer, CustomerLookupSerializer, AddressLookupSerializer,
     MarketingPersonLookupSerializer, UnitLookupSerializer, ItemMasterLookupSerializer, PrejobLookupSerializer,
@@ -18,10 +21,12 @@ from .api_serializers import (
     PouchTypeLookupSerializer, LamiRubberLookupSerializer,
     JobMaterialSerializer, JobProcessSerializer, JobColorSerializer, JobImageSerializer,
     JobItemAttributeSerializer, JobCoaSerializer,
+    ProcessReportSerializer, JobMaterialReportSerializer, JobChangeLogSerializer,
+    BulkMaterialRateSerializer, AssignMarketingPersonSerializer,
 )
 from .permissions import IsOrderUser
 from .querysets import can_edit_order, can_cancel_job, can_delete_job_subresource
-from .filters import OrderFilter, JobFilter
+from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 
 
 class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -305,3 +310,107 @@ class JobCoaViewSet(viewsets.ModelViewSet):
         if not can_delete_job_subresource(self.request.user, instance.job):
             raise PermissionDenied("Only this job's order creator can delete this row.")
         instance.delete()
+
+
+class ProcessReportViewSet(viewsets.ReadOnlyModelViewSet):
+    """Mirrors processlist — a cross-job production-floor report (GET
+    filters only, no inline editing in the old template either). Kept
+    separate from JobProcessViewSet, whose 'job' filter is an exact-match
+    used by the job detail page's sub-resource table; JobProcessFilter's
+    'job' filter is instead an icontains search on the job's itemname, to
+    match the old report's own filter form."""
+    queryset = JobProcess.objects.select_related(
+        'job', 'job__joborder__customer', 'job__itemmaster', 'process', 'unit',
+    ).prefetch_related('jobreport', 'jobreport__unit').order_by('-job__film_size')
+    serializer_class = ProcessReportSerializer
+    permission_classes = [IsOrderUser]
+    filterset_class = JobProcessFilter
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        total_qty = round(queryset.aggregate(Sum('qty'))['qty__sum'] or 0)
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page if page is not None else queryset, many=True)
+        response = self.get_paginated_response(serializer.data) if page is not None else Response(serializer.data)
+        response.data['total_qty'] = total_qty
+        return response
+
+
+class JobMaterialReportViewSet(viewsets.ReadOnlyModelViewSet):
+    """Mirrors jobmateriallist — same reasoning as ProcessReportViewSet:
+    separate from JobMaterialViewSet's exact-match 'job' filter."""
+    queryset = JobMaterial.objects.select_related(
+        'job', 'job__joborder__customer', 'materialname', 'item_mat_type', 'item_grade',
+    ).order_by('-size')
+    serializer_class = JobMaterialReportSerializer
+    permission_classes = [IsOrderUser]
+    filterset_class = JobMaterialFilter
+
+
+class JobChangeLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = JobChangeLog.objects.select_related('job', 'changed_by')
+    serializer_class = JobChangeLogSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+
+class BulkMaterialRateView(APIView):
+    """Mirrors the old `rate` view exactly: given a material/type/grade and
+    a rate, backfills every currently-unrated (or effectively zero, <=0.1)
+    Stockdetail row matching that combination — a stock-wide catch-up, not
+    a single-record edit."""
+    permission_classes = [IsOrderUser]
+
+    def post(self, request):
+        serializer = BulkMaterialRateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        base = Stockdetail.objects.filter(
+            materialname_id=data['materialname'],
+            item_mat_type_id=data['item_mat_type'],
+            item_grade_id=data['item_grade'],
+        )
+        updated = base.filter(rate__isnull=True).update(rate=data['rate'])
+        updated += base.filter(rate__lte=0.1).update(rate=data['rate'])
+        return Response({'updated': updated})
+
+
+class AssignMarketingPersonView(APIView):
+    """Mirrors assign_marketing_person exactly: sets the customer's default
+    marketing_person, and backfills it onto every one of that customer's
+    jobs (via itemmaster__itemcustomer) that doesn't have one yet."""
+    permission_classes = [IsOrderUser]
+
+    def post(self, request):
+        serializer = AssignMarketingPersonSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        customer = serializer.validated_data['customer']
+        marketing_person = serializer.validated_data['marketing_person']
+
+        updated_count = Job.objects.filter(
+            itemmaster__itemcustomer=customer, marketing_person__isnull=True,
+        ).update(marketing_person=marketing_person)
+
+        customer.marketing_person = marketing_person
+        customer.save(update_fields=['marketing_person'])
+
+        return Response({'updated_count': updated_count})
+
+
+class GetMarketingPersonView(APIView):
+    """Mirrors get_marketing_person exactly — given a customer, returns
+    their current default marketing_person (used to pre-fill the order/job
+    forms client-side)."""
+    permission_classes = [IsOrderUser]
+
+    def get(self, request):
+        customer_id = request.query_params.get('customer_id')
+        data = {'marketing_person_id': None, 'marketing_person_name': None}
+        if customer_id:
+            customer = Customer.objects.filter(id=customer_id).select_related('marketing_person').first()
+            if customer and customer.marketing_person:
+                data['marketing_person_id'] = customer.marketing_person.id
+                data['marketing_person_name'] = (
+                    customer.marketing_person.get_full_name() or customer.marketing_person.username
+                )
+        return Response(data)

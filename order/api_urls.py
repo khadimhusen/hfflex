@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .api_viewsets import (
@@ -9,6 +10,8 @@ from .api_viewsets import (
     PouchTypeLookupViewSet, LamiRubberLookupViewSet,
     JobMaterialViewSet, JobProcessViewSet, JobColorViewSet, JobImageViewSet,
     JobItemAttributeViewSet, JobCoaViewSet,
+    ProcessReportViewSet, JobMaterialReportViewSet, JobChangeLogViewSet,
+    BulkMaterialRateView, AssignMarketingPersonView, GetMarketingPersonView,
 )
 
 router = DefaultRouter()
@@ -35,5 +38,12 @@ router.register('job-colors', JobColorViewSet)
 router.register('job-images', JobImageViewSet)
 router.register('job-attributes', JobItemAttributeViewSet)
 router.register('job-coas', JobCoaViewSet)
+router.register('process-report', ProcessReportViewSet, basename='order-process-report')
+router.register('job-material-report', JobMaterialReportViewSet, basename='order-job-material-report')
+router.register('job-change-log', JobChangeLogViewSet, basename='order-job-change-log')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path('bulk-material-rate/', BulkMaterialRateView.as_view(), name='order-bulk-material-rate'),
+    path('assign-marketing-person/', AssignMarketingPersonView.as_view(), name='order-assign-marketing-person'),
+    path('get-marketing-person/', GetMarketingPersonView.as_view(), name='order-get-marketing-person'),
+]
