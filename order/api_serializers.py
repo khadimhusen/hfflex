@@ -5,6 +5,7 @@ from customer.models import Customer, Address
 from material.models import Unit, Material, MatType, Grade
 from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
+from production.models import Stockdetail, JobMaterialStatus
 from myproject.thumbnails import get_or_create_thumbnail
 from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa, JobChangeLog
 from .querysets import can_edit_order
@@ -460,3 +461,53 @@ class AssignMarketingPersonSerializer(serializers.Serializer):
     marketing_person = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(department__department_name='marketing', is_active=True),
     )
+
+
+# ---- Material allotment (JobMaterialStatus) & dispatch info ---------------
+
+class StockdetailLookupSerializer(serializers.ModelSerializer):
+    """For picking which stock lot to allot against a JobMaterial
+    requirement — scoped by ?materialname=&item_mat_type=&item_grade= to
+    match the requirement being fulfilled."""
+    full_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Stockdetail
+        fields = ['id', 'full_name', 'available', 'rate', 'qc_status']
+
+
+class JobMaterialStatusSerializer(serializers.ModelSerializer):
+    """Mirrors the old production:jobmaterialstatusedit flow — allotting a
+    specific Stockdetail lot (a physical stock entry) against a
+    JobMaterial's requirement. JobMaterial.avail (already exposed on
+    JobMaterialSerializer) is the live sum of these rows' qty."""
+    stock_display = serializers.CharField(source='allote.full_name', read_only=True)
+    stock_available = serializers.DecimalField(
+        source='allote.available', read_only=True, max_digits=10, decimal_places=3, default=None,
+    )
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+
+    class Meta:
+        model = JobMaterialStatus
+        fields = [
+            'id', 'jobmaterial', 'allote', 'stock_display', 'stock_available', 'qty',
+            'created', 'createdby', 'created_by_name', 'edited', 'editedby',
+        ]
+        read_only_fields = ['created', 'createdby', 'edited', 'editedby']
+
+
+class JobDispatchItemSerializer(serializers.Serializer):
+    """Mirrors jobdetail's finished_list construction exactly: one row per
+    finished-goods Stockdetail entry belonging to this job (from
+    Job.job_disptached), with which dispatch batch (if any) it went out
+    on. dispatch_id is None for goods still pending dispatch — the old
+    template grouped by this (0 meant 'Pending For Dispatch')."""
+    id = serializers.IntegerField()
+    object_id = serializers.IntegerField()
+    gross_wt = serializers.DecimalField(max_digits=10, decimal_places=3, allow_null=True)
+    tare_wt = serializers.DecimalField(max_digits=10, decimal_places=3, allow_null=True)
+    recieved = serializers.DecimalField(max_digits=10, decimal_places=3, allow_null=True)
+    nos = serializers.DecimalField(max_digits=10, decimal_places=0, allow_null=True)
+    remark = serializers.CharField(allow_null=True)
+    dispatch_id = serializers.IntegerField(allow_null=True)
+    dispatch_date = serializers.DateTimeField(allow_null=True)

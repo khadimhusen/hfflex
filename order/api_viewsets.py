@@ -11,7 +11,7 @@ from customer.models import Customer, Address
 from material.models import Unit, Material, MatType, Grade
 from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
-from production.models import Stockdetail
+from production.models import Stockdetail, JobMaterialStatus
 from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa, JobChangeLog
 from .api_serializers import (
     OrderSerializer, JobSerializer, CustomerLookupSerializer, AddressLookupSerializer,
@@ -23,6 +23,7 @@ from .api_serializers import (
     JobItemAttributeSerializer, JobCoaSerializer,
     ProcessReportSerializer, JobMaterialReportSerializer, JobChangeLogSerializer,
     BulkMaterialRateSerializer, AssignMarketingPersonSerializer,
+    StockdetailLookupSerializer, JobMaterialStatusSerializer, JobDispatchItemSerializer,
 )
 from .permissions import IsOrderUser
 from .querysets import can_edit_order, can_cancel_job, can_delete_job_subresource
@@ -212,6 +213,31 @@ class JobViewSet(viewsets.ModelViewSet):
         job.dispatch_approval_date = None
         job.save()
         return Response(self.get_serializer(job).data)
+
+    @action(detail=True, methods=['get'], url_path='dispatch-info')
+    def dispatch_info(self, request, pk=None):
+        """Read-only — mirrors jobdetail's finished_list exactly: one row
+        per finished-goods Stockdetail belonging to this job
+        (Job.job_disptached), noting which DispatchRegister batch (if any)
+        it went out on. dispatch_id is None for goods still pending
+        dispatch (the old template's 'Pending For Dispatch' bucket)."""
+        job = self.get_object()
+        rows = []
+        for item in job.job_disptached.all():
+            first_dispatch = item.dispached.first()
+            rows.append({
+                'id': item.id,
+                'object_id': item.object_id,
+                'gross_wt': item.gross_wt,
+                'tare_wt': item.tare_wt,
+                'recieved': item.recieved,
+                'nos': item.nos,
+                'remark': item.remark,
+                'dispatch_id': first_dispatch.id if first_dispatch else None,
+                'dispatch_date': first_dispatch.dispatchdate if first_dispatch else None,
+            })
+        rows.sort(key=lambda k: k['dispatch_id'] or 0)
+        return Response(JobDispatchItemSerializer(rows, many=True).data)
 
 
 class JobMaterialViewSet(viewsets.ModelViewSet):
@@ -414,3 +440,40 @@ class GetMarketingPersonView(APIView):
                     customer.marketing_person.get_full_name() or customer.marketing_person.username
                 )
         return Response(data)
+
+
+class StockdetailLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    """Lets the frontend pick which stock lot to allot against a
+    JobMaterial requirement — scoped to available, QC-ok stock only,
+    filterable by the same material/type/grade combination as the
+    requirement being fulfilled."""
+    queryset = Stockdetail.objects.filter(available__gt=0, qc_status='Ok').select_related(
+        'materialname', 'item_mat_type', 'item_grade',
+    ).order_by('-created')
+    serializer_class = StockdetailLookupSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['materialname', 'item_mat_type', 'item_grade']
+
+
+class JobMaterialStatusViewSet(viewsets.ModelViewSet):
+    """Mirrors production:jobmaterialstatusedit — allotting a specific
+    Stockdetail lot against a JobMaterial's requirement. filterset_fields
+    supports both '?jobmaterial=<id>' (one material row's allotments) and
+    '?jobmaterial__job=<id>' (a whole job's Material Allotment tab)."""
+    queryset = JobMaterialStatus.objects.select_related(
+        'jobmaterial', 'jobmaterial__job', 'allote', 'allote__materialname', 'createdby', 'editedby',
+    ).order_by('-id')
+    serializer_class = JobMaterialStatusSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['jobmaterial', 'jobmaterial__job']
+
+    def perform_create(self, serializer):
+        serializer.save(createdby=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(editedby=self.request.user)
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.jobmaterial.job):
+            raise PermissionDenied("Only this order's creator can remove a material allotment.")
+        instance.delete()

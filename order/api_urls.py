@@ -12,6 +12,7 @@ from .api_viewsets import (
     JobItemAttributeViewSet, JobCoaViewSet,
     ProcessReportViewSet, JobMaterialReportViewSet, JobChangeLogViewSet,
     BulkMaterialRateView, AssignMarketingPersonView, GetMarketingPersonView,
+    StockdetailLookupViewSet, JobMaterialStatusViewSet,
 )
 
 router = DefaultRouter()
@@ -41,6 +42,8 @@ router.register('job-coas', JobCoaViewSet)
 router.register('process-report', ProcessReportViewSet, basename='order-process-report')
 router.register('job-material-report', JobMaterialReportViewSet, basename='order-job-material-report')
 router.register('job-change-log', JobChangeLogViewSet, basename='order-job-change-log')
+router.register('stockdetail-lookup', StockdetailLookupViewSet, basename='order-stockdetail-lookup')
+router.register('job-material-status', JobMaterialStatusViewSet)
 
 urlpatterns = router.urls + [
     path('bulk-material-rate/', BulkMaterialRateView.as_view(), name='order-bulk-material-rate'),
