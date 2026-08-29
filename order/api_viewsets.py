@@ -452,7 +452,10 @@ class StockdetailLookupViewSet(viewsets.ReadOnlyModelViewSet):
     balance>0 (physical stock left) AND available>0 (not already fully
     allotted elsewhere), and either an unsized lot or one at least as
     wide as the requirement minus a 15mm trim tolerance (a roll can be
-    slit narrower but never widened)."""
+    slit narrower but never widened). ?include=<stockdetail id> mirrors
+    the form's elif self.instance.pk branch: when editing an existing
+    allotment, its current lot stays selectable even if it no longer
+    passes the filters above (e.g. it's since been fully allotted)."""
     serializer_class = StockdetailLookupSerializer
     permission_classes = [IsOrderUser]
     filterset_fields = ['materialname', 'item_mat_type']
@@ -470,6 +473,11 @@ class StockdetailLookupViewSet(viewsets.ReadOnlyModelViewSet):
             qs = qs.filter(materialname=jm.materialname, item_mat_type=jm.item_mat_type).filter(
                 Q(size__isnull=True) | Q(size__gte=sizes)
             )
+        include_id = self.request.query_params.get('include')
+        if include_id:
+            qs = Stockdetail.objects.filter(id=include_id).select_related(
+                'materialname', 'item_mat_type', 'item_grade',
+            ) | qs
         return qs.order_by('materialname', 'size', 'micron')
 
 
