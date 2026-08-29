@@ -1,1 +1,0 @@
-import{g as e}from"./index-OJ4LXBQH.js";var t=e.create({baseURL:`/quotation/`,withCredentials:!0});function n(e){let t=document.cookie.match(RegExp(`(^|; )`+e+`=([^;]*)`));return t?decodeURIComponent(t[2]):null}t.interceptors.request.use(e=>{let t=n(`csrftoken`);return t&&(e.headers[`X-CSRFToken`]=t),e});export{t};
