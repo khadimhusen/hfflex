@@ -138,6 +138,8 @@ class JobSerializer(serializers.ModelSerializer):
     nearschedule = serializers.SerializerMethodField()
     oneweek = serializers.SerializerMethodField()
     twoweek = serializers.SerializerMethodField()
+    threeweek = serializers.SerializerMethodField()
+    fourweek = serializers.SerializerMethodField()
 
     # --- expensive computed properties (detail only — each one walks
     # jobmaterial/jobprocess/prodreport/prodinput; fine for a single job,
@@ -164,7 +166,7 @@ class JobSerializer(serializers.ModelSerializer):
             'cyl_length', 'cyl_circum', 'printing', 'total_gsm', 'pouch_weight', 'pouch_per_kg',
             'pouch_type', 'supply_form', 'film_size', 'remark', 'unwind_direction', 'lami_rubber',
             'totalpouch', 'totalmeter', 'job_waste', 'job_repeat_status', 'calculated_waste_percentage',
-            'ply', 'pouchqty', 'kgrate', 'late', 'nearschedule', 'oneweek', 'twoweek',
+            'ply', 'pouchqty', 'kgrate', 'late', 'nearschedule', 'oneweek', 'twoweek', 'threeweek', 'fourweek',
             'totalgsm', 'totalmicron', 'std_waste_percentage', 'jobwaste', 'cost', 'salecost',
             'profit', 'netoutput',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby', 'edited_by_name',
@@ -215,6 +217,12 @@ class JobSerializer(serializers.ModelSerializer):
 
     def get_twoweek(self, obj):
         return bool(obj.joborder.deliverydate) and obj.twoweek
+
+    def get_threeweek(self, obj):
+        return bool(obj.joborder.deliverydate) and obj.threeweek
+
+    def get_fourweek(self, obj):
+        return bool(obj.joborder.deliverydate) and obj.fourweek
 
     def _detail(self):
         return self.context.get('detail', False)
