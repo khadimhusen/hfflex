@@ -226,6 +226,36 @@ class ProdReport(models.Model):
         else:
             return 0
 
+    @property
+    def wasteoutput(self):
+        # Mirrors report/detail.html's inline JS "Waste" figure — sum of
+        # recieved for output rows tagged as the WASTE material, exact same
+        # cutoff netoutput already excludes.
+        result = self.output.filter(materialname__name="WASTE").aggregate(Sum("recieved"))
+        return round((result["recieved__sum"] or 0), 3)
+
+    @property
+    def wasteoutputpercentage(self):
+        # Mirrors the same script's "Waste %" — waste's share of gross
+        # output (not to be confused with wastepercentage above, which is
+        # a yield-loss figure against consumed input).
+        if not self.grossrecieved:
+            return 0
+        return round(self.wasteoutput * 100 / self.grossrecieved, 3)
+
+    @property
+    def massbalancediff(self):
+        # Mirrors the same script's "Diffrence" — gross output vs. input
+        # weight-gain-adjusted consumption, a raw mass-balance check.
+        return round(self.grossrecieved - self.totalwtgain, 3)
+
+    @property
+    def massbalanceerrorpercentage(self):
+        # Mirrors the same script's "Error %".
+        if not self.totalwtgain:
+            return 0
+        return round(self.massbalancediff * 100 / self.totalwtgain, 2)
+
 
 class ProdInput(models.Model):
     material = models.ForeignKey(Stockdetail, related_name='prodinput', on_delete=models.PROTECT)

@@ -172,6 +172,10 @@ class ProdReportSerializer(serializers.ModelSerializer):
     grossrecieved = serializers.ReadOnlyField()
     grossnos = serializers.ReadOnlyField()
     wastepercentage = serializers.ReadOnlyField()
+    wasteoutput = serializers.ReadOnlyField()
+    wasteoutputpercentage = serializers.ReadOnlyField()
+    massbalancediff = serializers.ReadOnlyField()
+    massbalanceerrorpercentage = serializers.ReadOnlyField()
 
     class Meta:
         model = ProdReport
@@ -181,6 +185,7 @@ class ProdReportSerializer(serializers.ModelSerializer):
             'supervisor', 'supervisor_name',
             'grossinput', 'totalbalance', 'totalinput', 'totalwtgain', 'grossoutput', 'netoutput',
             'grosstarewt', 'grossrecieved', 'grossnos', 'wastepercentage',
+            'wasteoutput', 'wasteoutputpercentage', 'massbalancediff', 'massbalanceerrorpercentage',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
