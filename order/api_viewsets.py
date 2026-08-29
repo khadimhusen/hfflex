@@ -1,5 +1,8 @@
+from decimal import Decimal, InvalidOperation
+
 from django.contrib.auth.models import User
-from django.db.models import Sum, Q
+from django.db import transaction
+from django.db.models import Sum, Q, F
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -207,6 +210,38 @@ class JobViewSet(viewsets.ModelViewSet):
         job.jobcolors.all().delete()
         job.jobimages.all().delete()
         Job.objects.filter(id=job.id).update(jobstatus='Cancelled')
+        job.refresh_from_db()
+        return Response(self.get_serializer(job).data)
+
+    @action(detail=True, methods=['post'])
+    def scale(self, request, pk=None):
+        """Multiplies this job's JobMaterial (req/length), JobProcess (qty)
+        and planning MachineSchedule (qty) rows by a given ratio -- e.g.
+        0.5 to halve everything in one shot, for a partial run. Manual and
+        user-triggered only; nothing recalculates automatically from this.
+        Same permission as adding a job (perform_create above): the
+        order's creator or a director."""
+        job = self.get_object()
+        if not can_edit_order(request.user, job.joborder):
+            raise PermissionDenied("Only this order's creator, or a director, can scale this job.")
+
+        try:
+            ratio = Decimal(str(request.data.get('ratio')))
+        except (TypeError, InvalidOperation):
+            return Response({'ratio': ['A valid number is required.']}, status=400)
+        if ratio <= 0:
+            return Response({'ratio': ['Ratio must be greater than 0.']}, status=400)
+
+        # Imported here, not at module level -- planning.models.MachineSchedule
+        # itself FKs to order.JobProcess, so importing planning up top would
+        # be circular.
+        from planning.models import MachineSchedule
+
+        with transaction.atomic():
+            job.jobmaterial.update(req=F('req') * ratio, length=F('length') * ratio)
+            job.jobprocess.update(qty=F('qty') * ratio)
+            MachineSchedule.objects.filter(jobprocess__job=job).update(qty=F('qty') * ratio)
+
         job.refresh_from_db()
         return Response(self.get_serializer(job).data)
 
