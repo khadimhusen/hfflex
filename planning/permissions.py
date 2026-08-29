@@ -1,14 +1,17 @@
 from rest_framework.permissions import BasePermission
 
+from .utils import get_planning_role
+
 
 class IsPlanningUser(BasePermission):
-    # TEMPORARY: restricted to staff/superuser only during rollout, matching
-    # every other newly-exposed module this round (order/production/
-    # itemmaster/preorder/purchase) -- this app never had an API before
-    # this, so there's no existing department-based queryset to restore
-    # here later; add one when planning is ready for wider access.
+    """Real role check, mirroring the old app's planning_access_required
+    exactly (get_planning_role != None) -- manager/supervisor/operator/
+    viewer. Finer-grained rules (operator confined to their own machine,
+    manager/supervisor-only actions like reorder/idle slots) are enforced
+    per-action in the viewsets themselves, matching where the old views
+    enforced them (decorators on individual view functions, not uniformly)."""
     def has_permission(self, request, view):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        return user.is_staff or user.is_superuser
+        return get_planning_role(user) is not None
