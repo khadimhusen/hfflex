@@ -55,3 +55,17 @@ def can_delete_material_allotment(user):
     (and, unlike hardcoding usernames, still works if a new superuser is
     ever added)."""
     return user.is_superuser
+
+
+def account_clearance_users():
+    """'accountclearance' department — the old jobdetail page's real
+    authority for the "Approval for production" action (only shown, per
+    the old template, to this department when a job is sitting in
+    Account clearance status)."""
+    return User.objects.filter(department__department_name__iexact='accountclearance', is_active=True)
+
+
+def can_approve_account_clearance(user):
+    if user.is_staff or user.is_superuser:
+        return True
+    return account_clearance_users().filter(id=user.id).exists()

@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -28,6 +29,7 @@ from .api_serializers import (
 from .permissions import IsOrderUser
 from .querysets import (
     can_edit_order, can_cancel_job, can_delete_job_subresource, can_delete_material_allotment,
+    can_approve_account_clearance,
 )
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 
@@ -213,6 +215,27 @@ class JobViewSet(viewsets.ModelViewSet):
         job = self.get_object()
         job.dispatch_approval = False
         job.dispatch_approval_date = None
+        job.save()
+        return Response(self.get_serializer(job).data)
+
+    @action(detail=True, methods=['post'], url_path='approve-account-clearance')
+    def approve_account_clearance(self, request, pk=None):
+        """Mirrors jobdetail's "Approval for production" button exactly:
+        only meaningful while the job is sitting in Account clearance
+        status, restricted to the 'accountclearance' department. Flips the
+        job back to Unplanned and stamps who/when approved it — neither
+        field is reachable through the general edit endpoint (both are
+        excluded from JobDetailEditForm, matching how they're always
+        read-only on JobSerializer)."""
+        if not can_approve_account_clearance(request.user):
+            raise PermissionDenied('Only the account clearance department can approve this job.')
+        job = self.get_object()
+        if job.jobstatus != 'Account clearance':
+            raise ValidationError('This job is not awaiting account clearance.')
+        job.jobstatus = 'Unplanned'
+        job.account_clearance_date = timezone.now()
+        job.approvedby = request.user
+        job.editedby = request.user
         job.save()
         return Response(self.get_serializer(job).data)
 
