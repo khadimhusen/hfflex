@@ -131,6 +131,17 @@ class StockdetailLineSerializer(serializers.ModelSerializer):
             'content_type', 'object_id', 'created', 'createdby', 'edited', 'editedby',
         ]
 
+    def validate(self, attrs):
+        # Same class of check as ProdInput's returned<=grossinput: the old
+        # app never enforced this either (Stockdetail.save() would happily
+        # compute a negative recieved), but a tare weight heavier than the
+        # gross weight makes no physical sense.
+        gross_wt = attrs.get('gross_wt', getattr(self.instance, 'gross_wt', None))
+        tare_wt = attrs.get('tare_wt', getattr(self.instance, 'tare_wt', None))
+        if gross_wt is not None and tare_wt is not None and tare_wt > gross_wt:
+            raise serializers.ValidationError({'tare_wt': ['Tare Wt cannot be greater than Gross Wt.']})
+        return attrs
+
 
 # ---- Inward -----------------------------------------------------------
 
