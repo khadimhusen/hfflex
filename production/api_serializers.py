@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 from rest_framework import serializers
 
 from customer.models import Customer, Address
@@ -145,18 +147,95 @@ class StockdetailLineSerializer(serializers.ModelSerializer):
 
 # ---- Inward -----------------------------------------------------------
 
+class InwardStockNestedSerializer(StockdetailLineSerializer):
+    """StockdetailLineSerializer's 'id' is read-only (auto PK), which is
+    right for the standalone inward-stock/ endpoint but wrong here: the
+    nested 'stock' list on InwardSerializer needs a writable id to tell an
+    edited existing line apart from a newly added one (see
+    InwardSerializer.update)."""
+    id = serializers.IntegerField(required=False)
+
+
 class InwardSerializer(serializers.ModelSerializer):
+    """Edited as a single form, like QuotationSerializer -- but unlike
+    QuotationItem, a Stockdetail line can already be PROTECTed by
+    ProdInput/JobMaterialStatus/dispatch once consumed downstream, so
+    update() below matches existing lines by id and updates them in place
+    instead of deleting and recreating the whole set."""
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
     stock_count = serializers.IntegerField(source='stock.count', read_only=True)
+    stock = InwardStockNestedSerializer(many=True, required=False)
 
     class Meta:
         model = Inward
         fields = [
-            'id', 'docdate', 'supplier', 'supplier_name', 'inwarddate', 'invoice', 'stock_count',
+            'id', 'docdate', 'supplier', 'supplier_name', 'inwarddate', 'invoice', 'stock_count', 'stock',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
+
+    @transaction.atomic
+    def create(self, validated_data):
+        # 'createdby' arrives already merged into validated_data (the
+        # viewset's perform_create calls serializer.save(createdby=...)) --
+        # only the nested stock lines need it set explicitly here.
+        stock_data = validated_data.pop('stock', [])
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        inward = Inward.objects.create(**validated_data)
+        for item in stock_data:
+            item.pop('id', None)
+            inward.stock.create(**item, createdby=user)
+        return inward
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        # Likewise 'editedby' is already in validated_data via
+        # perform_update's serializer.save(editedby=...).
+        # Wrapped in one transaction: a ProtectedError on the final delete
+        # (or any other failure) must not leave the other lines' updates
+        # applied while the request as a whole reports failure.
+        stock_data = validated_data.pop('stock', None)
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if stock_data is not None:
+            existing = {s.id: s for s in instance.stock.all()}
+            kept_ids = set()
+            for item in stock_data:
+                item_id = item.pop('id', None)
+                if item_id and item_id in existing:
+                    kept_ids.add(item_id)
+                    line = existing[item_id]
+                    for attr, value in item.items():
+                        setattr(line, attr, value)
+                    if user:
+                        line.editedby = user
+                    line.save()
+                else:
+                    inward_stock = instance.stock.create(**item, createdby=user)
+                    kept_ids.add(inward_stock.id)
+
+            removed_ids = set(existing) - kept_ids
+            if removed_ids:
+                try:
+                    with transaction.atomic():
+                        instance.stock.filter(id__in=removed_ids).delete()
+                except ProtectedError:
+                    raise serializers.ValidationError({
+                        'stock': [
+                            'One or more removed lines are already in use '
+                            '(allotted, consumed, or dispatched) and cannot be deleted.',
+                        ],
+                    })
+
+        return instance
 
 
 # ---- ProdReport and its sub-resources --------------------------------
