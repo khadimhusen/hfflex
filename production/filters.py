@@ -8,13 +8,21 @@ class ProdReportFilter(django_filters.FilterSet):
     created__lt = django_filters.DateFilter(label="To", field_name='created', lookup_expr='lte',
                                             input_formats=('%d/%m/%Y',))
 
+    # prodprocess__process is JobProcess.process, itself a FK to Process —
+    # the frontend's status tabs filter by the process *name* (e.g.
+    # "Printing"), so this needs to traverse one level further to Process's
+    # own 'process' CharField rather than auto-generating a PK-based
+    # ModelChoiceFilter (which rejected every tab click with "Select a
+    # valid choice").
+    prodprocess__process = django_filters.CharFilter(field_name='prodprocess__process__process', lookup_expr='exact')
+
     class Meta:
         model = ProdReport
         # 'prodprocess' added on top of the old app's own field list — lets
         # the API list reports for one specific JobProcess (the "Reports"
         # link on the job's Processes tab), same additive pattern as
         # order.JobFilter's 'joborder'.
-        fields = ['prodprocess', 'prodprocess__process', 'prodprocess__status', "checked","approved"]
+        fields = ['prodprocess', 'prodprocess__status', "checked","approved"]
 
 
 class StockFilter(django_filters.FilterSet):
