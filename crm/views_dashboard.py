@@ -117,7 +117,7 @@ class DealDashboardView(APIView):
         )
         my_won_by_month = {row['month']: row['total'] or 0 for row in my_won_rows}
         my_monthly_closed_won = [
-            {'month': m.strftime('%b %Y'), 'total': my_won_by_month.get(m, 0)}
+            {'month': m.strftime('%b'), 'total': my_won_by_month.get(m, 0)}
             for m in months
         ]
 
