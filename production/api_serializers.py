@@ -218,6 +218,13 @@ class ProdInputSerializer(serializers.ModelSerializer):
             'wtgain', 'created', 'createdby', 'edited', 'editedby',
         ]
 
+    def validate(self, attrs):
+        grossinput = attrs.get('grossinput', getattr(self.instance, 'grossinput', None))
+        returned = attrs.get('returned', getattr(self.instance, 'returned', None))
+        if grossinput is not None and returned is not None and returned > grossinput:
+            raise serializers.ValidationError({'returned': ['Returned cannot be greater than Gross Input.']})
+        return attrs
+
 
 class ProdPersonSerializer(serializers.ModelSerializer):
     person_display = serializers.CharField(source='person.worker_name', read_only=True)
