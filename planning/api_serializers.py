@@ -87,6 +87,7 @@ class MachineScheduleBoardSerializer(serializers.ModelSerializer):
     job_itemname = serializers.CharField(source='jobprocess.job.itemname', read_only=True, default=None)
     process_display = serializers.CharField(source='jobprocess.process.process', read_only=True, default=None)
     no_of_ply = serializers.CharField(source='jobprocess.no_of_ply', read_only=True, default=None)
+    film_size = serializers.IntegerField(source='jobprocess.job.film_size', read_only=True, default=None)
     idle_reason_name = serializers.CharField(source='idle_reason.name', read_only=True, default=None)
     createdby_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
     editedby_name = serializers.CharField(source='editedby.get_full_name', read_only=True, default=None)
@@ -101,7 +102,7 @@ class MachineScheduleBoardSerializer(serializers.ModelSerializer):
         model = MachineSchedule
         fields = [
             'id', 'schedule_type', 'jobprocess', 'job_id', 'job_itemname', 'process_display', 'no_of_ply',
-            'idle_reason', 'idle_reason_name', 'idle_notes', 'raw_material_status',
+            'film_size', 'idle_reason', 'idle_reason_name', 'idle_notes', 'raw_material_status',
             'machine', 'machine_display', 'qty', 'unit', 'unit_display', 'speed',
             'status', 'persons_assigned', 'queue_position', 'start_time', 'end_time',
             'makeready_seconds', 'running_seconds', 'downtime_seconds', 'estimated_seconds',
