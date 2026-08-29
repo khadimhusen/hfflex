@@ -96,19 +96,21 @@ class DealDashboardView(APIView):
             .order_by('-total')
         )
 
-        # Last 12 months of Closed Won amount, for the `owner` filter above —
-        # defaults to the logged-in user when no owner is selected.
+        # Last 12 months of Closed Won amount, for the `owner` filter above.
+        # The frontend defaults its filter to the logged-in user on first
+        # load, so this normally already scopes to "me"; an explicit "All
+        # Users" selection sends no owner param, which here means sum
+        # across every owner rather than silently falling back to "me".
         today = timezone.now().date()
         current_month_start = today.replace(day=1)
         months = [
             _add_months(current_month_start, -offset) for offset in range(11, -1, -1)
         ]
+        my_won_qs = Deal.objects.filter(stage__is_won=True, closing_date__gte=months[0])
+        if owner_id:
+            my_won_qs = my_won_qs.filter(owner_id=owner_id)
         my_won_rows = (
-            Deal.objects.filter(
-                owner_id=owner_id or request.user.id,
-                stage__is_won=True,
-                closing_date__gte=months[0],
-            )
+            my_won_qs
             .annotate(month=TruncMonth('closing_date'))
             .values('month')
             .annotate(total=Sum('amount'))
