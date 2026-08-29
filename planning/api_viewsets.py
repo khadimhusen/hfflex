@@ -432,7 +432,11 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get', 'post'])
     def tasks(self, request, pk=None):
-        """Mirrors schedule_tasks()."""
+        """Mirrors schedule_tasks(), plus a fix the old app was missing:
+        editing a task's qty/time (which changes makeready/downtime
+        duration) now recalculates the schedule's estimated duration and
+        reflows the machine's timeline, same as changing persons_assigned
+        already does in edit_schedule()."""
         schedule = get_object_or_404(MachineSchedule, pk=pk, queue_position__gte=0)
 
         if request.method == 'POST':
@@ -442,6 +446,24 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
                 task.qty = t['qty']
                 task.time_per_task = t['time_per_task']
                 task.save()
+
+            prod_tasks = schedule.productiontasks.select_related('task').all()
+            makeready_mins = sum(
+                pt.effective_duration for pt in prod_tasks if pt.task.category == 'Makeready'
+            )
+            downtime_mins = sum(
+                pt.effective_duration for pt in prod_tasks if pt.task.category != 'Makeready'
+            )
+            new_makeready = timedelta(minutes=makeready_mins)
+            new_downtime = timedelta(minutes=downtime_mins)
+            new_estimated = new_makeready + (schedule.running_duration or timedelta(0)) + new_downtime
+            MachineSchedule.objects.filter(pk=schedule.pk).update(
+                makeready_duration=new_makeready,
+                downtime_duration=new_downtime,
+                estimated_duration=new_estimated,
+                editedby=request.user,
+            )
+            recalculate_timeline(schedule.machine)
             return Response({'status': 'ok'})
 
         prod_tasks = schedule.productiontasks.select_related('task').all()
