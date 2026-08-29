@@ -33,3 +33,14 @@ def can_cancel_job(user):
     if user.is_staff or user.is_superuser:
         return True
     return order_directors().filter(id=user.id).exists()
+
+
+def can_delete_job_subresource(user, job):
+    """Mirrors jobdetailedit's exact check for its inline formsets:
+    can_delete = request.user == job.joborder.createdby — adding/editing a
+    material/process/color/image/attribute/COA row on a job is open to any
+    IsOrderUser (matches jobdetailedit having no ownership check at all for
+    saves), but DELETING one is restricted to the parent order's creator."""
+    if user.is_staff or user.is_superuser:
+        return True
+    return job.joborder.createdby_id == user.id

@@ -2,19 +2,25 @@ from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 
 from customer.models import Customer, Address
-from material.models import Unit
-from itemmaster.models import ItemMaster
+from material.models import Unit, Material, MatType, Grade
+from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
-from .models import Order, Job
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa
 from .api_serializers import (
     OrderSerializer, JobSerializer, CustomerLookupSerializer, AddressLookupSerializer,
     MarketingPersonLookupSerializer, UnitLookupSerializer, ItemMasterLookupSerializer, PrejobLookupSerializer,
+    MaterialLookupSerializer, MatTypeLookupSerializer, GradeLookupSerializer, ProcessLookupSerializer,
+    ColorLookupSerializer, AttributeMasterLookupSerializer, StdParameterLookupSerializer,
+    PouchTypeLookupSerializer, LamiRubberLookupSerializer,
+    JobMaterialSerializer, JobProcessSerializer, JobColorSerializer, JobImageSerializer,
+    JobItemAttributeSerializer, JobCoaSerializer,
 )
 from .permissions import IsOrderUser
-from .querysets import can_edit_order, can_cancel_job
+from .querysets import can_edit_order, can_cancel_job, can_delete_job_subresource
 from .filters import OrderFilter, JobFilter
 
 
@@ -61,6 +67,61 @@ class PrejobLookupViewSet(viewsets.ReadOnlyModelViewSet):
         job__isnull=True, preorder__final_submition=True,
     ).select_related('unit').order_by('-id')
     serializer_class = PrejobLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class MaterialLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Material.objects.order_by('name')
+    serializer_class = MaterialLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class MatTypeLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = MatType.objects.order_by('mat_type')
+    serializer_class = MatTypeLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class GradeLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Grade.objects.order_by('grade')
+    serializer_class = GradeLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class ProcessLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Process.objects.order_by('process')
+    serializer_class = ProcessLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class ColorLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Color.objects.order_by('colorname')
+    serializer_class = ColorLookupSerializer
+    permission_classes = [IsOrderUser]
+    search_fields = ['colorname']
+
+
+class AttributeMasterLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AttributeMaster.objects.order_by('attribute')
+    serializer_class = AttributeMasterLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class StdParameterLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = StdParameter.objects.order_by('parameter')
+    serializer_class = StdParameterLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class PouchTypeLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = PouchType.objects.order_by('pouchtype')
+    serializer_class = PouchTypeLookupSerializer
+    permission_classes = [IsOrderUser]
+
+
+class LamiRubberLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LamiRubber.objects.order_by('-id')
+    serializer_class = LamiRubberLookupSerializer
     permission_classes = [IsOrderUser]
 
 
@@ -146,3 +207,101 @@ class JobViewSet(viewsets.ModelViewSet):
         job.dispatch_approval_date = None
         job.save()
         return Response(self.get_serializer(job).data)
+
+
+class JobMaterialViewSet(viewsets.ModelViewSet):
+    queryset = JobMaterial.objects.select_related(
+        'job', 'job__joborder', 'materialname', 'item_mat_type', 'item_grade', 'po', 'createdby', 'editedby',
+    ).order_by('id')
+    serializer_class = JobMaterialSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+    def perform_create(self, serializer):
+        serializer.save(createdby=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(editedby=self.request.user)
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()
+
+
+class JobProcessViewSet(viewsets.ModelViewSet):
+    queryset = JobProcess.objects.select_related(
+        'job', 'job__joborder', 'process', 'unit', 'createdby', 'editedby',
+    ).order_by('id')
+    serializer_class = JobProcessSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+    def perform_create(self, serializer):
+        serializer.save(createdby=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(editedby=self.request.user)
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()
+
+
+class JobColorViewSet(viewsets.ModelViewSet):
+    queryset = JobColor.objects.select_related('job', 'job__joborder', 'color').order_by('id')
+    serializer_class = JobColorSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()
+
+
+class JobImageViewSet(viewsets.ModelViewSet):
+    # Old app: images only ever get added/replaced via the same inline
+    # formset as everything else in jobdetailedit — no dedicated delete
+    # view, but the formset's can_delete flag covers it same as the rest.
+    queryset = JobImage.objects.select_related('job', 'job__joborder', 'createdby', 'editedby').order_by('-id')
+    serializer_class = JobImageSerializer
+    permission_classes = [IsOrderUser]
+    parser_classes = [MultiPartParser, FormParser]
+    filterset_fields = ['job']
+
+    def perform_create(self, serializer):
+        serializer.save(createdby=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(editedby=self.request.user)
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()
+
+
+class JobItemAttributeViewSet(viewsets.ModelViewSet):
+    queryset = JobItemAttribute.objects.select_related('job', 'job__joborder', 'item_attirbuate').order_by('id')
+    serializer_class = JobItemAttributeSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()
+
+
+class JobCoaViewSet(viewsets.ModelViewSet):
+    queryset = JobCoa.objects.select_related('job', 'job__joborder', 'standard_parameter').order_by('id')
+    serializer_class = JobCoaSerializer
+    permission_classes = [IsOrderUser]
+    filterset_fields = ['job']
+
+    def perform_destroy(self, instance):
+        if not can_delete_job_subresource(self.request.user, instance.job):
+            raise PermissionDenied("Only this job's order creator can delete this row.")
+        instance.delete()

@@ -2,10 +2,11 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from customer.models import Customer, Address
-from material.models import Unit
-from itemmaster.models import ItemMaster
+from material.models import Unit, Material, MatType, Grade
+from itemmaster.models import ItemMaster, Process, Color, AttributeMaster, StdParameter, PouchType, LamiRubber
 from preorder.models import JobName
-from .models import Order, Job
+from myproject.thumbnails import get_or_create_thumbnail
+from .models import Order, Job, JobMaterial, JobProcess, JobColor, JobImage, JobItemAttribute, JobCoa
 from .querysets import can_edit_order
 
 
@@ -240,3 +241,149 @@ class JobSerializer(serializers.ModelSerializer):
 
     def get_netoutput(self, obj):
         return obj.netoutput if self._detail() else None
+
+
+# ---- Job sub-resource lookups -------------------------------------------
+
+class MaterialLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Material
+        fields = ['id', 'name']
+
+
+class MatTypeLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatType
+        fields = ['id', 'mat_type']
+
+
+class GradeLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Grade
+        fields = ['id', 'grade']
+
+
+class ProcessLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Process
+        fields = ['id', 'process']
+
+
+class ColorLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Color
+        fields = ['id', 'colorname', 'pantonecolor', 'hexcode']
+
+
+class AttributeMasterLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AttributeMaster
+        fields = ['id', 'attribute']
+
+
+class StdParameterLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StdParameter
+        fields = ['id', 'parameter', 'unit_of_measure']
+
+
+class PouchTypeLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PouchType
+        fields = ['id', 'pouchtype']
+
+
+class LamiRubberLookupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LamiRubber
+        fields = ['id', 'rubber', 'status']
+
+
+# ---- Job sub-resources ---------------------------------------------------
+
+class JobMaterialSerializer(serializers.ModelSerializer):
+    materialname_display = serializers.CharField(source='materialname.name', read_only=True)
+    item_mat_type_display = serializers.CharField(source='item_mat_type.mat_type', read_only=True)
+    item_grade_display = serializers.CharField(source='item_grade.grade', read_only=True)
+    avail = serializers.ReadOnlyField()
+    required = serializers.ReadOnlyField()
+    mat_length = serializers.ReadOnlyField()
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+
+    class Meta:
+        model = JobMaterial
+        fields = [
+            'id', 'job', 'materialname', 'materialname_display', 'item_mat_type', 'item_mat_type_display',
+            'item_grade', 'item_grade_display', 'size', 'micron', 'gsm', 'req', 'available', 'to_order',
+            'orderedqty', 'receivedqty', 'po', 'length', 'avail', 'required', 'mat_length',
+            'created', 'createdby', 'created_by_name', 'edited', 'editedby',
+        ]
+        read_only_fields = [
+            # JobMaterial.save() unconditionally recomputes all four of
+            # these from the other fields on every save — submitting a
+            # value for them is silently discarded.
+            'gsm', 'length', 'available', 'to_order',
+            'created', 'createdby', 'edited', 'editedby',
+        ]
+
+
+class JobProcessSerializer(serializers.ModelSerializer):
+    process_display = serializers.CharField(source='process.process', read_only=True)
+    unit_display = serializers.CharField(source='unit.unit', read_only=True, default=None)
+    pendingqty = serializers.ReadOnlyField()
+    produced_qty = serializers.ReadOnlyField()
+    no_of_ply = serializers.ReadOnlyField()
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+
+    class Meta:
+        model = JobProcess
+        fields = [
+            'id', 'job', 'process', 'process_display', 'qty', 'unit', 'unit_display', 'status',
+            'process_count', 'pendingqty', 'produced_qty', 'no_of_ply',
+            'created', 'createdby', 'created_by_name', 'edited', 'editedby',
+        ]
+        read_only_fields = [
+            'process_count',  # set in JobProcess.save() from a count of existing rows
+            'created', 'createdby', 'edited', 'editedby',
+        ]
+
+
+class JobColorSerializer(serializers.ModelSerializer):
+    color_display = serializers.CharField(source='color.colorname', read_only=True, default=None)
+
+    class Meta:
+        model = JobColor
+        fields = ['id', 'job', 'color', 'color_display', 'remark']
+
+
+class JobImageSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobImage
+        fields = ['id', 'job', 'imagename', 'thumbnail_url', 'created', 'createdby', 'edited', 'editedby']
+        read_only_fields = ['created', 'createdby', 'edited', 'editedby']
+
+    def get_thumbnail_url(self, obj):
+        url = get_or_create_thumbnail(obj.imagename)
+        if not url:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
+
+
+class JobItemAttributeSerializer(serializers.ModelSerializer):
+    item_attirbuate_display = serializers.CharField(source='item_attirbuate.attribute', read_only=True)
+
+    class Meta:
+        model = JobItemAttribute
+        fields = ['id', 'job', 'item_attirbuate', 'item_attirbuate_display', 'attri_value']
+
+
+class JobCoaSerializer(serializers.ModelSerializer):
+    standard_parameter_display = serializers.CharField(source='standard_parameter.parameter', read_only=True)
+    unit_of_measure = serializers.CharField(source='standard_parameter.unit_of_measure', read_only=True)
+
+    class Meta:
+        model = JobCoa
+        fields = ['id', 'job', 'standard_parameter', 'standard_parameter_display', 'unit_of_measure', 'value']
