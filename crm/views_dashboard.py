@@ -96,26 +96,28 @@ class DealDashboardView(APIView):
             .order_by('-total')
         )
 
-        # Last 12 months of Closed Won amount, for the `owner` filter above —
-        # defaults to the logged-in user when no owner is selected.
+        # Last 12 months of Closed Won amount, for the `owner` filter above.
+        # The frontend defaults its filter to the logged-in user on first
+        # load, so this normally already scopes to "me"; an explicit "All
+        # Users" selection sends no owner param, which here means sum
+        # across every owner rather than silently falling back to "me".
         today = timezone.now().date()
         current_month_start = today.replace(day=1)
         months = [
             _add_months(current_month_start, -offset) for offset in range(11, -1, -1)
         ]
+        my_won_qs = Deal.objects.filter(stage__is_won=True, closing_date__gte=months[0])
+        if owner_id:
+            my_won_qs = my_won_qs.filter(owner_id=owner_id)
         my_won_rows = (
-            Deal.objects.filter(
-                owner_id=owner_id or request.user.id,
-                stage__is_won=True,
-                closing_date__gte=months[0],
-            )
+            my_won_qs
             .annotate(month=TruncMonth('closing_date'))
             .values('month')
             .annotate(total=Sum('amount'))
         )
         my_won_by_month = {row['month']: row['total'] or 0 for row in my_won_rows}
         my_monthly_closed_won = [
-            {'month': m.strftime('%b %Y'), 'total': my_won_by_month.get(m, 0)}
+            {'month': m.strftime('%b'), 'total': my_won_by_month.get(m, 0)}
             for m in months
         ]
 
@@ -250,15 +252,34 @@ from customer.querysets import customer_department_users
 from itemmaster.querysets import itemmaster_department_users
 from preorder.querysets import preorder_department_users
 from purchase.querysets import purchase_department_users
+from order.querysets import order_department_users
+from production.querysets import report_department_users, dispatch_department_users, stock_department_users
 
 
 def me_payload(u):
     is_staff = u.is_staff or u.is_superuser
     is_crm = is_staff or crm_users().filter(id=u.id).exists()
     is_customer = is_staff or customer_department_users().filter(id=u.id).exists()
-    is_itemmaster = is_staff or itemmaster_department_users().filter(id=u.id).exists()
-    is_preorder = is_staff or preorder_department_users().filter(id=u.id).exists()
-    is_purchase = is_staff or purchase_department_users().filter(id=u.id).exists()
+    # TEMPORARY: itemmaster/preorder/purchase/order/production-report/
+    # dispatch/stock restricted to staff/superuser only during rollout —
+    # regular users see only crm/dashboard/costing/quotation for now.
+    # Restore department-based access on each line below by swapping in
+    # its commented-out version once ready for wider access. Matches the
+    # same restriction on each module's own DRF permission class.
+    is_itemmaster = is_staff
+    # is_itemmaster = is_staff or itemmaster_department_users().filter(id=u.id).exists()
+    is_preorder = is_staff
+    # is_preorder = is_staff or preorder_department_users().filter(id=u.id).exists()
+    is_purchase = is_staff
+    # is_purchase = is_staff or purchase_department_users().filter(id=u.id).exists()
+    is_order = is_staff
+    # is_order = is_staff or order_department_users().filter(id=u.id).exists()
+    is_production_report = is_staff
+    # is_production_report = is_staff or report_department_users().filter(id=u.id).exists()
+    is_dispatch = is_staff
+    # is_dispatch = is_staff or dispatch_department_users().filter(id=u.id).exists()
+    is_stock = is_staff
+    # is_stock = is_staff or stock_department_users().filter(id=u.id).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
@@ -270,6 +291,10 @@ def me_payload(u):
             'itemmaster': is_itemmaster,
             'preorder': is_preorder,
             'purchase': is_purchase,
+            'order': is_order,
+            'productionReport': is_production_report,
+            'dispatch': is_dispatch,
+            'stock': is_stock,
         },
     }
 

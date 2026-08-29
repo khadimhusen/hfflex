@@ -10,7 +10,11 @@ class ProdReportFilter(django_filters.FilterSet):
 
     class Meta:
         model = ProdReport
-        fields = ['prodprocess__process', 'prodprocess__status', "checked","approved"]
+        # 'prodprocess' added on top of the old app's own field list — lets
+        # the API list reports for one specific JobProcess (the "Reports"
+        # link on the job's Processes tab), same additive pattern as
+        # order.JobFilter's 'joborder'.
+        fields = ['prodprocess', 'prodprocess__process', 'prodprocess__status', "checked","approved"]
 
 
 class StockFilter(django_filters.FilterSet):
