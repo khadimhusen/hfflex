@@ -38,7 +38,7 @@ class JobFilter(django_filters.FilterSet):
 
     class Meta:
         model = Job
-        fields = ['id', 'joborder__customer', 'jobstatus', 'supply_form']
+        fields = ['id', 'joborder', 'joborder__customer', 'jobstatus', 'supply_form']
 
 
 class JobProcessFilter1(django_filters.FilterSet):
