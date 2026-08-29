@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -26,7 +26,9 @@ from .api_serializers import (
     StockdetailLookupSerializer, JobMaterialStatusSerializer, JobDispatchItemSerializer,
 )
 from .permissions import IsOrderUser
-from .querysets import can_edit_order, can_cancel_job, can_delete_job_subresource
+from .querysets import (
+    can_edit_order, can_cancel_job, can_delete_job_subresource, can_delete_material_allotment,
+)
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 
 
@@ -444,15 +446,31 @@ class GetMarketingPersonView(APIView):
 
 class StockdetailLookupViewSet(viewsets.ReadOnlyModelViewSet):
     """Lets the frontend pick which stock lot to allot against a
-    JobMaterial requirement — scoped to available, QC-ok stock only,
-    filterable by the same material/type/grade combination as the
-    requirement being fulfilled."""
-    queryset = Stockdetail.objects.filter(available__gt=0, qc_status='Ok').select_related(
-        'materialname', 'item_mat_type', 'item_grade',
-    ).order_by('-created')
+    JobMaterial requirement. ?jobmaterial=<id> mirrors
+    JobMaterialStatusForm's exact matching logic: same material and mat
+    type (NOT grade — the old form never filters on it), qc_status Ok,
+    balance>0 (physical stock left) AND available>0 (not already fully
+    allotted elsewhere), and either an unsized lot or one at least as
+    wide as the requirement minus a 15mm trim tolerance (a roll can be
+    slit narrower but never widened)."""
     serializer_class = StockdetailLookupSerializer
     permission_classes = [IsOrderUser]
-    filterset_fields = ['materialname', 'item_mat_type', 'item_grade']
+    filterset_fields = ['materialname', 'item_mat_type']
+
+    def get_queryset(self):
+        qs = Stockdetail.objects.filter(available__gt=0, balance__gt=0, qc_status='Ok').select_related(
+            'materialname', 'item_mat_type', 'item_grade',
+        )
+        jobmaterial_id = self.request.query_params.get('jobmaterial')
+        if jobmaterial_id:
+            jm = JobMaterial.objects.filter(id=jobmaterial_id).select_related('materialname', 'item_mat_type').first()
+            if not jm:
+                return qs.none()
+            sizes = (jm.size or 0) - 15
+            qs = qs.filter(materialname=jm.materialname, item_mat_type=jm.item_mat_type).filter(
+                Q(size__isnull=True) | Q(size__gte=sizes)
+            )
+        return qs.order_by('materialname', 'size', 'micron')
 
 
 class JobMaterialStatusViewSet(viewsets.ModelViewSet):
@@ -474,6 +492,6 @@ class JobMaterialStatusViewSet(viewsets.ModelViewSet):
         serializer.save(editedby=self.request.user)
 
     def perform_destroy(self, instance):
-        if not can_delete_job_subresource(self.request.user, instance.jobmaterial.job):
-            raise PermissionDenied("Only this order's creator can remove a material allotment.")
+        if not can_delete_material_allotment(self.request.user):
+            raise PermissionDenied('Only an admin can remove a material allotment.')
         instance.delete()

@@ -44,3 +44,14 @@ def can_delete_job_subresource(user, job):
     if user.is_staff or user.is_superuser:
         return True
     return job.joborder.createdby_id == user.id
+
+
+def can_delete_material_allotment(user):
+    """Mirrors jobmaterialstatusedit's exact check:
+    can_delete = request.user.username in ("khadimhusen", "admin") — unlike
+    every other job sub-resource, this is NOT open to the order's creator,
+    only to those two hardcoded admin accounts. Both happen to be the
+    system's only superusers, so user.is_superuser replicates it exactly
+    (and, unlike hardcoding usernames, still works if a new superuser is
+    ever added)."""
+    return user.is_superuser
