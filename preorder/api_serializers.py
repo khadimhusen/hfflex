@@ -39,6 +39,7 @@ class JobNameSerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
     edited_by_name = serializers.CharField(source='editedby.get_full_name', read_only=True, default=None)
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
+    preorder_customer = serializers.CharField(source='preorder.customer', read_only=True)
     job_status = serializers.CharField(read_only=True)
     is_done = serializers.SerializerMethodField()
     preimg_thumbnail_url = serializers.SerializerMethodField()
@@ -46,7 +47,7 @@ class JobNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobName
         fields = [
-            'id', 'preorder', 'jobname', 'qty', 'unit', 'unit_display', 'new_cyl_qty',
+            'id', 'preorder', 'preorder_customer', 'jobname', 'qty', 'unit', 'unit_display', 'new_cyl_qty',
             'new_cylinder', 'cyl_invoice', 'cyl_cost', 'design_charges', 'rate',
             'preimg', 'preimg_thumbnail_url', 'prefile', 'remark', 'job_status', 'is_done',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby', 'edited_by_name',

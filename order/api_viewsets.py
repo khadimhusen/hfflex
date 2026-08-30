@@ -8,6 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -561,3 +562,25 @@ class JobMaterialStatusViewSet(viewsets.ModelViewSet):
         if not can_delete_material_allotment(self.request.user):
             raise PermissionDenied('Only an admin can remove a material allotment.')
         instance.delete()
+
+
+class JobNavSummaryView(APIView):
+    """Mirrors boottopnavbar.html's job-status quick-counts (pendingjobs/
+    pendingkg/jobwork/partiallyready/newjobs/newkg/accountclearance/
+    accountclearancekg simple_tags) as one call instead of eight. Visible
+    to any authenticated user, same as the old navbar's default variant --
+    the individual list pages behind each count still gate themselves."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        def count_and_kg(status):
+            qs = Job.objects.filter(jobstatus=status)
+            return {'count': qs.count(), 'kg': round(qs.aggregate(Sum('kgqty'))['kgqty__sum'] or 0)}
+
+        return Response({
+            'pending': count_and_kg('Pending'),
+            'job_work': count_and_kg('Job Work'),
+            'partially_ready': count_and_kg('Partially Ready'),
+            'unplanned': count_and_kg('Unplanned'),
+            'account_clearance': count_and_kg('Account clearance'),
+        })
