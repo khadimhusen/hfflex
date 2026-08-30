@@ -468,16 +468,25 @@ class DispatchApprovalPendingView(APIView):
             prodreports__prodprocess__job__jobstatus__in=['Completed', 'Partially Ready'],
         ).prefetch_related(
             'content_object__prodprocess__job__joborder__customer',
+            'content_object__prodprocess__job__prejob',
         ).order_by('id')
 
         data = {}
         for material in material_list:
             report = material.content_object
             job = report.prodprocess.job
+            prejob = job.prejob
             cust = job.joborder.customer.name
             bucket = data.setdefault(cust, {})
             entry = bucket.setdefault(job.id, {
                 'job_id': job.id, 'job_itemname': job.itemname, 'qty': 0, 'orderqty': job.kgqty,
+                'rate': job.rate, 'unit_display': job.unit.unit if job.unit else None,
+                'new_cyl_qty': prejob.new_cyl_qty if prejob else None,
+                'cyl_cost': prejob.cyl_cost if prejob else None,
+                'design_charges': prejob.design_charges if prejob else None,
+                'invoice_required': bool(
+                    prejob and ((prejob.new_cyl_qty or 0) > 1 or (prejob.design_charges or 0) > 1)
+                ),
             })
             entry['qty'] = float(entry['qty']) + float(material.recieved or 0)
 
