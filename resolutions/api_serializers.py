@@ -49,7 +49,8 @@ class ResolutionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'resolution_number', 'title', 'content',
             'meeting_date', 'meeting_location', 'meeting_type', 'meeting_type_display',
-            'status', 'status_display', 'header_height_mm', 'footer_height_mm', 'can_edit', 'documents',
+            'status', 'status_display', 'header_height_mm', 'footer_height_mm',
+            'header_content', 'footer_content', 'can_edit', 'documents',
             'created_by', 'created_by_name', 'created_at', 'updated_at', 'published_at',
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at', 'published_at']
