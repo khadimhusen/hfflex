@@ -22,7 +22,7 @@ class OrderFilter(django_filters.FilterSet):
 
     class Meta:
         model = Order
-        fields = ['createdby', 'status']
+        fields = ['id', 'createdby', 'status']
 
 
 class JobFilter(django_filters.FilterSet):
