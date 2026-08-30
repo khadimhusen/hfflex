@@ -1,1 +1,0 @@
-import{K as e,N as t,g as n,rt as r}from"./use-router-link-Rhu-fyfW.js";var i=t({name:`QTr`,props:{props:Object,noHover:Boolean},setup(t,{slots:i}){let a=e(()=>`q-tr`+(t.props===void 0||t.props.header?``:` `+t.props.__trClass)+(t.noHover?` q-tr--no-hover`:``));return()=>r(`tr`,{style:t.props?.__trStyle,class:a.value},n(i.default))}});export{i as t};
