@@ -110,3 +110,10 @@ class ShiftSerializer(serializers.ModelSerializer):
             'created', 'createdby', 'createdby_name', 'edited', 'editedby',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
+        # DRF auto-generates a UniqueTogetherValidator from the model's
+        # unique_together = ["shift", "machine", "production_date"], which
+        # would reject "Go to Shift" with a 400 the moment that combination
+        # already exists -- before ShiftViewSet.perform_create()'s own
+        # get_or_create (mirroring newshift()) ever gets a chance to run.
+        # Uniqueness is handled there instead.
+        validators = []
