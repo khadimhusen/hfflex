@@ -288,6 +288,8 @@ def me_payload(u):
     # is_manpower = is_staff or manpower_department_users().filter(id=u.id).exists()
     is_bank = is_staff
     # is_bank = is_staff or bank_department_users().filter(id=u.id).exists()
+    is_returnable = is_staff
+    # is_returnable = is_staff or returnable_department_users().filter(id=u.id).exists()
     # Documents itself has NO department gate on the backend (any logged-in
     # user can access it, scoped per-document) -- this flag is nav
     # visibility only, same rollout gate as everything else for now.
@@ -321,6 +323,7 @@ def me_payload(u):
             'planning': is_planning,
             'manpower': is_manpower,
             'bank': is_bank,
+            'returnable': is_returnable,
             'documents': is_documents,
             'resolutions': is_resolutions,
         },
