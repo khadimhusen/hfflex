@@ -334,12 +334,13 @@ class ProdProblemSerializer(serializers.ModelSerializer):
 
 class JobQcSerializer(serializers.ModelSerializer):
     qctest_display = serializers.CharField(source='qctest.name', read_only=True)
+    prodreport_display = serializers.CharField(source='prodreport.__str__', read_only=True)
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
 
     class Meta:
         model = JobQc
         fields = [
-            'id', 'prodreport', 'qctest', 'qctest_display', 'result', 'lock',
+            'id', 'prodreport', 'prodreport_display', 'qctest', 'qctest_display', 'result', 'lock',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']

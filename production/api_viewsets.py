@@ -31,7 +31,7 @@ from .api_serializers import (
 )
 from .permissions import IsProductionUser, IsProductionReportUser, IsStockUser, IsDispatchUser
 from .querysets import supervisor_users
-from .filters import ProdReportFilter, StockFilter, DispatchFilter, InwardFilter
+from .filters import ProdReportFilter, StockFilter, DispatchFilter, InwardFilter, JobQcListFilter
 
 
 # ---- shared lookups -------------------------------------------------------
@@ -315,10 +315,12 @@ class ProdProblemViewSet(viewsets.ModelViewSet):
 
 
 class JobQcViewSet(viewsets.ModelViewSet):
-    queryset = JobQc.objects.select_related('qctest', 'prodreport', 'createdby', 'editedby')
+    queryset = JobQc.objects.select_related(
+        'qctest', 'prodreport__prodprocess__process', 'createdby', 'editedby',
+    ).order_by('created')
     serializer_class = JobQcSerializer
     permission_classes = [IsProductionReportUser]
-    filterset_fields = ['prodreport']
+    filterset_class = JobQcListFilter
 
     def perform_create(self, serializer):
         serializer.save(createdby=self.request.user)

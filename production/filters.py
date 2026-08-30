@@ -1,5 +1,5 @@
 import django_filters
-from .models import ProdReport, Stockdetail, DispatchRegister, Inward
+from .models import ProdReport, Stockdetail, DispatchRegister, Inward, JobQc
 
 
 class ProdReportFilter(django_filters.FilterSet):
@@ -64,6 +64,18 @@ class DispatchFilter(django_filters.FilterSet):
     class Meta:
         model = DispatchRegister
         fields = ["id", ]
+
+
+class JobQcListFilter(django_filters.FilterSet):
+    """Mirrors manpower's qctestlist() JobQcFilter -- the standalone
+    'Qc List' page's filters, on top of JobQcViewSet's existing
+    ?prodreport= scoping used by the per-report QC-add flow."""
+    time__gt = django_filters.DateFilter(label="From Date", field_name='created', lookup_expr='date__gte')
+    time__lt = django_filters.DateFilter(label="To Date", field_name='created', lookup_expr='date__lte')
+
+    class Meta:
+        model = JobQc
+        fields = ['prodreport', 'createdby', 'prodreport__prodprocess__process']
 
 
 class InwardFilter(django_filters.FilterSet):
