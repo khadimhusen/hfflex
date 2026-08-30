@@ -1,3 +1,5 @@
+from django.db.models import Sum, F, Value, DecimalField
+from django.db.models.functions import Coalesce
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 
@@ -57,7 +59,7 @@ class ReturnableViewSet(viewsets.ModelViewSet):
 
 
 class ChallanItemViewSet(viewsets.ModelViewSet):
-    queryset = ChallanItem.objects.select_related('returnable', 'unit', 'createdby', 'editedby').order_by('id')
+    queryset = ChallanItem.objects.select_related('returnable', 'returnable__party_name', 'unit', 'createdby', 'editedby').order_by('id')
     serializer_class = ChallanItemSerializer
     permission_classes = [IsReturnableUser]
     filterset_fields = ['returnable']
@@ -80,6 +82,18 @@ class ChallanItemViewSet(viewsets.ModelViewSet):
                 returnable__party_name_id=party,
                 returnable__status__in=['Dispatched', 'Delivered', 'Partially received'],
             )
+        # ?pending=true: the pending-receivable-items report -- every item
+        # across every challan still owed back (qty > what's already come
+        # back, matching ChallanItem.pendingqty's own math exactly, just
+        # done at the DB level so it composes with ordering/pagination
+        # instead of being computed in Python per-row after the fact).
+        if self.request.query_params.get('pending') in ('true', '1'):
+            qs = qs.annotate(
+                received_sum=Coalesce(Sum('receiveditem__qty'), Value(0), output_field=DecimalField()),
+            ).filter(qty__gt=F('received_sum'))
+        party_filter = self.request.query_params.get('party_name')
+        if party_filter:
+            qs = qs.filter(returnable__party_name_id=party_filter)
         return qs
 
 

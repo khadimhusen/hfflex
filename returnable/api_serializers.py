@@ -30,11 +30,19 @@ class ChallanItemSerializer(serializers.ModelSerializer):
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
     receivedqty = serializers.ReadOnlyField()
     pendingqty = serializers.ReadOnlyField()
+    # Only meaningful cross-challan (the pending-receivable-items report,
+    # ?pending=true) -- harmless, cheap extras when fetched scoped to one
+    # challan (?returnable=<id>) too, since select_related already joins
+    # returnable/party_name for every row regardless.
+    party_name_display = serializers.CharField(source='returnable.party_name.name', read_only=True)
+    status = serializers.CharField(source='returnable.status', read_only=True)
+    expected_date = serializers.DateTimeField(source='returnable.expected_date', read_only=True)
 
     class Meta:
         model = ChallanItem
         fields = [
-            'id', 'returnable', 'itemname', 'description', 'category', 'qty', 'unit', 'unit_display',
+            'id', 'returnable', 'party_name_display', 'status', 'expected_date',
+            'itemname', 'description', 'category', 'qty', 'unit', 'unit_display',
             'approxvalue', 'receivedqty', 'pendingqty',
             'created', 'createdby', 'edited', 'editedby',
         ]
