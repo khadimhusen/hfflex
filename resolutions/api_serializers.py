@@ -34,9 +34,10 @@ class ResolutionListSerializer(serializers.ModelSerializer):
 
 
 class ResolutionSerializer(serializers.ModelSerializer):
-    """Mirrors ResolutionForm exactly (resolution_number/title/content/
-    meeting_date/meeting_location/meeting_type/status -- everything else
-    is set by the view, not the form)."""
+    """Mirrors ResolutionForm's fields (resolution_number/title/content/
+    meeting_date/meeting_location/meeting_type/status) plus
+    header_height_mm/footer_height_mm -- new, not in the old app's form,
+    for reserving blank letterhead space when printing."""
     meeting_type_display = serializers.CharField(source='get_meeting_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, default=None)
@@ -48,7 +49,7 @@ class ResolutionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'resolution_number', 'title', 'content',
             'meeting_date', 'meeting_location', 'meeting_type', 'meeting_type_display',
-            'status', 'status_display', 'can_edit', 'documents',
+            'status', 'status_display', 'header_height_mm', 'footer_height_mm', 'can_edit', 'documents',
             'created_by', 'created_by_name', 'created_at', 'updated_at', 'published_at',
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at', 'published_at']
