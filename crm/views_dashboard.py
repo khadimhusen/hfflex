@@ -293,6 +293,11 @@ def me_payload(u):
     # visibility only, same rollout gate as everything else for now.
     is_documents = is_staff
     # is_documents = is_staff or documents_department_users().filter(id=u.id).exists()
+    # Resolutions has no department gate either (nor on its own permission
+    # class -- ResolutionPermission), same reasoning: the old app's
+    # resolution_list/detail were never even login_required, matching a
+    # public board-resolutions listing. Nav visibility only.
+    is_resolutions = is_staff
     # Planning has its own real role system (manager/supervisor/operator/
     # viewer via get_planning_role) rather than the staff-only rollout gate
     # above -- that role check IS the old app's actual access control for
@@ -317,6 +322,7 @@ def me_payload(u):
             'manpower': is_manpower,
             'bank': is_bank,
             'documents': is_documents,
+            'resolutions': is_resolutions,
         },
     }
 
