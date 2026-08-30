@@ -60,6 +60,10 @@ class CoaSerializer(serializers.ModelSerializer):
     is_approved = serializers.ReadOnlyField()
     approver_name = serializers.ReadOnlyField()
     jobname_display = serializers.CharField(source='jobname.itemname', read_only=True)
+    # Lets the delivery_challan dropdown scope itself to the job's own
+    # customer -- a dispatch belonging to any other customer could never
+    # actually be this COA's delivery challan.
+    job_customer = serializers.IntegerField(source='jobname.joborder.customer_id', read_only=True)
     delivery_challan_display = serializers.SerializerMethodField()
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
     edited_by_name = serializers.CharField(source='editedby.get_full_name', read_only=True, default=None)
@@ -67,7 +71,7 @@ class CoaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coa
         fields = [
-            'id', 'coa_number', 'jobname', 'jobname_display', 'work_order', 'delivery_challan',
+            'id', 'coa_number', 'jobname', 'jobname_display', 'job_customer', 'work_order', 'delivery_challan',
             'delivery_challan_display', 'invoice_no', 'qty', 'remark',
             'shelf_life_months', 'storage_conditions',
             'is_approved', 'approvedby', 'approver_name', 'approve_date',
