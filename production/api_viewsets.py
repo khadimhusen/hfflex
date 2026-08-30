@@ -172,6 +172,16 @@ class ProdInputMaterialLookupViewSet(viewsets.ReadOnlyModelViewSet):
         for name in topup_names:
             qs = qs | Stockdetail.objects.filter(balance__gt=0, qc_status='Ok', materialname__name=name)[:1]
 
+        # Editing an existing input row: its own material lot may have
+        # been fully consumed (balance now 0) by that very row, so the
+        # balance>0 filters above would silently drop it from the options
+        # list and break the edit dialog's label lookup. include_id lets
+        # the caller force its current selection back in, ignoring
+        # balance/qc_status for that one id only.
+        include_id = self.request.query_params.get('include_id')
+        if include_id:
+            qs = qs | Stockdetail.objects.filter(id=include_id)
+
         return qs.order_by('materialname', 'size')
 
 
