@@ -1,8 +1,10 @@
+import logging
 import os
 
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Case, Q, When
 from django.http import FileResponse, Http404
+from elastic_transport import TransportError
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -13,6 +15,9 @@ from .models import Document, DocumentDownloadLog
 from .api_serializers import (
     UserLookupSerializer, DocumentListSerializer, DocumentSerializer, DocumentDownloadLogSerializer,
 )
+from .search_indexes import DocumentIndex
+
+logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request):
@@ -67,14 +72,35 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             query = self.request.query_params.get('q', '').strip()
             if query:
-                # The old app searched Elasticsearch (title/description/
-                # uploader username, fuzzy) -- substituted with a plain
-                # DB search rather than standing up ES for this port.
-                qs = qs.filter(
-                    Q(title__icontains=query) | Q(description__icontains=query)
-                    | Q(uploaded_by__username__icontains=query),
-                )
+                qs = self._search(qs, query)
         return qs
+
+    def _search(self, qs, query):
+        """Mirrors document_list()'s exact Elasticsearch query (fuzzy
+        multi_match across title^2/description/uploader username,
+        relevance-ordered) when ES is reachable; falls back to a plain DB
+        substring search otherwise -- e.g. if ES isn't running, matching
+        the graceful-degradation the rest of this app already has for it
+        (see signal_processors.ResilientSignalProcessor)."""
+        try:
+            es_results = DocumentIndex.search().query(
+                'multi_match', query=query,
+                fields=['title^2', 'description', 'uploaded_by_username'],
+                fuzziness='AUTO',
+            )
+            pks = [hit.meta.id for hit in es_results]
+        except TransportError:
+            logger.warning('Elasticsearch search failed (is it running?) -- falling back to a DB search.')
+            return qs.filter(
+                Q(title__icontains=query) | Q(description__icontains=query)
+                | Q(uploaded_by__username__icontains=query),
+            )
+
+        if not pks:
+            return qs.none()
+        pks = [int(pk) for pk in pks]
+        preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pks)])
+        return qs.filter(pk__in=pks).order_by(preserved_order)
 
     def get_object(self):
         # Deliberately NOT scoped by get_queryset()'s uploaded_by/viewers
