@@ -56,13 +56,23 @@ class PoItemSerializer(serializers.ModelSerializer):
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
     total = serializers.ReadOnlyField()
     pendingqty = serializers.ReadOnlyField()
+    # Display-only fields for the standalone "Po Item List" page (mirrors
+    # poitemlist.html's Po/Created/Approved columns and delayed row
+    # highlight) -- harmless extras on the per-PO nested list too.
+    purchaseorder_display = serializers.CharField(source='purchaseorder.__str__', read_only=True)
+    supplier_name = serializers.CharField(source='purchaseorder.supplier.name', read_only=True, default=None)
+    po_status = serializers.CharField(source='purchaseorder.status', read_only=True, default=None)
+    po_approve_date = serializers.DateTimeField(source='purchaseorder.approve_date', read_only=True, default=None)
+    po_delayed = serializers.BooleanField(source='purchaseorder.delayed', read_only=True, default=False)
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
 
     class Meta:
         model = PoItem
         fields = [
-            'id', 'purchaseorder', 'description', 'category', 'qty', 'unit', 'unit_display',
+            'id', 'purchaseorder', 'purchaseorder_display', 'supplier_name', 'po_status', 'po_approve_date',
+            'po_delayed', 'description', 'category', 'qty', 'unit', 'unit_display',
             'rate', 'rec_qty', 'remark', 'total', 'pendingqty',
-            'created', 'createdby', 'edited', 'editedby',
+            'created', 'createdby', 'created_by_name', 'edited', 'editedby',
         ]
         read_only_fields = ['created', 'createdby', 'edited', 'editedby']
 
