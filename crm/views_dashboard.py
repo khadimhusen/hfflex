@@ -255,6 +255,7 @@ from purchase.querysets import purchase_department_users
 from order.querysets import order_department_users
 from production.querysets import report_department_users, dispatch_department_users, stock_department_users
 from manpower.querysets import manpower_department_users
+from bank.querysets import bank_department_users
 from planning.utils import get_planning_role
 
 
@@ -284,6 +285,8 @@ def me_payload(u):
     # is_stock = is_staff or stock_department_users().filter(id=u.id).exists()
     is_manpower = is_staff
     # is_manpower = is_staff or manpower_department_users().filter(id=u.id).exists()
+    is_bank = is_staff
+    # is_bank = is_staff or bank_department_users().filter(id=u.id).exists()
     # Planning has its own real role system (manager/supervisor/operator/
     # viewer via get_planning_role) rather than the staff-only rollout gate
     # above -- that role check IS the old app's actual access control for
@@ -306,6 +309,7 @@ def me_payload(u):
             'stock': is_stock,
             'planning': is_planning,
             'manpower': is_manpower,
+            'bank': is_bank,
         },
     }
 
