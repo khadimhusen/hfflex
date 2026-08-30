@@ -12,9 +12,13 @@ from .permissions import IsCoaUser, CanApproveCoa, IsStaffForReopen
 
 
 class DispatchRegisterLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    """For Coa.delivery_challan's admin-edit dropdown. ?customer=<id> scopes
+    it to the COA's own job's customer -- a dispatch belonging to any
+    other customer could never actually be this COA's delivery challan."""
     queryset = DispatchRegister.objects.select_related('customer').order_by('-dispatchdate')
     serializer_class = DispatchRegisterLookupSerializer
     permission_classes = [IsCoaUser]
+    filterset_fields = ['customer']
 
 
 class CoaViewSet(viewsets.ModelViewSet):

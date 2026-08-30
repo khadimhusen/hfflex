@@ -63,6 +63,11 @@ class JobNameViewSet(viewsets.ModelViewSet):
         qs = super().get_queryset()
         if self.request.query_params.get('pending') == 'true':
             qs = qs.filter(job__isnull=True)
+        # Mirrors the navbar's prejoblist() tag exactly (job__isnull=True
+        # +preorder__final_submition=True) -- final_submitted=true lets the
+        # nav dropdown reuse this same viewset instead of a bespoke endpoint.
+        if self.request.query_params.get('final_submitted') == 'true':
+            qs = qs.filter(preorder__final_submition=True)
         return qs
 
     def perform_create(self, serializer):

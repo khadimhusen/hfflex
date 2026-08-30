@@ -94,12 +94,32 @@ def quotationlist(request):
     return render(request, "quotation/list.html", context)
 
 
+# Same "Authentication credentials were not provided." 403 shape DRF
+# returns elsewhere in the app (see crm.views_dashboard.MeView) -- these
+# three are plain Django views hit directly via fetch/axios from
+# costing.vue, not through the DRF-authenticated api client, so a real
+# @login_required redirect would hand back an HTML login page instead of
+# JSON. Matching DRF's shape instead lets the frontend's existing 403
+# interceptor redirect to /login the same way it does for every other
+# unauthenticated API call.
+def _require_login_json(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
+    return None
+
+
 def materialjson(request):
+    denied = _require_login_json(request)
+    if denied:
+        return denied
     data = list(MaterialRate.objects.values("density", "rate", "solid", "material"))
     return JsonResponse(data, safe=False)
 
 
 def getstructurejson(request, ply="3ply"):
+    denied = _require_login_json(request)
+    if denied:
+        return denied
     data = list(MaterialStructure.objects.filter(predefined__structure=ply).values(film=F("material__material"),
                                                                                    mic=F('micron')))
     return JsonResponse(data, safe=False)
@@ -107,6 +127,9 @@ def getstructurejson(request, ply="3ply"):
 
 @csrf_exempt
 def getquotationjson(request, id=None):
+    denied = _require_login_json(request)
+    if denied:
+        return denied
     quote = Quotation.objects.filter(id=id or 1)
     serializer = QuotationSerializer(quote)
     # data = list(Quotation.objects.filter(id=id or 1).values())
