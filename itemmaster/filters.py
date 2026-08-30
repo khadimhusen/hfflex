@@ -15,4 +15,4 @@ class ItemmasterFilter(django_filters.FilterSet):
 
     class Meta:
         model = ItemMaster
-        fields = ['active', 'film_size','createdby']
+        fields = ['id', 'active', 'film_size','createdby']
