@@ -47,6 +47,7 @@ urlpatterns = [
                   path('api/manpower/', include('manpower.api_urls')),
                   path('api/bank/', include('bank.api_urls')),
                   path('api/documents/', include('documents.api_urls')),
+                  path('api/resolutions/', include('resolutions.api_urls')),
                   path('crm/', views.serve_crm_spa, name='crm-spa'),
                   path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
 

@@ -17,6 +17,25 @@ class Resolution(models.Model):
     title = models.CharField(max_length=300)
     content = CKEditor5Field('Resolution Content', config_name='default')
 
+    # Printed on the company's pre-printed letterhead stationery -- these
+    # reserve blank space at the top/bottom of every printed page so the
+    # resolution text doesn't overlap the letterhead's own header/footer
+    # artwork. Defaults match a typical A4 letterhead (logo/address block
+    # up top, registration/contact strip at the bottom).
+    header_height_mm = models.PositiveIntegerField(
+        default=40, help_text='Blank space (mm) reserved at the top of each printed page for the letterhead header.',
+    )
+    footer_height_mm = models.PositiveIntegerField(
+        default=25, help_text='Blank space (mm) reserved at the bottom of each printed page for the letterhead footer.',
+    )
+
+    # Word-style running header/footer -- unlike the plain letterhead
+    # margins above (which just reserve blank space for pre-printed
+    # stationery), this is actual rich-text content that gets repeated on
+    # every printed page, inside that reserved space.
+    header_content = CKEditor5Field('Header Content', config_name='default', blank=True)
+    footer_content = CKEditor5Field('Footer Content', config_name='default', blank=True)
+
     # Meeting details
     meeting_date = models.DateField()
     meeting_location = models.CharField(max_length=300)
