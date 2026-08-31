@@ -1,10 +1,12 @@
 from datetime import datetime
 from openpyxl import Workbook
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .filters import StockFilter
 from .models import Stockdetail
 
 
+@login_required(login_url='/login/')
 def stocklist(request):
     Stock_list = Stockdetail.objects.all()
 
