@@ -468,9 +468,13 @@ class DispatchPendingView(APIView):
         for material in material_list:
             report = material.content_object
             job = report.prodprocess.job
-            cust = job.joborder.customer.name
-            bucket = data.setdefault(cust, {})
-            entry = bucket.setdefault(job.id, {
+            customer = job.joborder.customer
+            # Keyed by id, not name -- two different customers sharing a
+            # display name would otherwise merge into one bucket. customer_id
+            # lets the frontend link straight into a pre-filled new-dispatch
+            # form for this customer.
+            bucket = data.setdefault(customer.id, {'name': customer.name, 'jobs': {}})
+            entry = bucket['jobs'].setdefault(job.id, {
                 'job_id': job.id, 'job_itemname': job.itemname, 'qty': 0, 'nos': 0,
                 'po': job.joborder.po, 'orderqty': job.kgqty, 'remark': job.dispatch_remark,
             })
@@ -478,7 +482,8 @@ class DispatchPendingView(APIView):
             entry['nos'] = float(entry['nos']) + float(material.nos or 0)
 
         return Response([
-            {'customer': cust, 'jobs': list(jobs.values())} for cust, jobs in sorted(data.items())
+            {'customer_id': cid, 'customer': bucket['name'], 'jobs': list(bucket['jobs'].values())}
+            for cid, bucket in sorted(data.items(), key=lambda kv: kv[1]['name'])
         ])
 
 
