@@ -12,7 +12,7 @@ from quality.models import QCTest
 from order.models import JobProcess, JobMaterial, Job
 from .models import (
     Inward, Stockdetail, ProdReport, ProdInput, ProdPerson, ProdProblem, JobQc,
-    DispatchRegister, OtherDispatchItem, ProductionProblem, ProblemTag,
+    DispatchRegister, OtherDispatchItem, ProductionProblem, ProblemTag, JobMaterialStatus,
 )
 from .querysets import supervisor_users
 
@@ -119,19 +119,36 @@ class StockdetailLineSerializer(serializers.ModelSerializer):
     item_mat_type_display = serializers.CharField(source='item_mat_type.mat_type', read_only=True)
     item_grade_display = serializers.CharField(source='item_grade.grade', read_only=True)
     full_name = serializers.ReadOnlyField()
+    used = serializers.ReadOnlyField()
+    # Mirrors stocklist.html/xlviews.stocklist's "From" column -- only
+    # ever populated for prodreport-sourced rolls (an inward receipt has
+    # no upstream job to name), and used to link to the record that
+    # actually created this roll.
+    source_kind = serializers.SerializerMethodField()
+    source_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Stockdetail
         fields = [
             'id', 'materialname', 'materialname_display', 'item_mat_type', 'item_mat_type_display',
             'item_grade', 'item_grade_display', 'full_name', 'size', 'micron', 'gsm', 'rate', 'qc_status',
-            'remark', 'gross_wt', 'tare_wt', 'recieved', 'available', 'alloted', 'balance', 'nos',
-            'content_type', 'object_id', 'created', 'createdby', 'edited', 'editedby',
+            'remark', 'gross_wt', 'tare_wt', 'recieved', 'used', 'available', 'alloted', 'balance', 'nos',
+            'content_type', 'object_id', 'source_kind', 'source_display', 'created', 'createdby', 'edited', 'editedby',
         ]
         read_only_fields = [
             'recieved', 'available', 'alloted', 'balance',
             'content_type', 'object_id', 'created', 'createdby', 'edited', 'editedby',
         ]
+
+    def get_source_kind(self, obj):
+        return obj.content_type.model if obj.content_type_id else None
+
+    def get_source_display(self, obj):
+        if obj.content_type_id and obj.content_type.model == 'prodreport':
+            report = obj.content_object
+            if report:
+                return str(report.prodprocess.job)
+        return ''
 
     def validate(self, attrs):
         # Same class of check as ProdInput's returned<=grossinput: the old
@@ -294,11 +311,12 @@ class ProdInputSerializer(serializers.ModelSerializer):
     material_available = serializers.DecimalField(
         source='material.available', read_only=True, max_digits=10, decimal_places=3, default=None,
     )
+    prodreport_display = serializers.CharField(source='prodreport.prodprocess', read_only=True, default=None)
 
     class Meta:
         model = ProdInput
         fields = [
-            'id', 'prodreport', 'material', 'material_display', 'material_available',
+            'id', 'prodreport', 'prodreport_display', 'material', 'material_display', 'material_available',
             'grossinput', 'returned', 'inputqty', 'wtgain',
             'created', 'createdby', 'edited', 'editedby',
         ]
@@ -314,6 +332,20 @@ class ProdInputSerializer(serializers.ModelSerializer):
         if grossinput is not None and returned is not None and returned > grossinput:
             raise serializers.ValidationError({'returned': ['Returned cannot be greater than Gross Input.']})
         return attrs
+
+
+class JobMaterialStatusSerializer(serializers.ModelSerializer):
+    """Read-only -- mirrors singlematerailedit.html's "Material Alloted
+    Detail" table (one row per job a stock roll was allocated to). Actually
+    editing an allocation stays on the job material page (jobmaterialstatusedit
+    in the old app), this is just for display/linking from the stock side."""
+    job_id = serializers.IntegerField(source='jobmaterial.job_id', read_only=True)
+    job_display = serializers.CharField(source='jobmaterial.job', read_only=True)
+
+    class Meta:
+        model = JobMaterialStatus
+        fields = ['id', 'jobmaterial', 'job_id', 'job_display', 'allote', 'qty', 'created']
+        read_only_fields = fields
 
 
 class ProdPersonSerializer(serializers.ModelSerializer):

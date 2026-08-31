@@ -8,7 +8,7 @@ from .api_viewsets import (
     SupervisorLookupViewSet, JobProcessLookupViewSet, ProdInputMaterialLookupViewSet,
     InwardViewSet, InwardStockViewSet,
     ProdReportViewSet, ProdInputViewSet, ProdOutputViewSet, ProdPersonViewSet, ProdProblemViewSet, JobQcViewSet,
-    StockdetailReportViewSet, StockdetailEditViewSet, ProblemTagViewSet,
+    StockdetailReportViewSet, StockdetailEditViewSet, ProblemTagViewSet, JobMaterialStatusViewSet,
     DispatchRegisterViewSet, OtherDispatchItemViewSet, DispatchableStockViewSet,
     DispatchPendingView, DispatchApprovalPendingView, DispatchApprovalView,
 )
@@ -41,6 +41,7 @@ router.register('jobqcs', JobQcViewSet)
 
 router.register('stock-report', StockdetailReportViewSet, basename='production-stock-report')
 router.register('stock-edit', StockdetailEditViewSet, basename='production-stock-edit')
+router.register('job-material-status', JobMaterialStatusViewSet, basename='production-job-material-status')
 router.register('problem-tags', ProblemTagViewSet)
 
 router.register('dispatches', DispatchRegisterViewSet)

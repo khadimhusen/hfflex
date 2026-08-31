@@ -17,7 +17,7 @@ from quality.models import QCTest
 from order.models import JobProcess, Job
 from .models import (
     Inward, Stockdetail, ProdReport, ProdInput, ProdPerson, ProdProblem, JobQc,
-    DispatchRegister, OtherDispatchItem, ProductionProblem, ProblemTag,
+    DispatchRegister, OtherDispatchItem, ProductionProblem, ProblemTag, JobMaterialStatus,
 )
 from .api_serializers import (
     SupplierLookupSerializer, CustomerLookupSerializer, AddressLookupSerializer, WorkerLookupSerializer,
@@ -27,7 +27,7 @@ from .api_serializers import (
     StockdetailLineSerializer, InwardSerializer,
     ProdReportSerializer, ProdInputSerializer, ProdPersonSerializer, ProdProblemSerializer, JobQcSerializer,
     ProblemTagSerializer, OtherDispatchItemSerializer, DispatchRegisterSerializer, DispatchableStockSerializer,
-    DispatchApprovalSerializer,
+    DispatchApprovalSerializer, JobMaterialStatusSerializer,
 )
 from .permissions import IsProductionUser, IsProductionReportUser, IsStockUser, IsDispatchUser
 from .querysets import supervisor_users
@@ -269,11 +269,13 @@ class ProdReportViewSet(viewsets.ModelViewSet):
 
 class ProdInputViewSet(viewsets.ModelViewSet):
     queryset = ProdInput.objects.select_related(
-        'material', 'material__materialname', 'prodreport', 'createdby', 'editedby',
+        'material', 'material__materialname', 'prodreport', 'prodreport__prodprocess', 'createdby', 'editedby',
     ).order_by('id')
     serializer_class = ProdInputSerializer
     permission_classes = [IsProductionReportUser]
-    filterset_fields = ['prodreport']
+    # 'material' lets the stock detail page ask "what consumed this roll?"
+    # (mirrors singlematerailedit.html's "Production Input Material detail").
+    filterset_fields = ['prodreport', 'material']
 
     def perform_create(self, serializer):
         serializer.save(createdby=self.request.user)
@@ -346,7 +348,9 @@ class StockdetailReportViewSet(viewsets.ReadOnlyModelViewSet):
     Stockdetail row regardless of source (inward/prodreport)."""
     queryset = Stockdetail.objects.select_related(
         'materialname', 'item_mat_type', 'item_grade', 'content_type',
-    ).annotate(allote=Sum('jobmaterialstatus__qty', distinct=True)).order_by('-id')
+    ).prefetch_related('content_object').annotate(
+        allote=Sum('jobmaterialstatus__qty', distinct=True)
+    ).order_by('-id')
     serializer_class = StockdetailLineSerializer
     permission_classes = [IsStockUser]
     filterset_class = StockFilter
@@ -362,14 +366,26 @@ class StockdetailReportViewSet(viewsets.ReadOnlyModelViewSet):
 
 class StockdetailEditViewSet(viewsets.ModelViewSet):
     """Mirrors singlematerailedit — the only thing editable from the stock
-    report is qc_status/remark on an existing lot."""
+    report is qc_status/remark on an existing lot. Also backs the stock
+    detail page's retrieve (header info + the source link)."""
     http_method_names = ['get', 'patch', 'head', 'options']
-    queryset = Stockdetail.objects.select_related('materialname', 'item_mat_type', 'item_grade')
+    queryset = Stockdetail.objects.select_related(
+        'materialname', 'item_mat_type', 'item_grade', 'content_type',
+    ).prefetch_related('content_object')
     serializer_class = StockdetailLineSerializer
     permission_classes = [IsStockUser]
 
     def perform_update(self, serializer):
         serializer.save(editedby=self.request.user)
+
+
+class JobMaterialStatusViewSet(viewsets.ReadOnlyModelViewSet):
+    """Mirrors singlematerailedit.html's "Material Alloted Detail" table --
+    filter with ?allote=<stockId> to see which jobs a roll was allocated to."""
+    queryset = JobMaterialStatus.objects.select_related('jobmaterial', 'jobmaterial__job').order_by('-id')
+    serializer_class = JobMaterialStatusSerializer
+    permission_classes = [IsStockUser]
+    filterset_fields = ['allote']
 
 
 class ProblemTagViewSet(viewsets.ModelViewSet):

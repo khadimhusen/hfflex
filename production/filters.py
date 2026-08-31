@@ -63,7 +63,7 @@ class DispatchFilter(django_filters.FilterSet):
 
     class Meta:
         model = DispatchRegister
-        fields = ["id", ]
+        fields = ["id", "dispatch_material"]
 
 
 class JobQcListFilter(django_filters.FilterSet):
