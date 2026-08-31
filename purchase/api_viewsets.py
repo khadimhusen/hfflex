@@ -1,3 +1,4 @@
+from django.db.models import DecimalField, F, Sum
 from django.http import FileResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -82,6 +83,18 @@ class PoViewSet(viewsets.ModelViewSet):
         if not can_see_all_po(user):
             qs = qs.filter(createdby=user)
         return qs
+
+    def list(self, request, *args, **kwargs):
+        # pototal is a Python @property (sum of qty*rate per line, rounded
+        # per-line) -- recomputing it in the DB avoids an N+1 per PO (each
+        # .pototal access would otherwise walk its own poitem.all()). The
+        # DB sum skips the per-line rounding, which is fine for a total.
+        response = super().list(request, *args, **kwargs)
+        total = self.filter_queryset(self.get_queryset()).aggregate(
+            total_amount=Sum(F('poitem__qty') * F('poitem__rate'), output_field=DecimalField()),
+        )
+        response.data['total_amount'] = total['total_amount'] or 0
+        return response
 
     def perform_create(self, serializer):
         serializer.save(createdby=self.request.user, status='Pending')

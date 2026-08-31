@@ -420,6 +420,15 @@ class DispatchRegisterViewSet(viewsets.ModelViewSet):
     permission_classes = [IsDispatchUser]
     filterset_class = DispatchFilter
 
+    def list(self, request, *args, **kwargs):
+        # totalsum is a Python @property (Sum over dispatch_material.recieved
+        # per dispatch) -- aggregating straight through the M2M join gives
+        # the same grand total across every filtered row in one query.
+        response = super().list(request, *args, **kwargs)
+        total = self.filter_queryset(self.get_queryset()).aggregate(total_wt=Sum('dispatch_material__recieved'))
+        response.data['total_wt'] = total['total_wt'] or 0
+        return response
+
     def perform_create(self, serializer):
         serializer.save(createdby=self.request.user)
 

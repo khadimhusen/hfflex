@@ -45,6 +45,17 @@ class QuotationViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    def list(self, request, *args, **kwargs):
+        # totalquotationcost is a Python @property chaining several other
+        # properties, each walking quotationitems.all() -- get_queryset()
+        # already prefetches that relation unconditionally, so summing it
+        # in Python here over every filtered row (not just the page) costs
+        # one extra query total, not one per quotation.
+        response = super().list(request, *args, **kwargs)
+        qs = self.filter_queryset(self.get_queryset())
+        response.data['total_cost'] = sum((q.totalquotationcost for q in qs), 0)
+        return response
+
     @action(detail=False, methods=['get'])
     def filter_options(self, request):
         # Matches QuotationFilter's own createdby queryset restriction —

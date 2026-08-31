@@ -185,6 +185,17 @@ class JobViewSet(viewsets.ModelViewSet):
         context['detail'] = self.action == 'retrieve'
         return context
 
+    def list(self, request, *args, **kwargs):
+        # Total across every filtered row, not just the visible page --
+        # same idea as StockdetailReportViewSet's total_balance/total_available.
+        # quantity itself isn't summed: its unit varies per job (Nos vs Kg
+        # depending on supply_form), so a raw sum would mix units. kgqty is
+        # always a normalized weight, safe to total regardless of that.
+        response = super().list(request, *args, **kwargs)
+        totals = self.filter_queryset(self.get_queryset()).aggregate(total_kgqty=Sum('kgqty'))
+        response.data['total_kgqty'] = totals['total_kgqty'] or 0
+        return response
+
     def perform_create(self, serializer):
         # Old app: jobs only ever get created from orderdetailedit's inline
         # formset, which is itself gated to the order's creator or a
