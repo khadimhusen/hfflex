@@ -1,13 +1,16 @@
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
-from .api_serializers import NotificationSerializer, TaskSerializer, UserLookupSerializer
-from .models import Notification, Task
+from .api_serializers import (
+    NotificationSerializer, RecurringTaskSerializer, TaskMsgSerializer, TaskSerializer, UserLookupSerializer,
+)
+from .models import Notification, RecurringTask, Task, TaskMsg
 from .permissions import IsTaskUser
 
 
@@ -24,11 +27,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     matches the old view's own tab param (assigned/created/toclose/all),
     defaulting to 'assigned' like the old view did.
 
-    TaskMsg (the per-task comment/attachment thread) is NOT ported here --
-    a genuinely separate, much larger feature (image thumbnails, file
-    uploads) than the navbar widget this was built for. Same for
-    RecurringTask, which has no UI entry point outside the old admin-style
-    recurring_task_* views."""
+    TaskMsg (the per-task comment/attachment thread) and RecurringTask are
+    their own viewsets below."""
     queryset = Task.objects.select_related('createdby', 'task_alloted_to').order_by('target_date')
     serializer_class = TaskSerializer
     permission_classes = [IsTaskUser]
@@ -36,6 +36,15 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
+        # The ?tab= filter only makes sense for the list view -- it's the
+        # tab strip's own filtering, not an access rule. Detail actions
+        # (retrieve/update/destroy/close/request_close) must see every task
+        # the user has any relationship to, closed or not, or e.g. closing
+        # a task the *creator* isn't also assigned to -- or even just
+        # reopening the detail page after it's been closed -- 404s despite
+        # get_object()'s explicit check below allowing it.
+        if self.action != 'list':
+            return qs.filter(Q(task_alloted_to=user) | Q(createdby=user))
         tab = self.request.query_params.get('tab', 'assigned')
         if tab == 'assigned':
             qs = qs.filter(task_alloted_to=user, is_closed=False)
@@ -118,3 +127,57 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def mark_all_read(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'success': True})
+
+
+class TaskMsgViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """Mirrors detailtask's chat pane + post_task_message. Always scoped to
+    one task via a required `task` id (query param for list, form field for
+    create) -- both go through the same createdby/task_alloted_to access
+    check as TaskViewSet.get_object()."""
+    queryset = TaskMsg.objects.select_related('createdby').filter(is_deleted=False).order_by('created')
+    serializer_class = TaskMsgSerializer
+    permission_classes = [IsTaskUser]
+
+    def _get_task(self):
+        task_id = self.request.query_params.get('task') or self.request.data.get('task')
+        if not task_id:
+            raise ValidationError({'task': 'This field is required.'})
+        task = get_object_or_404(Task, id=task_id)
+        if self.request.user != task.createdby and self.request.user != task.task_alloted_to:
+            raise PermissionDenied("You don't have access to this task.")
+        return task
+
+    def get_queryset(self):
+        return super().get_queryset().filter(task=self._get_task())
+
+    def perform_create(self, serializer):
+        task = self._get_task()
+        if task.is_closed:
+            raise ValidationError({'task': 'This task is closed.'})
+        msg = serializer.save(task=task, createdby=self.request.user)
+        notify_user = task.createdby if self.request.user == task.task_alloted_to else task.task_alloted_to
+        Notification.objects.create(
+            user=notify_user, task=task,
+            message=f'New message on task "{task.taskname}" from {self.request.user}',
+        )
+
+
+class RecurringTaskViewSet(viewsets.ModelViewSet):
+    """Mirrors recurring_task_list/add/edit/toggle -- always scoped to the
+    creator, same as the old views' createdby=request.user filter."""
+    queryset = RecurringTask.objects.select_related('task_alloted_to', 'createdby').order_by('day_of_month')
+    serializer_class = RecurringTaskSerializer
+    permission_classes = [IsTaskUser]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(createdby=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(createdby=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def toggle(self, request, pk=None):
+        r = self.get_object()
+        r.is_active = not r.is_active
+        r.save(update_fields=['is_active'])
+        return Response(self.get_serializer(r).data)
