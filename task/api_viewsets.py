@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from .api_serializers import (
     NotificationSerializer, RecurringTaskSerializer, TaskMsgSerializer, TaskSerializer, UserLookupSerializer,
 )
+from .filters import TaskFilter
 from .models import Notification, RecurringTask, Task, TaskMsg
 from .permissions import IsTaskUser
 
@@ -32,6 +33,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.select_related('createdby', 'task_alloted_to').order_by('target_date')
     serializer_class = TaskSerializer
     permission_classes = [IsTaskUser]
+    filterset_class = TaskFilter
 
     def get_queryset(self):
         qs = super().get_queryset()

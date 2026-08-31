@@ -19,7 +19,7 @@ class TaskFilter(django_filters.FilterSet):
 
     class Meta:
         model = Task
-        fields = [ 'taskname', 'priority','task_alloted_to', 'createdby','description',
+        fields = [ 'id', 'taskname', 'priority','task_alloted_to', 'createdby','description',
                    'is_closed','request_to_close','target_date']
 
 
