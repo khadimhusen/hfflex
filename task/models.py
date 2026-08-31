@@ -30,9 +30,9 @@ class Task(models.Model):
 class TaskMsg(models.Model):
     task = models.ForeignKey(Task, on_delete=models.PROTECT, related_name='taskmsg')
     msg_text = models.TextField(null=True, blank=True)
-    msg_image = models.ImageField(upload_to='taskmsg/', null=True, blank=True)
-    thumbnail = models.ImageField(upload_to='taskmsg_thumbnail/',editable=False ,null=True, blank=True)
-    msg_file = models.FileField(null=True, blank=True)
+    msg_image = models.ImageField(upload_to='taskmsg/', max_length=255, null=True, blank=True)
+    thumbnail = models.ImageField(upload_to='taskmsg_thumbnail/', max_length=255, editable=False, null=True, blank=True)
+    msg_file = models.FileField(max_length=255, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     createdby = models.ForeignKey(User, null=True, blank=True, on_delete=models.PROTECT,
