@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -133,6 +134,12 @@ class DowntimeReportViewSet(viewsets.ModelViewSet):
     serializer_class = DowntimeReportSerializer
     permission_classes = [IsManpowerUser]
     filterset_class = DowntimeFilter
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        total = self.filter_queryset(self.get_queryset()).aggregate(total_downtime=Sum('downtime'))
+        response.data['total_downtime'] = total['total_downtime'] or 0
+        return response
 
     def _check_not_approved(self, activity):
         if activity.shift.is_approved:

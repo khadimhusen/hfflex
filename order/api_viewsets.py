@@ -444,6 +444,15 @@ class JobMaterialReportViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsOrderUser]
     filterset_class = JobMaterialFilter
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        totals = self.filter_queryset(self.get_queryset()).aggregate(
+            total_req=Sum('req'), total_available=Sum('available'), total_to_order=Sum('to_order'),
+            total_orderedqty=Sum('orderedqty'), total_receivedqty=Sum('receivedqty'),
+        )
+        response.data.update({k: v or 0 for k, v in totals.items()})
+        return response
+
 
 class JobChangeLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = JobChangeLog.objects.select_related('job', 'changed_by')

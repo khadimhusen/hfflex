@@ -182,6 +182,18 @@ class PoItemViewSet(viewsets.ModelViewSet):
             qs = qs.filter(purchaseorder__createdby=user)
         return qs
 
+    def list(self, request, *args, **kwargs):
+        # total is qty*rate (a Python @property) -- computing it in the DB
+        # over the full filtered queryset avoids an N+1 and, unlike the
+        # frontend's previous client-side reduce() over items.value, covers
+        # every filtered row instead of just the visible page.
+        response = super().list(request, *args, **kwargs)
+        total = self.filter_queryset(self.get_queryset()).aggregate(
+            gross_total=Sum(F('qty') * F('rate'), output_field=DecimalField()),
+        )
+        response.data['gross_total'] = total['gross_total'] or 0
+        return response
+
     def perform_create(self, serializer):
         po = serializer.validated_data['purchaseorder']
         if not can_edit_po(self.request.user, po):
