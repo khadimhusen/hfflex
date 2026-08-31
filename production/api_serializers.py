@@ -335,17 +335,18 @@ class ProdInputSerializer(serializers.ModelSerializer):
 
 
 class JobMaterialStatusSerializer(serializers.ModelSerializer):
-    """Read-only -- mirrors singlematerailedit.html's "Material Alloted
-    Detail" table (one row per job a stock roll was allocated to). Actually
-    editing an allocation stays on the job material page (jobmaterialstatusedit
-    in the old app), this is just for display/linking from the stock side."""
+    """Mirrors singlematerailedit.html's "Material Alloted Detail" table
+    (one row per job a stock roll was allocated to). qty is the only
+    writable field -- matches JobMaterialStatusForm, which only ever let
+    the old jobmaterialstatusedit formset touch qty (jobmaterial/allote
+    are the relation itself, never reassigned from that screen either)."""
     job_id = serializers.IntegerField(source='jobmaterial.job_id', read_only=True)
     job_display = serializers.CharField(source='jobmaterial.job', read_only=True)
 
     class Meta:
         model = JobMaterialStatus
         fields = ['id', 'jobmaterial', 'job_id', 'job_display', 'allote', 'qty', 'created']
-        read_only_fields = fields
+        read_only_fields = ['id', 'jobmaterial', 'job_id', 'job_display', 'allote', 'created']
 
 
 class ProdPersonSerializer(serializers.ModelSerializer):

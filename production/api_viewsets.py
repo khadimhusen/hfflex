@@ -379,13 +379,21 @@ class StockdetailEditViewSet(viewsets.ModelViewSet):
         serializer.save(editedby=self.request.user)
 
 
-class JobMaterialStatusViewSet(viewsets.ReadOnlyModelViewSet):
+class JobMaterialStatusViewSet(viewsets.ModelViewSet):
     """Mirrors singlematerailedit.html's "Material Alloted Detail" table --
-    filter with ?allote=<stockId> to see which jobs a roll was allocated to."""
+    filter with ?allote=<stockId> to see which jobs a roll was allocated to.
+    qty is the only thing ever editable here (see JobMaterialStatusSerializer);
+    saving fires JobMaterialStatus's post_save signal, which re-saves both
+    the JobMaterial and the Stockdetail so alloted/available/balance stay
+    correct -- same mechanism ProdInput editing already relies on."""
+    http_method_names = ['get', 'patch', 'head', 'options']
     queryset = JobMaterialStatus.objects.select_related('jobmaterial', 'jobmaterial__job').order_by('-id')
     serializer_class = JobMaterialStatusSerializer
     permission_classes = [IsStockUser]
     filterset_fields = ['allote']
+
+    def perform_update(self, serializer):
+        serializer.save(editedby=self.request.user)
 
 
 class ProblemTagViewSet(viewsets.ModelViewSet):
