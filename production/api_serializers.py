@@ -409,10 +409,15 @@ class DispatchableStockSerializer(serializers.ModelSerializer):
     mirrors DispatchForm's dispatch_material queryset/label_from_instance."""
     label = serializers.SerializerMethodField()
     job_id = serializers.SerializerMethodField()
+    # Same as label but without the per-roll "Gross Wt." suffix -- one
+    # dispatch can carry finished rolls from several different jobs, so
+    # the frontend groups attached rolls by job_id under this as the
+    # group header, same idea as Inward's material-spec group headers.
+    job_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Stockdetail
-        fields = ['id', 'label', 'job_id', 'gross_wt', 'tare_wt', 'recieved', 'nos']
+        fields = ['id', 'label', 'job_id', 'job_display', 'gross_wt', 'tare_wt', 'recieved', 'nos']
 
     def _report(self, obj):
         return obj.content_object
@@ -427,6 +432,13 @@ class DispatchableStockSerializer(serializers.ModelSerializer):
     def get_job_id(self, obj):
         report = self._report(obj)
         return report.prodprocess.job_id if report else None
+
+    def get_job_display(self, obj):
+        report = self._report(obj)
+        if not report:
+            return obj.full_name
+        job = report.prodprocess.job
+        return f'{job.rate}/{job.unit}-{job.itemname}'
 
 
 class DispatchApprovalSerializer(serializers.ModelSerializer):
