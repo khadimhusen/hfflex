@@ -430,11 +430,25 @@ class DispatchableStockViewSet(viewsets.ReadOnlyModelViewSet):
         customer_id = self.request.query_params.get('customer')
         if not customer_id:
             return Stockdetail.objects.none()
-        return Stockdetail.objects.filter(
+        qs = Stockdetail.objects.filter(
             prodreports__prodprocess__job__joborder__customer__id=customer_id, dispached__isnull=True,
             qc_status='Finished', prodreports__prodprocess__job__dispatch_approval=True,
             prodreports__checked=True, prodreports__approved=True,
-        ).prefetch_related('content_object__prodprocess__job').order_by('id')
+        )
+
+        # A material already attached to THIS dispatch no longer satisfies
+        # dispached__isnull=True (it's dispatched now), so it drops out of
+        # the list above -- the edit page's "currently attached" display
+        # can't resolve its label and falls back to a bare "Stock #<id>".
+        # include_ids forces those specific rows back in, ignoring every
+        # other filter, same pattern as order's stockdetail-lookup and
+        # production's prodinput-material-lookup include params.
+        include_ids = self.request.query_params.get('include_ids')
+        if include_ids:
+            ids = [i for i in include_ids.split(',') if i]
+            qs = qs | Stockdetail.objects.filter(id__in=ids)
+
+        return qs.prefetch_related('content_object__prodprocess__job').order_by('id')
 
 
 class DispatchPendingView(APIView):
