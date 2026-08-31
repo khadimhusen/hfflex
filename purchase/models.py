@@ -116,7 +116,6 @@ class Po(models.Model):
     def inword(self):
         rupees = int(self.grosstotal)
         paise = int((self.grosstotal - int(self.grosstotal)) * 100)
-        print("rupees", rupees, "paise", paise)
 
         if rupees and paise:
             result = "Rupees " + num2words(rupees) + " & " + num2words(paise) + " Paise Only"
