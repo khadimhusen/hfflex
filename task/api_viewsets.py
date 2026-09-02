@@ -136,7 +136,7 @@ class TaskMsgViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Ge
     one task via a required `task` id (query param for list, form field for
     create) -- both go through the same createdby/task_alloted_to access
     check as TaskViewSet.get_object()."""
-    queryset = TaskMsg.objects.select_related('createdby').filter(is_deleted=False).order_by('created')
+    queryset = TaskMsg.objects.select_related('createdby').filter(is_deleted=False).order_by('-created')
     serializer_class = TaskMsgSerializer
     permission_classes = [IsTaskUser]
 
