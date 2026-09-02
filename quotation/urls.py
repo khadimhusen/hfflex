@@ -20,6 +20,7 @@ urlpatterns = [
     path('getstructure/<str:ply>/',views.getstructurejson),
     path('getquotationjson/',views.getquotationjson),
     path('quotepdf/<int:id>/',pdfviews.quotepdf,name='quotepdf'),
+    path('quotepdf-v2/<int:id>/',pdfviews.quotepdf_v2,name='quotepdf-v2'),
     path('letterheadquotepdf/<int:id>/',pdfviews.letterheadquotepdf,name='letterheadquotepdf'),
     path('quoteapproval/<int:id>/',views.quoteapproval,name='quoteapproval'),
     path('copy/<int:id>/', views.copyquote, name='copyquote'),

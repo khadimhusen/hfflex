@@ -566,3 +566,309 @@ def letterheadquotepdf(_, id):
         as_attachment=True,
         filename=f'Quote-{quote.id} - {quote.partyname} - {quote.createdby}.pdf',
     )
+
+
+# ── Comparison draft — quotepdf v2 ──────────────────────────────────────────
+# New URL (quotepdf-v2/<id>/), doesn't touch quotepdf/letterheadquotepdf or
+# their URLs, so the two can be opened side by side. Same structure as
+# quotepdf() above, with fixes for four things noticed while reviewing it:
+#
+#   1. Company name was hand-drawn as bold text twice at a 0.5pt offset to
+#      fake a shadow/bold effect, when static/images/hflogo.png -- an actual
+#      logo -- already exists in the codebase and just wasn't used.
+#   2. Multi-line addresses (Quotation.add is a plain TextField, and real
+#      addresses do contain \n) were passed straight to canvas.drawString(),
+#      which doesn't interpret \n at all -- it draws the tofu/box glyph for
+#      it inline instead of starting a new line. Now split and drawn one
+#      line at a time.
+#   3. Per Pouch Cost / Pouch Per Kg were always printed even for Kg-unit
+#      items, where they're not used in the total at all (itemtotalcost is
+#      material_rate x moq for Kg, per_pouch_cost x moq for Nos.) -- same
+#      "don't show a number that isn't actually in play" treatment the
+#      table already gives cylinder detail/cost when there's no cylinder.
+#   4. The signature always fell back to Firoj's image for literally any
+#      approver whose username isn't 'khadimhusen' -- so a PDF approved by
+#      a third staff member would print showing the wrong person's
+#      signature. Now shows a signature only for a recognized approver,
+#      omits it otherwise rather than attributing it to the wrong person.
+@login_required(login_url='/login/')
+@accessview
+def quotepdf_v2(_, id):
+    quote = get_object_or_404(Quotation, id=id)
+    buffer = io.BytesIO()
+
+    styles = getSampleStyleSheet()
+    styleN = styles['BodyText']
+    styleN.leading = 11
+
+    SIGNATURES = {
+        'khadimhusen': 'static/images/husensign.png',
+        'firoj': 'static/images/firojsign.png',
+    }
+
+    def draw_header(canvas, doc):
+        canvas.saveState()
+
+        # Decorative corner triangles
+        canvas.setFillColor(yellow); canvas.setStrokeColor(yellow)
+        _drawpath(canvas, (0, H), [(80, H), (0, H - 80)])
+        canvas.setFillColor(orange); canvas.setStrokeColor(orange)
+        _drawpath(canvas, (0, H), [(73, H), (0, H - 73)])
+
+        # Right green strip
+        canvas.setFillColorRGB(0.7, 0.9, 0); canvas.setStrokeColorRGB(0.7, 0.9, 0)
+        _drawpath(canvas, [W - 30, H], [(W, H), (W, 0), (W - 30, 0)])
+
+        # "H F FLEX" text on strip
+        canvas.rotate(90)
+        canvas.setFont('times', 14); canvas.setFillColorRGB(0.1, 0.4, 0.6)
+        canvas.drawCentredString(450, -580, '   H F FLEX  ' * 10)
+        canvas.rotate(-90)
+
+        # Actual logo, in place of the old hand-drawn double-text company
+        # name -- static/images/hflogo.png is 365x425 (0.859 aspect).
+        logo_w, logo_h = 46, 46 / (365 / 425)
+        logo_x = MARGIN_L + 5
+        canvas.drawImage(
+            'static/images/hflogo.png', logo_x, H - 12 - logo_h,
+            width=logo_w, height=logo_h, mask='auto',
+        )
+
+        text_x = logo_x + logo_w + 10
+        canvas.setFillColorRGB(0.80, 0, 0)
+        canvas.setFont('timesbd', 20)
+        canvas.drawString(text_x, H - 28, 'H F Flex Pvt. Ltd.')
+
+        canvas.setFillColorRGB(0, 0.2, 0.5); canvas.setFont('arial', 9)
+        canvas.drawString(text_x, H - 42, '25, Lucky Lark Textile Park, Gardi, Vita')
+        canvas.drawString(text_x, H - 54, 'Tal- Khanapur, Dist- Sangli, Maharashtra-415311')
+        canvas.drawString(text_x, H - 67, f'Contact:- {quote.createdby.profile.mobile}')
+        canvas.drawString(text_x, H - 81, 'Email:- hfflexpvtltd@gmail.com  |  www.hfflex.co.in')
+
+        # Quotation meta (top right)
+        canvas.setFont('arial', 10); canvas.setFillColorRGB(0.0, 0.2, 0.5)
+        rx = W - MARGIN_R - 145
+        canvas.drawRightString(rx, H - 30, 'Quotation No:- ')
+        canvas.setFont('arial', 14)
+        canvas.drawString(rx, H - 30, f'# {str(quote.id).zfill(6)}')
+        canvas.setFont('arial', 10)
+        canvas.drawRightString(rx, H - 45, 'Date:- ')
+        canvas.drawString(rx, H - 45, quote.quotedate.strftime('%d/%m/%Y'))
+        canvas.drawRightString(rx, H - 60, 'Created By:- ')
+        canvas.drawString(rx, H - 60, f'{quote.createdby} ({quote.createdby.profile.mobile})')
+        canvas.drawRightString(rx, H - 75, 'Company GST:- ')
+        canvas.drawString(rx, H - 75, '27AADCH3462K1ZF')
+        canvas.drawRightString(rx, H - 90, 'Company CIN:- ')
+        canvas.drawString(rx, H - 90, 'U74900PN2014PTC150332')
+
+        # Divider below letterhead
+        canvas.setFillColor(black); canvas.setStrokeColor(black)
+        _drawpath(canvas, [MARGIN_L, H - 105], [(W - MARGIN_R, H - 105)])
+
+        # -- Customer block --------------------------------------------
+        canvas.setFont('arial', 9); canvas.setFillColorRGB(0.1, 0.1, 0.1)
+        y = H - 118
+        canvas.drawString(MARGIN_L, y, f'Customer : {quote.partyname.upper()}')
+
+        # Address split into real lines -- drawString ignores \n entirely,
+        # so a multi-line address used to print as one line with a tofu
+        # glyph where each newline was. Caps at 3 lines so a long address
+        # can't run into the divider/table below; matches this header's
+        # fixed height same as the rest of the block.
+        #
+        # Line 2/3 start exactly under where line 1's address text starts
+        # (measured with stringWidth, not padded with space characters --
+        # Arial isn't monospace, so N spaces don't reliably land at the
+        # same x as the label text they're meant to match).
+        address_label = 'Address  : '
+        address_value_x = MARGIN_L + canvas.stringWidth(address_label, 'arial', 9)
+        address_lines = (quote.add or '-').splitlines() or ['-']
+        for i, line in enumerate(address_lines[:3]):
+            ly = y - 13 - (i * 11)
+            if i == 0:
+                canvas.drawString(MARGIN_L, ly, f'{address_label}{line}')
+            else:
+                canvas.drawString(address_value_x, ly, line)
+        contact_y = y - 13 - (min(len(address_lines), 3) * 11)
+        canvas.drawString(MARGIN_L, contact_y, f'Contact  : {quote.contact or "-"}')
+
+        # Divider below customer block -- positioned relative to contact_y
+        # (which already accounts for however many address lines actually
+        # got drawn) instead of a fixed offset. A fixed H-152 sat only 1pt
+        # above the 3rd address line whenever the address used its full 3
+        # lines, striking straight through that line's text.
+        canvas.setStrokeColorRGB(0.7, 0.7, 0.7); canvas.setLineWidth(0.5)
+        canvas.line(MARGIN_L, contact_y - 9, W - MARGIN_R, contact_y - 9)
+
+        canvas.restoreState()
+
+    def draw_footer(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('arial', 7)
+        canvas.setFillColorRGB(0.5, 0.5, 0.5)
+        canvas.drawCentredString(W / 2, 8, 'H F Flex Pvt. Ltd. | Confidential')
+        canvas.restoreState()
+
+    def on_page(canvas, doc):
+        draw_header(canvas, doc)
+        draw_footer(canvas, doc)
+
+    frame = Frame(FRAME_X, FRAME_Y, FRAME_W, FRAME_H, id='body', showBoundary=False)
+    doc = BaseDocTemplate(
+        buffer,
+        pagesize=A4,
+        pageTemplates=[PageTemplate(id='main', frames=[frame], onPage=on_page)],
+        leftMargin=MARGIN_L,
+        rightMargin=MARGIN_R,
+        topMargin=HEADER_H,
+        bottomMargin=FOOTER_H,
+    )
+
+    story = []
+
+    tabelheader = [
+        '#',
+        Paragraph('Description', styleN),
+        Paragraph('Cylinder<br/>Detail', styleN),
+        Paragraph('Cylinder<br/>Cost', styleN),
+        Paragraph('Material<br/>Rate', styleN),
+        Paragraph('Pouch<br/>Per<br/>Kg.', styleN),
+        Paragraph('Per Pouch<br/>Cost.', styleN),
+        Paragraph('MOQ', styleN),
+        Paragraph('Material<br/>Cost', styleN),
+    ]
+    data = [tabelheader]
+
+    for i, item in enumerate(quote.quotationitems.order_by('id'), 1):
+        itemdesc = (
+            f'{item.jobname}<br/>Size:- {item.dimension}<br/>'
+            f'{item.structure}<br/>Supply :- {item.supply}'
+        )
+        para = Paragraph(f'<font name=arial size=8>{itemdesc}</font>', styleN)
+
+        if item.cyl_rate and item.no_of_cyl:
+            cyl_detail = Paragraph(f'<font size=8>Rs.{round(item.cyl_rate)} x {item.no_of_cyl}Nos.</font>', styleN)
+            cyl_cost = Paragraph(f'<font size=8>Rs.{round(item.item_cylinder_cost, 0)}</font>', styleN)
+        else:
+            cyl_detail = Paragraph('<font size=8>-</font>', styleN)
+            cyl_cost = Paragraph('<font size=8>-</font>', styleN)
+
+        mat_rate = (
+            Paragraph(f'<font size=8>Rs.{round(item.material_rate, 1)}</font>', styleN)
+            if item.material_rate else Paragraph('<font size=8>-</font>', styleN)
+        )
+
+        # Per Pouch Cost / Pouch Per Kg only actually feed the total for a
+        # Nos.-unit item (see QuotationItem.itemtotalcost) -- printing them
+        # for a Kg-unit item suggests they matter here when they don't.
+        is_pouch_unit = item.unit == 'Nos.'
+        pouch_per_kg = Paragraph(
+            f'<font size=8>{item.pouch_per_kg or "-"}</font>' if is_pouch_unit else '<font size=8>-</font>', styleN,
+        )
+        per_pouch_cost = Paragraph(
+            f'<font size=8>Rs. {item.per_pouch_cost or "-"}</font>' if is_pouch_unit else '<font size=8>-</font>',
+            styleN,
+        )
+
+        data.append([
+            str(i), para, cyl_detail, cyl_cost, mat_rate,
+            pouch_per_kg, per_pouch_cost,
+            Paragraph(f'<font size=8>{item.moq} {item.unit}</font>', styleN),
+            Paragraph(f'<font size=8>Rs.{round(item.itemtotalcost)}</font>', styleN),
+        ])
+
+    sbibank = (
+        '<font size=8>Bank Name:- State bank of India<br/>'
+        'Branch:- VITA<br/>'
+        'Account Name:- H F FLEX PVT. LTD.<br/>'
+        'Account No:- 38244070864<br/>'
+        'IFS Code:- SBIN0000285</font>'
+        '<br/><font name="LohitDevanagari" size=8>'
+        'कोटेशन में दीए हुए बैंक अकाउंट के अलावा कीसी और बैंक अकाउंट पर पेमेंट ना करें।'
+        '</font>'
+    )
+    sbibankdetail = Paragraph(sbibank, styleN)
+
+    # Only a recognized approver's signature is shown -- previously any
+    # approver other than 'khadimhusen' silently got Firoj's signature
+    # printed on the PDF regardless of who actually approved it.
+    sign_path = SIGNATURES.get(quote.approvedby.username) if quote.approvedby else None
+    sig = Image(sign_path, 1.2 * inch, 1.2 * inch) if sign_path else ''
+
+    item_count = len(data) - 1
+    bank_row = 1 + item_count
+    gst_row = bank_row + 1
+    gross_row = bank_row + 2
+    remark_row = bank_row + 3
+
+    data.append([sbibankdetail, '', 'Basic Total', quote.totalcylindercost, sig, '', 'Basic Total', '',
+                 quote.totalmaterialcost])
+    data.append(
+        ['', '', f'Gst @{quote.cylinder_gst} %', round(quote.cylindergst, 2), '', '', f'Gst @{quote.material_gst} %',
+         '', round(quote.materialgst, 2)])
+    data.append(['', '', Paragraph('<font size=8>Cylinder<br/>Gross Total</font>', styleN),
+                 Paragraph(f'<font size=9>{round(quote.grosscylindercost, 2)}</font>', styleN),
+                 '', '', 'Material Gross Total', '', round(quote.grossmaterialcost, 2)])
+    data.append([Paragraph(f"<font size=7>Remark: {quote.remark or ' '}</font>", styleN),
+                 '', '', '', '', '', '', '', ''])
+
+    tstyle = TableStyle([
+        ('GRID', (0, 0), (8, remark_row), 0.25, colors.gray),
+        ('BACKGROUND', (0, 0), (8, 0), (0.9, 0.9, 0.9)),
+        ('ALIGN', (0, 0), (8, remark_row), 'CENTER'),
+        ('VALIGN', (0, 0), (8, remark_row), 'MIDDLE'),
+        ('FONTSIZE', (0, 0), (8, remark_row), 8),
+        ('SPAN', (0, bank_row), (1, gross_row)),
+        ('SPAN', (4, bank_row), (5, gross_row)),
+        ('SPAN', (6, bank_row), (7, bank_row)),
+        ('SPAN', (6, gst_row), (7, gst_row)),
+        ('SPAN', (6, gross_row), (7, gross_row)),
+        ('SPAN', (0, remark_row), (8, remark_row)),
+        ('BOX', (0, bank_row), (1, gross_row), 2, colors.black),
+    ])
+
+    t = Table(data, colWidths=[15, 170, 55, 60, 50, 45, 50, 50, 55])
+    t.setStyle(tstyle)
+    story.append(t)
+    story.append(Spacer(0, 8))
+
+    summrydata = [
+        ['Quotation Summary'],
+        ['Design Charges', round(quote.designcost, 2)],
+        ['Cylinder Cost', round(quote.grosscylindercost, 2)],
+        ['Material Cost', round(quote.grossmaterialcost, 2)],
+        ['Total Amount', round(quote.totalquotationcost, 2)],
+        ['Amount In Word', Paragraph(f'<font size=8>{quote.amountinword}</font>', styleN)],
+    ]
+    summrytable = Table(summrydata, colWidths=[150, 400])
+    summrytable.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.gray),
+        ('BACKGROUND', (0, 0), (0, 0), (0.9, 0.9, 0.9)),
+        ('SPAN', (0, 0), (1, 0)),
+    ]))
+    story.append(summrytable)
+    story.append(Spacer(0, 8))
+
+    termslist = [['Terms & Conditions']]
+    for term in quote.quote_term.all():
+        termslist.append([term])
+    for term in quote.additionalterms.all():
+        termslist.append([term.term])
+
+    termstable = Table(termslist, colWidths=[550])
+    termstable.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.gray),
+        ('BACKGROUND', (0, 0), (0, 0), (0.9, 0.9, 0.9)),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),
+    ]))
+    story.append(termstable)
+
+    doc.title = f'Quote-{quote.id} - {quote.partyname} - {quote.createdby} (v2)'
+    doc.build(story, canvasmaker=NumberedCanvas)
+
+    buffer.seek(0)
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=f'Quote-{quote.id} - {quote.partyname} - {quote.createdby} (v2).pdf',
+    )
