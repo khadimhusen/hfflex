@@ -60,7 +60,7 @@ class PrejobLookupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JobName
-        fields = ['id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark']
+        fields = ['id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark', 'new_cylinder', 'new_cyl_qty']
 
 
 class OrderSerializer(serializers.ModelSerializer):
