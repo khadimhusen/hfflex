@@ -1,1 +1,0 @@
-import{U as e,dt as t}from"./use-router-link-DVq4c45B.js";import{t as n}from"./QuotationForm-mQT3iZUZ.js";var r={__name:`new`,setup(r){return(r,i)=>(t(),e(n))}};export{r as default};
