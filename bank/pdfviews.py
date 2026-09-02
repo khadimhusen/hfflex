@@ -34,8 +34,8 @@ def chequepdf(request, id):
         t.setTextOrigin(-62 * mm, 93 * mm)
         t.setCharSpace(9.8)
     else:
-        t.setTextOrigin(-57 * mm, 93 * mm)
-        t.setCharSpace(7.7)
+        t.setTextOrigin(-56 * mm, 93 * mm)
+        t.setCharSpace(8)
     if cheque.cheque_date:
         t.textLine(f'{cheque.cheque_date.strftime("%d%m%Y")}')
     p.drawText(t)
