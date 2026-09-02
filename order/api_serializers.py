@@ -52,12 +52,15 @@ class ItemMasterLookupSerializer(serializers.ModelSerializer):
 
 class PrejobLookupSerializer(serializers.ModelSerializer):
     """For Job.prejob — old JobForm scoped this to preorder JobNames that
-    are final-submitted and not yet converted into a Job."""
+    are final-submitted and not yet converted into a Job. Carries qty/unit/
+    rate/remark too (not just the label fields) so the frontend can prefill
+    the rest of the Add Job form from a single lookup call instead of a
+    second round trip once a prejob is picked."""
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
 
     class Meta:
         model = JobName
-        fields = ['id', 'jobname', 'qty', 'unit_display']
+        fields = ['id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark']
 
 
 class OrderSerializer(serializers.ModelSerializer):
