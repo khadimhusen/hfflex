@@ -79,7 +79,7 @@ class ItemMasterLookupViewSet(viewsets.ReadOnlyModelViewSet):
 class PrejobLookupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = JobName.objects.filter(
         job__isnull=True, preorder__final_submition=True,
-    ).select_related('unit').order_by('-id')
+    ).select_related('unit', 'preorder').order_by('-id')
     serializer_class = PrejobLookupSerializer
     permission_classes = [IsOrderUser]
 

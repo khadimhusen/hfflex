@@ -57,10 +57,14 @@ class PrejobLookupSerializer(serializers.ModelSerializer):
     the rest of the Add Job form from a single lookup call instead of a
     second round trip once a prejob is picked."""
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
+    preorder_customer = serializers.CharField(source='preorder.customer', read_only=True)
 
     class Meta:
         model = JobName
-        fields = ['id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark', 'new_cylinder', 'new_cyl_qty']
+        fields = [
+            'id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark', 'new_cylinder', 'new_cyl_qty',
+            'preorder_customer',
+        ]
 
 
 class OrderSerializer(serializers.ModelSerializer):
