@@ -130,6 +130,7 @@ class JobSerializer(serializers.ModelSerializer):
     itemname_display = serializers.CharField(source='itemname', read_only=True)
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
     order_customer = serializers.CharField(source='joborder.customer.name', read_only=True)
+    schedule_date = serializers.DateTimeField(source='joborder.deliverydate', read_only=True, default=None)
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
     edited_by_name = serializers.CharField(source='editedby.get_full_name', read_only=True, default=None)
     marketing_person_name = serializers.CharField(
@@ -163,7 +164,7 @@ class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
         fields = [
-            'id', 'prejob', 'joborder', 'order_customer', 'itemmaster', 'itemname_display',
+            'id', 'prejob', 'joborder', 'order_customer', 'schedule_date', 'itemmaster', 'itemname_display',
             'quantity', 'unit', 'unit_display', 'rate', 'waste', 'jobstatus',
             'account_clearance_date', 'approvedby', 'approvedby_name',
             'marketing_person', 'marketing_person_name',
