@@ -259,6 +259,7 @@ class LeadViewSet(viewsets.ModelViewSet):
                     amount=deal_data.get('amount'),
                     closing_date=deal_data.get('closing_date') or None,
                     description=deal_data.get('description') or lead.description or '',
+                    city=lead.city,
                     owner=owner,
                 )
                 DealStageHistory.objects.create(
