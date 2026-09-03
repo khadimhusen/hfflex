@@ -19,7 +19,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.select_related('marketing_person', 'createdby', 'editedby')
     serializer_class = CustomerSerializer
     filterset_class = CustomerFilter
-    search_fields = ['name', 'gst', 'email']
+    # addresses__add1/add2 let the one search box also match a customer's
+    # address/location -- 'addresses' is a to-many reverse FK, so DRF's
+    # SearchFilter auto-applies .distinct() to avoid duplicate rows from a
+    # customer with multiple matching addresses.
+    search_fields = ['name', 'gst', 'email', 'addresses__add1', 'addresses__add2']
     permission_classes = [IsCustomerUser]
 
     def perform_create(self, serializer):
