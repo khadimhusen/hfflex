@@ -1,1 +1,0 @@
-import{At as e,U as t,dt as n}from"./use-router-link-DVq4c45B.js";import{O as r}from"./index-D3QAFt7z.js";import{t as i}from"./QuotationForm-DN3lynkY.js";var a={__name:`edit`,setup(a){let o=r();return(r,a)=>(n(),t(i,{"quotation-id":e(o).params.id},null,8,[`quotation-id`]))}};export{a as default};
