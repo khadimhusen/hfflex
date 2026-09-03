@@ -3,7 +3,7 @@ import re
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Customer, Address, Person
+from .models import Customer, Address, Person, Pincode
 from .querysets import marketing_users
 
 # Standard 15-character GST number: 2-digit state code, 10-char PAN,
@@ -18,6 +18,15 @@ class MarketingUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name']
+
+
+class PincodeSerializer(serializers.ModelSerializer):
+    """Powers the place-name typeahead on Find Nearby Customers -- pick a
+    result here to fill in its pincode rather than needing to know it."""
+
+    class Meta:
+        model = Pincode
+        fields = ['code', 'place_name', 'district', 'state']
 
 
 class AddressSerializer(serializers.ModelSerializer):

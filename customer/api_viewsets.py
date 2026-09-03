@@ -1,10 +1,12 @@
+import difflib
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .models import Customer, Address, Person, Pincode
 from .api_serializers import (
-    CustomerSerializer, AddressSerializer, PersonSerializer, MarketingUserSerializer,
+    CustomerSerializer, AddressSerializer, PersonSerializer, MarketingUserSerializer, PincodeSerializer,
 )
 from .filters import CustomerFilter
 from .querysets import marketing_users
@@ -16,6 +18,50 @@ class MarketingUserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = marketing_users()
     serializer_class = MarketingUserSerializer
     permission_classes = [IsCustomerUser]
+
+
+class PincodeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Place-name typeahead for Find Nearby Customers -- 'Mayni' etc.
+    resolves to its pincode without needing to already know it. Not
+    filtered by district/state on its own -- ?search= (name only) is
+    enough, since the frontend shows district/state alongside each
+    result for disambiguation.
+
+    Plain list(), not SearchFilter -- India Post's own spelling
+    ('Mayani') often differs from the colloquial one people actually
+    type ('Mayni'), so a substring match alone misses real queries. An
+    icontains pass runs first (cheap, and a literal match should always
+    rank first); only when that comes up thin does it fall back to
+    difflib fuzzy matching against all place names -- fine here since
+    that only runs on the minority of searches that need it.
+    """
+    queryset = Pincode.objects.all()
+    serializer_class = PincodeSerializer
+    permission_classes = [IsCustomerUser]
+    pagination_class = None  # typeahead: a capped plain list, not a paged envelope
+
+    def list(self, request, *args, **kwargs):
+        q = (request.query_params.get('search') or '').strip()
+        if len(q) < 2:
+            return Response([])
+
+        results = list(Pincode.objects.filter(place_name__icontains=q).order_by('place_name')[:20])
+
+        if len(results) < 8:
+            seen = {p.place_name for p in results}
+            all_names = list(Pincode.objects.values_list('place_name', flat=True).distinct())
+            close_names = [
+                n for n in difflib.get_close_matches(q.title(), all_names, n=20, cutoff=0.6)
+                if n not in seen
+            ]
+            if close_names:
+                rank = {name: i for i, name in enumerate(close_names)}
+                extra = list(Pincode.objects.filter(place_name__in=close_names))
+                extra.sort(key=lambda p: rank[p.place_name])
+                results += extra[:20 - len(results)]
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
