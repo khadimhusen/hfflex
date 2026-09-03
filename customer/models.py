@@ -40,6 +40,24 @@ class Customer(models.Model):
     #     return self.credit_cap == 0
 
 
+class Pincode(models.Model):
+    """India Post pincode -> lat/lng lookup, loaded once from
+    customer/data/india_pincodes.csv via `manage.py load_pincodes` (see
+    that command's docstring for the source and how the file was built).
+    Not a FK target for Address.pincode -- joined by the plain 6-digit
+    value so existing Address rows need no backfill/migration of their
+    own. Powers CustomerViewSet.nearby (find customers near a pincode)."""
+    code = models.PositiveIntegerField(unique=True, db_index=True)
+    place_name = models.CharField(max_length=64, blank=True)
+    district = models.CharField(max_length=64, blank=True)
+    state = models.CharField(max_length=64, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+
+    def __str__(self):
+        return f'{self.code} - {self.place_name}, {self.district}'
+
+
 class Address(models.Model):
     customer = models.ForeignKey(Customer, related_name='addresses', on_delete=models.PROTECT)
     addname = models.CharField(max_length=32)
