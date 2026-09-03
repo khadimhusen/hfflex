@@ -172,10 +172,14 @@ class JobViewSet(viewsets.ModelViewSet):
     # No delete — cancel (below) is the old app's only destructive action,
     # and even that only soft-cancels (status flip + wipes sub-resources).
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    # Job.Meta.ordering is -id (newest first) -- that default still serves
+    # the old Django views (joblist.html etc.), so it's overridden here
+    # rather than changed model-wide, scoping "oldest first" to just the
+    # SPA's Jobs list.
     queryset = Job.objects.select_related(
         'joborder', 'joborder__customer', 'itemmaster', 'unit', 'prejob',
         'marketing_person', 'approvedby', 'createdby', 'editedby',
-    )
+    ).order_by('id')
     serializer_class = JobSerializer
     permission_classes = [IsOrderUser]
     filterset_class = JobFilter
