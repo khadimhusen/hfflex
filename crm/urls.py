@@ -7,7 +7,9 @@ from .viewsets import (
     DealStageHistoryViewSet, LeadViewSet, CrmUserViewSet,
     NoteViewSet, DealAttachmentViewSet, DealTaskViewSet
 )
-from .views_dashboard import DealDashboardView, MeView, MyDashboardView, LoginView, LogoutView
+from .views_dashboard import (
+    DealDashboardView, MeView, MyDashboardView, LoginView, LogoutView, ChangePasswordView,
+)
 
 router = DefaultRouter()
 router.register('pipelines', PipelineViewSet)
@@ -28,5 +30,6 @@ urlpatterns = router.urls + [
     path('me/', MeView.as_view(), name='crm-me'),
     path('login/', LoginView.as_view(), name='crm-login'),
     path('logout/', LogoutView.as_view(), name='crm-logout'),
+    path('change-password/', ChangePasswordView.as_view(), name='crm-change-password'),
     path('my-dashboard/', MyDashboardView.as_view(), name='crm-my-dashboard'),
 ]

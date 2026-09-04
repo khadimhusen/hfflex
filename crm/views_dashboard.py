@@ -1,4 +1,8 @@
-from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib.auth import (
+    authenticate, login as django_login, logout as django_logout, update_session_auth_hash,
+)
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.contrib.auth.password_validation import validate_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -365,6 +369,34 @@ class LogoutView(APIView):
     def post(self, request):
         django_logout(request)
         return Response({'detail': 'Logged out.'})
+
+
+class ChangePasswordView(APIView):
+    """Self-service password change for the currently logged-in user --
+    old_password confirms identity, new_password runs through the
+    project's normal AUTH_PASSWORD_VALIDATORS. update_session_auth_hash
+    is required after set_password: Django's session auth hash is
+    derived from the password, so without it the user would be silently
+    logged out by their own successful password change."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        old_password = request.data.get('old_password', '')
+        new_password = request.data.get('new_password', '')
+
+        if not request.user.check_password(old_password):
+            return Response({'old_password': ['Current password is incorrect.']}, status=400)
+
+        try:
+            validate_password(new_password, user=request.user)
+        except DjangoValidationError as exc:
+            return Response({'new_password': list(exc.messages)}, status=400)
+
+        request.user.set_password(new_password)
+        request.user.save(update_fields=['password'])
+        update_session_auth_hash(request, request.user)
+
+        return Response({'detail': 'Password changed.'})
 
 
 class MyDashboardView(APIView):
