@@ -260,6 +260,11 @@ class LeadViewSet(viewsets.ModelViewSet):
                     closing_date=deal_data.get('closing_date') or None,
                     description=deal_data.get('description') or lead.description or '',
                     city=lead.city,
+                    lead_source=lead.lead_source,
+                    # Lead itself has no equivalent field -- inferred from
+                    # which account this deal landed on, matching this
+                    # field's own two documented values.
+                    deal_type='Existing Business' if account_action == 'existing' else 'New Business',
                     owner=owner,
                 )
                 DealStageHistory.objects.create(
