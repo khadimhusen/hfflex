@@ -593,5 +593,9 @@ class DispatchApprovalRemoveView(APIView):
             raise ValidationError({'detail': ['Job not found.']})
         job.dispatch_approval = False
         job.dispatch_approval_date = None
-        job.save(update_fields=['dispatch_approval', 'dispatch_approval_date'])
-        return Response({'id': job.id, 'dispatch_approval': job.dispatch_approval})
+        remover = request.user.get_full_name() or request.user.username
+        job.dispatch_remark = f'Dispatch approval removed by {remover}'
+        job.save(update_fields=['dispatch_approval', 'dispatch_approval_date', 'dispatch_remark'])
+        return Response({
+            'id': job.id, 'dispatch_approval': job.dispatch_approval, 'dispatch_remark': job.dispatch_remark,
+        })
