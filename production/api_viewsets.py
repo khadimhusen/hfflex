@@ -576,3 +576,22 @@ class DispatchApprovalView(APIView):
             'dispatch_approval_date': job.dispatch_approval_date, 'dispatch_remark': job.dispatch_remark,
             'invoice': job.invoice,
         })
+
+
+class DispatchApprovalRemoveView(APIView):
+    """Undo a job's dispatch approval -- sends it back to the
+    approval-pending queue. A separate endpoint from DispatchApprovalView
+    (rather than posting dispatch_approval=False through it) because that
+    view unconditionally stamps dispatch_approval_date=now() on every
+    save, which is right for approving but wrong here -- removing an
+    approval should clear the date, not refresh it."""
+    permission_classes = [IsDispatchUser]
+
+    def post(self, request, pk=None):
+        job = Job.objects.filter(id=pk).first()
+        if not job:
+            raise ValidationError({'detail': ['Job not found.']})
+        job.dispatch_approval = False
+        job.dispatch_approval_date = None
+        job.save(update_fields=['dispatch_approval', 'dispatch_approval_date'])
+        return Response({'id': job.id, 'dispatch_approval': job.dispatch_approval})

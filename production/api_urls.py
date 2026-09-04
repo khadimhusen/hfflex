@@ -10,7 +10,7 @@ from .api_viewsets import (
     ProdReportViewSet, ProdInputViewSet, ProdOutputViewSet, ProdPersonViewSet, ProdProblemViewSet, JobQcViewSet,
     StockdetailReportViewSet, StockdetailEditViewSet, ProblemTagViewSet, JobMaterialStatusViewSet,
     DispatchRegisterViewSet, OtherDispatchItemViewSet, DispatchableStockViewSet,
-    DispatchPendingView, DispatchApprovalPendingView, DispatchApprovalView,
+    DispatchPendingView, DispatchApprovalPendingView, DispatchApprovalView, DispatchApprovalRemoveView,
 )
 
 router = DefaultRouter()
@@ -52,4 +52,8 @@ urlpatterns = router.urls + [
     path('dispatch-pending/', DispatchPendingView.as_view(), name='production-dispatch-pending'),
     path('dispatch-approval-pending/', DispatchApprovalPendingView.as_view(), name='production-dispatch-approval-pending'),
     path('dispatch-approval/<int:pk>/', DispatchApprovalView.as_view(), name='production-dispatch-approval'),
+    path(
+        'dispatch-approval-remove/<int:pk>/', DispatchApprovalRemoveView.as_view(),
+        name='production-dispatch-approval-remove',
+    ),
 ]
