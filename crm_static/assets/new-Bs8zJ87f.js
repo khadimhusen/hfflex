@@ -1,1 +1,0 @@
-import{U as e,dt as t}from"./use-router-link-C2rrFOSi.js";import{t as n}from"./InwardTreeForm-LKZFOUgt.js";var r={__name:`new`,setup(r){return(r,i)=>(t(),e(n))}};export{r as default};
