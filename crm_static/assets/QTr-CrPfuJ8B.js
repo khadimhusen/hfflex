@@ -1,1 +1,0 @@
-import{A as e,V as t,et as n,f as r}from"./use-router-link-DVq4c45B.js";var i=e({name:`QTr`,props:{props:Object,noHover:Boolean},setup(e,{slots:i}){let a=t(()=>`q-tr`+(e.props===void 0||e.props.header?``:` `+e.props.__trClass)+(e.noHover?` q-tr--no-hover`:``));return()=>n(`tr`,{style:e.props?.__trStyle,class:a.value},r(i.default))}});export{i as t};
