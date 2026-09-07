@@ -16,7 +16,7 @@ from .serializers import (
 from .filters import DealFilter, LeadFilter, AccountFilter, ContactFilter
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
-from .querysets import crm_users
+from .querysets import crm_users, can_see_all_leads
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery, F, Q, ExpressionWrapper, DateTimeField, BooleanField
 from django.db.models.functions import Coalesce
@@ -196,10 +196,15 @@ class LeadViewSet(viewsets.ModelViewSet):
         qs = Lead.objects.select_related(
             'owner', 'converted_account', 'converted_contact', 'converted_deal'
         )
-        user = self.request.user
-        if user.is_staff or user.is_superuser:
+        # can_see_all_leads() covers staff/superusers as before, plus the
+        # can_see_edit_all_lead department. This queryset is the only gate
+        # on the whole viewset -- there is no per-object edit check, and
+        # convert() resolves its lead through get_object() -- so widening
+        # it here is what lets those users edit and convert other people's
+        # leads, not just read them.
+        if can_see_all_leads(self.request.user):
             return qs
-        return qs.filter(owner=user)
+        return qs.filter(owner=self.request.user)
 
     @action(detail=True, methods=['post'])
     def convert(self, request, pk=None):
