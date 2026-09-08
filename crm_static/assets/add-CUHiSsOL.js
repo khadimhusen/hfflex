@@ -1,1 +1,0 @@
-import{U as e,dt as t,jt as n}from"./use-router-link-C2rrFOSi.js";import{k as r}from"./index-CjA_d81N.js";import{t as i}from"./InwardTreeForm-JN_D0PH8.js";var a={__name:`add`,setup(a){let o=r();return(r,a)=>(t(),e(i,{"inward-id":n(o).params.id},null,8,[`inward-id`]))}};export{a as default};
