@@ -307,6 +307,10 @@ def me_payload(u):
     # above -- that role check IS the old app's actual access control for
     # this module, not something to leave behind a temporary lock.
     is_planning = get_planning_role(u) is not None
+    # Ink store has no department gate of its own (the old views were
+    # login_required only), so this is the same TEMPORARY staff-only
+    # rollout gate as the modules above, matching IsInkStoreUser.
+    is_ink = is_staff
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
@@ -328,6 +332,7 @@ def me_payload(u):
             'returnable': is_returnable,
             'documents': is_documents,
             'resolutions': is_resolutions,
+            'ink': is_ink,
         },
     }
 
