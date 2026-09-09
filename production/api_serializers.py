@@ -257,6 +257,50 @@ class InwardSerializer(serializers.ModelSerializer):
 
 # ---- ProdReport and its sub-resources --------------------------------
 
+class ProdReportListSerializer(serializers.ModelSerializer):
+    """Read-only, list-sized twin of ProdReportSerializer.
+
+    The full serializer exposes 14 computed model properties, each of which
+    runs its own aggregate query and re-reads the ones it depends on --
+    roughly 23 queries per row, so a 25-row page cost ~575 queries. None of
+    them are shown on a list; the only one any list caller reads is
+    wastepercentage (the job page's Processes tab), and that is served here
+    from queryset annotations instead of per-row aggregates.
+    """
+    job_itemname = serializers.CharField(source='prodprocess.job.itemname', read_only=True)
+    job_id = serializers.IntegerField(source='prodprocess.job_id', read_only=True)
+    process_display = serializers.CharField(source='prodprocess.process.process', read_only=True)
+    process_status = serializers.CharField(source='prodprocess.status', read_only=True)
+    unit_display = serializers.CharField(source='unit.unit', read_only=True, default=None)
+    supervisor_name = serializers.CharField(source='supervisor.get_full_name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+    wastepercentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProdReport
+        fields = [
+            'id', 'prodprocess', 'job_id', 'job_itemname', 'process_display', 'process_status',
+            'processdate', 'qty', 'unit', 'unit_display', 'totalkg', 'checked', 'approved', 'remark',
+            'supervisor', 'supervisor_name', 'wastepercentage',
+            'created', 'createdby', 'created_by_name', 'edited', 'editedby',
+        ]
+        read_only_fields = fields
+
+    def get_wastepercentage(self, obj):
+        # Mirrors ProdReport.wastepercentage exactly, including rounding each
+        # sum to 3 before the division. Falls back to the property if the
+        # queryset was not annotated (see ProdReportViewSet.get_queryset).
+        if not hasattr(obj, 'wtgain_sum'):
+            return obj.wastepercentage
+        netoutput = round(obj.netoutput_sum or 0, 3)
+        if not netoutput:
+            return 0
+        totalwtgain = round(obj.wtgain_sum or 0, 3)
+        if not totalwtgain:
+            return 0
+        return round((totalwtgain - netoutput) * 100 / totalwtgain, 2)
+
+
 class ProdReportSerializer(serializers.ModelSerializer):
     """Mirrors NewProdReportForm (create: processdate/qty/unit/totalkg/
     supervisor) and ProdReportForm (edit: everything except prodprocess —

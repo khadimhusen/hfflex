@@ -52,6 +52,17 @@ class Stockdetail(models.Model):
 
     objects = StockdetailManager()
 
+    class Meta:
+        indexes = [
+            # Every GenericRelation into this table (ProdReport.output,
+            # Inward.stock) filters content_type + object_id together. The
+            # lone content_type index Django creates is useless on its own --
+            # one content type covers most of the table -- so those lookups
+            # were sequential-scanning all ~120k rows.
+            models.Index(fields=['content_type', 'object_id'],
+                         name='stockdetail_ct_objid_idx'),
+        ]
+
     def save(self, *args, **kwargs):
 
         if self.tare_wt is not None and self.gross_wt:
@@ -221,10 +232,16 @@ class ProdReport(models.Model):
 
     @property
     def wastepercentage(self):
-        if self.netoutput and self.totalwtgain:
-            return round((self.totalwtgain - self.netoutput) * 100 / self.totalwtgain, 2)
-        else:
+        # Each of these is its own aggregate query, so read every one into
+        # a local exactly once: reading self.totalwtgain three times cost
+        # three round trips for the same number.
+        netoutput = self.netoutput
+        if not netoutput:
             return 0
+        totalwtgain = self.totalwtgain
+        if not totalwtgain:
+            return 0
+        return round((totalwtgain - netoutput) * 100 / totalwtgain, 2)
 
     @property
     def wasteoutput(self):
@@ -239,9 +256,10 @@ class ProdReport(models.Model):
         # Mirrors the same script's "Waste %" — waste's share of gross
         # output (not to be confused with wastepercentage above, which is
         # a yield-loss figure against consumed input).
-        if not self.grossrecieved:
+        grossrecieved = self.grossrecieved
+        if not grossrecieved:
             return 0
-        return round(self.wasteoutput * 100 / self.grossrecieved, 3)
+        return round(self.wasteoutput * 100 / grossrecieved, 3)
 
     @property
     def massbalancediff(self):
@@ -252,9 +270,14 @@ class ProdReport(models.Model):
     @property
     def massbalanceerrorpercentage(self):
         # Mirrors the same script's "Error %".
-        if not self.totalwtgain:
+        # massbalancediff is inlined rather than read as a property, which
+        # would re-run both of its aggregates. The rounding to 3 first is
+        # kept, so the result is identical.
+        totalwtgain = self.totalwtgain
+        if not totalwtgain:
             return 0
-        return round(self.massbalancediff * 100 / self.totalwtgain, 2)
+        massbalancediff = round(self.grossrecieved - totalwtgain, 3)
+        return round(massbalancediff * 100 / totalwtgain, 2)
 
 
 class ProdInput(models.Model):

@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, OuterRef, Subquery, DecimalField
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -25,7 +25,7 @@ from .api_serializers import (
     MaterialLookupSerializer, MatTypeLookupSerializer, GradeLookupSerializer, UnitLookupSerializer,
     SupervisorLookupSerializer, JobProcessLookupSerializer,
     StockdetailLineSerializer, InwardSerializer,
-    ProdReportSerializer, ProdInputSerializer, ProdPersonSerializer, ProdProblemSerializer, JobQcSerializer,
+    ProdReportSerializer, ProdReportListSerializer, ProdInputSerializer, ProdPersonSerializer, ProdProblemSerializer, JobQcSerializer,
     ProblemTagSerializer, OtherDispatchItemSerializer, DispatchRegisterSerializer, DispatchableStockSerializer,
     DispatchApprovalSerializer, JobMaterialStatusSerializer,
 )
@@ -245,6 +245,33 @@ class ProdReportViewSet(viewsets.ModelViewSet):
     serializer_class = ProdReportSerializer
     permission_classes = [IsProductionReportUser]
     filterset_class = ProdReportFilter
+
+    def get_serializer_class(self):
+        # The full serializer's 14 computed properties are ~23 aggregate
+        # queries per row and none of them are shown on a list. Detail and
+        # write responses keep them.
+        if self.action == 'list':
+            return ProdReportListSerializer
+        return ProdReportSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action != 'list':
+            return qs
+        # wastepercentage is the one computed field a list caller reads (the
+        # job page's Processes tab). Two correlated subqueries give it to the
+        # whole page for free instead of ~5 aggregate queries per row.
+        ct = ContentType.objects.get_for_model(ProdReport)
+        wtgain_sum = ProdInput.objects.filter(
+            prodreport=OuterRef('pk'),
+        ).values('prodreport').annotate(total=Sum('wtgain')).values('total')
+        netoutput_sum = Stockdetail.objects.filter(
+            content_type=ct, object_id=OuterRef('pk'),
+        ).exclude(materialname__name='WASTE').values('object_id').annotate(total=Sum('recieved')).values('total')
+        return qs.annotate(
+            wtgain_sum=Subquery(wtgain_sum, output_field=DecimalField(max_digits=14, decimal_places=3)),
+            netoutput_sum=Subquery(netoutput_sum, output_field=DecimalField(max_digits=14, decimal_places=3)),
+        )
 
     def perform_create(self, serializer):
         # Mirrors addprodreport: the JobProcess is picked on the job's
