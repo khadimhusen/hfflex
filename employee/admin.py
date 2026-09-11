@@ -45,6 +45,10 @@ class DepartmentAdminForm(forms.ModelForm):
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     form = DepartmentAdminForm
+    list_display  = ('department_name',)
+    # Searching by user answers "which departments is this person in?"
+    search_fields = ['department_name', 'user__username', 'user__first_name', 'user__last_name']
+    ordering      = ('department_name',)
 
 
 # ── Copy-departments action (lives on UserAdmin) ───────────────────────────────
