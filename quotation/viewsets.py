@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Prefetch
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from employee.models import Department
 from .filters import QuotationFilter
 from .models import Quotation, QuotationItem, Term
-from .serializers import QuotationSerializer, TermSerializer
+from .serializers import QuotationSerializer, QuotationListSerializer, TermSerializer
 
 
 class TermViewSet(viewsets.ReadOnlyModelViewSet):
@@ -30,10 +31,21 @@ class QuotationViewSet(viewsets.ModelViewSet):
     filterset_class = QuotationFilter
     search_fields = ['partyname', 'contact']
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return QuotationListSerializer
+        return QuotationSerializer
+
     def get_queryset(self):
-        qs = Quotation.objects.filter(is_deleted=False).prefetch_related(
-            'quotationitems', 'additionalterms', 'quote_term'
-        ).select_related('createdby', 'editedby', 'approvedby')
+        qs = Quotation.objects.filter(is_deleted=False).select_related('createdby', 'editedby', 'approvedby')
+
+        if self.action == 'list':
+            # QuotationListSerializer only reads items (for
+            # totalquotationcost) -- the two term prefetches are for the
+            # detail/form responses.
+            qs = qs.prefetch_related('quotationitems')
+        else:
+            qs = qs.prefetch_related('quotationitems', 'additionalterms', 'quote_term')
 
         if self.action == 'list':
             user = self.request.user
@@ -46,13 +58,19 @@ class QuotationViewSet(viewsets.ModelViewSet):
         return qs
 
     def list(self, request, *args, **kwargs):
-        # totalquotationcost is a Python @property chaining several other
-        # properties, each walking quotationitems.all() -- get_queryset()
-        # already prefetches that relation unconditionally, so summing it
-        # in Python here over every filtered row (not just the page) costs
-        # one extra query total, not one per quotation.
+        # total_cost covers every filtered row, not just the page, and
+        # totalquotationcost is a Python @property walking
+        # quotationitems.all() -- so this pass loads the whole filtered set.
+        # Strip it to the handful of columns the property reads and prefetch
+        # only items: loading the page's full prefetches here built ~43k model
+        # instances per request. Same filters, same property, same total.
         response = super().list(request, *args, **kwargs)
-        qs = self.filter_queryset(self.get_queryset())
+        items = QuotationItem.objects.only(
+            'id', 'quote', 'cyl_rate', 'no_of_cyl', 'unit', 'material_rate', 'per_pouch_cost', 'moq',
+        )
+        qs = self.filter_queryset(self.get_queryset()).select_related(None).prefetch_related(None).only(
+            'id', 'design_rate', 'no_of_design', 'cylinder_gst', 'material_gst',
+        ).prefetch_related(Prefetch('quotationitems', queryset=items))
         response.data['total_cost'] = sum((q.totalquotationcost for q in qs), 0)
         return response
 

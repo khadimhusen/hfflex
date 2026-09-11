@@ -28,6 +28,29 @@ class AdditionTermSerializer(serializers.ModelSerializer):
         fields = ['id', 'term']
 
 
+class QuotationListSerializer(serializers.ModelSerializer):
+    """Read-only, list-sized twin of QuotationSerializer.
+
+    The full serializer nests every item and term, spells the total out in
+    words (num2words) and runs a Department query per approved row for
+    can_edit -- none of which the list page shows. Detail, form and write
+    responses keep the full serializer.
+    """
+    createdby_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+    approvedby_name = serializers.CharField(source='approvedby.get_full_name', read_only=True, default=None)
+    totalquotationcost = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Quotation
+        fields = [
+            'id', 'partyname', 'add', 'contact', 'quotedate', 'remark', 'status',
+            'created', 'createdby', 'createdby_name',
+            'approvedby', 'approvedby_name', 'approved', 'is_deleted',
+            'totalquotationcost',
+        ]
+        read_only_fields = fields
+
+
 class QuotationSerializer(serializers.ModelSerializer):
     items = QuotationItemSerializer(source='quotationitems', many=True, required=False)
     additional_terms = AdditionTermSerializer(source='additionalterms', many=True, required=False)
