@@ -1,30 +1,50 @@
-import pandas as pd
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from crm.models import Account, Contact
-from ._import_utils import resolve_owner, clean_str,write_log_file
+from ._import_utils import (
+    resolve_owner, clean_str, clean_datetime, read_export, add_common_arguments,
+    resolve_edit_cutoff, edited_since, set_created_at, mark_synced, mark_kept, log_missing_from_export, finish,
+)
 
 
 class Command(BaseCommand):
-    help = 'Imports Contacts from a Zoho Excel export'
+    help = 'Imports Contacts from a Zoho export (.xlsx or .csv)'
 
     def add_arguments(self, parser):
-        parser.add_argument('--file', type=str, required=True, help='Path to Contacts_*.xlsx')
+        add_common_arguments(parser, 'Path to Contacts_*.xlsx / .csv')
 
     @transaction.atomic
     def handle(self, *args, **options):
-        df = pd.read_excel(options['file'])
-        log = []
-        created, updated, skipped = 0, 0, 0
+        df = read_export(options['file'])
+        cutoff, cutoff_source = resolve_edit_cutoff('import_contacts', Contact, options['edited_after'])
+        self.stdout.write(f'Keeping CRM edits made after: {cutoff or "n/a"} ({cutoff_source})')
+        log, seen = [], []
+        created, updated, kept, skipped = 0, 0, 0, 0
 
         for _, row in df.iterrows():
             zoho_id = clean_str(row.get('Record Id'))
             last_name = clean_str(row.get('Last Name'))
             row_context = f'Contact Record Id={zoho_id}, {last_name}'
 
+            if not zoho_id:
+                log.append(f'SKIPPED — no Record Id — {row_context}')
+                skipped += 1
+                continue
+            seen.append(zoho_id)
+
             if not last_name:
                 log.append(f'SKIPPED — no Last Name — {row_context}')
                 skipped += 1
+                continue
+
+            existing = Contact.objects.filter(zoho_record_id=zoho_id).first()
+            zoho_created = clean_datetime(row.get('Created Time'))
+            if edited_since(existing, cutoff):
+                log.append(f'KEPT — edited in CRM after last import — {row_context} '
+                           f'(changed {existing.updated_at:%Y-%m-%d %H:%M})')
+                set_created_at(Contact, existing.pk, zoho_created)
+                mark_kept(Contact, existing, cutoff)
+                kept += 1
                 continue
 
             owner = resolve_owner(row.get('Contact Owner'), log, row_context)
@@ -60,18 +80,12 @@ class Command(BaseCommand):
                     'owner': owner,
                 },
             )
+            set_created_at(Contact, obj.pk, zoho_created)
+            mark_synced(Contact, obj.pk)
             created += was_created
             updated += not was_created
 
-        self.stdout.write(self.style.SUCCESS(
-            f'Contacts — created: {created}, updated: {updated}, skipped: {skipped}'
-        ))
-        if log:
-            self.stdout.write(self.style.WARNING(f'\n{len(log)} issues:'))
-            for line in log:
-                self.stdout.write(f'  {line}')
-        summary = f'Contacts - created: {created}, updated: {updated}, skipped: {skipped}'
-        self.stdout.write(self.style.SUCCESS(summary))
-
-        log_path = write_log_file('import_contacts', log, summary)
-        self.stdout.write(f'Full log written to: {log_path}')
+        missing = log_missing_from_export(Contact, seen, log)
+        summary = (f'Contacts — created: {created}, updated: {updated}, kept (edited in CRM): {kept}, '
+                   f'skipped: {skipped}, in CRM but not in export: {missing}')
+        finish(self, 'import_contacts', log, summary, options)

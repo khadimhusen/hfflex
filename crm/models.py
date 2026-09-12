@@ -54,6 +54,7 @@ class DealStage(models.Model):
 
 class Account(models.Model):
     zoho_record_id = models.CharField(max_length=30, unique=True, null=True, blank=True)  # for import traceability
+    zoho_synced_at = models.DateTimeField(null=True, blank=True, editable=False)  # last time the Zoho import wrote this row
     name = models.CharField(max_length=255)
     account_number = models.CharField(max_length=50, blank=True)
     phone = models.CharField(max_length=30, blank=True)
@@ -86,6 +87,7 @@ class Account(models.Model):
 
 class Contact(models.Model):
     zoho_record_id = models.CharField(max_length=30, unique=True, null=True, blank=True)
+    zoho_synced_at = models.DateTimeField(null=True, blank=True, editable=False)  # last time the Zoho import wrote this row
     salutation = models.CharField(max_length=10, choices=[("Mr.", "Mr."), ("Ms.", "Ms.")], blank=True, null=True)
     first_name = models.CharField(max_length=100, blank=True)  # 58% filled
     last_name = models.CharField(max_length=100)  # 100% filled
@@ -123,6 +125,7 @@ class Contact(models.Model):
 
 class Deal(models.Model):
     zoho_record_id = models.CharField(max_length=30, unique=True, null=True, blank=True)
+    zoho_synced_at = models.DateTimeField(null=True, blank=True, editable=False)  # last time the Zoho import wrote this row
     name = models.CharField(max_length=255)
     pipeline = models.ForeignKey(Pipeline, on_delete=models.PROTECT)
     stage = models.ForeignKey(DealStage, on_delete=models.PROTECT)
@@ -175,6 +178,7 @@ class DealStageHistory(models.Model):
 
 class Lead(models.Model):
     zoho_record_id = models.CharField(max_length=30, unique=True, null=True, blank=True)
+    zoho_synced_at = models.DateTimeField(null=True, blank=True, editable=False)  # last time the Zoho import wrote this row
 
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100)
@@ -233,6 +237,7 @@ class Lead(models.Model):
 
 
 class Note(models.Model):
+    zoho_record_id = models.CharField(max_length=30, unique=True, null=True, blank=True)  # import_notes re-run safety
     content = models.TextField()
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, null=True, blank=True, related_name='notes')
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE, null=True, blank=True, related_name='notes')
