@@ -20,6 +20,7 @@ from .querysets import crm_users, can_see_all_leads
 from django.utils import timezone
 from django.db.models import OuterRef, Subquery, F, Q, ExpressionWrapper, DateTimeField, BooleanField
 from django.db.models.functions import Coalesce
+from .stall_utils import annotate_deal_stall_fields
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -59,28 +60,11 @@ class DealViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'account__name']
 
     def get_queryset(self):
-        now = timezone.now()
-
-        latest_stage_entry = DealStageHistory.objects.filter(
-            deal=OuterRef('pk'), to_stage=OuterRef('stage')
-        ).order_by('-changed_at').values('changed_at')[:1]
-
+        # Stall fields come from the one shared definition, which knows a won
+        # or lost deal is finished and never stalled -- whatever stall time
+        # its stage happens to carry.
         qs = Deal.objects.select_related('pipeline', 'stage__dealstagename', 'account', 'contact', 'owner')
-        qs = qs.annotate(_stage_entry_from_history=Subquery(latest_stage_entry))
-        qs = qs.annotate(stage_entered_at=Coalesce('_stage_entry_from_history', 'created_at'))
-        qs = qs.annotate(
-            stall_deadline=ExpressionWrapper(
-                F('stage_entered_at') + F('stage__max_stall_time'),
-                output_field=DateTimeField(),
-                )
-        )
-        qs = qs.annotate(
-            is_stalled=ExpressionWrapper(
-                Q(stage__max_stall_time__isnull=False) & Q(stall_deadline__lt=now),
-                output_field=BooleanField(),
-                )
-        )
-        return qs
+        return annotate_deal_stall_fields(qs)
 
     def perform_create(self, serializer):
         deal = serializer.save()
