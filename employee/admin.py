@@ -51,13 +51,77 @@ class DepartmentAdmin(admin.ModelAdmin):
     ordering      = ('department_name',)
 
 
-# ── Copy-departments action (lives on UserAdmin) ───────────────────────────────
+# ── Copy-departments action (on UserAdmin and ProfileAdmin) ────────────────────
+
+def _copy_departments_page(model_admin, request, back_to):
+    """The intermediate page both actions lead to: pick a source user, then
+    add (or replace with) their departments on the selected users. back_to
+    is the changelist to return to afterwards."""
+    target_ids   = request.session.get('copy_dept_target_ids', [])
+    target_users = User.objects.filter(id__in=target_ids)
+
+    if not target_users.exists():
+        model_admin.message_user(request, "No users selected.", messages.WARNING)
+        return redirect(back_to)
+
+    if request.method == 'POST':
+        form = CopyDepartmentForm(request.POST)
+        if form.is_valid():
+            source_user  = form.cleaned_data['source_user']
+            replace      = form.cleaned_data['replace']
+            source_depts = source_user.department.all()
+
+            if not source_depts.exists():
+                model_admin.message_user(
+                    request,
+                    f"'{source_user.username}' has no departments assigned.",
+                    messages.WARNING,
+                )
+                return redirect(back_to)
+
+            for user in target_users:
+                if user == source_user:
+                    continue
+                if replace:
+                    user.department.set(source_depts)
+                else:
+                    existing_ids = set(user.department.values_list('id', flat=True))
+                    new_depts    = source_depts.exclude(id__in=existing_ids)
+                    if new_depts.exists():
+                        user.department.add(*new_depts)
+
+            target_names = ", ".join(u.username for u in target_users)
+            model_admin.message_user(
+                request,
+                f"Departments from '{source_user.username}' copied to: {target_names}",
+                messages.SUCCESS,
+            )
+            del request.session['copy_dept_target_ids']
+            return redirect(back_to)
+    else:
+        form = CopyDepartmentForm()
+
+    return render(request, 'admin/copy_departments.html', {
+        'form':         form,
+        'target_users': target_users,
+        'opts':         model_admin.model._meta,
+        'title':        'Copy Departments',
+    })
+
 
 def copy_departments_action(modeladmin, request, queryset):
     request.session['copy_dept_target_ids'] = list(queryset.values_list('id', flat=True))
     return redirect('admin:copy_departments_intermediate')
 
 copy_departments_action.short_description = "Copy departments from another user"
+
+
+def copy_profile_departments_action(modeladmin, request, queryset):
+    # Departments belong to the profile's user, so copy onto those users.
+    request.session['copy_dept_target_ids'] = list(queryset.values_list('user_id', flat=True))
+    return redirect('admin:copy_profile_departments_intermediate')
+
+copy_profile_departments_action.short_description = "Copy departments from another user"
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -75,58 +139,29 @@ class CustomUserAdmin(BaseUserAdmin):
         return custom_urls + urls
 
     def copy_departments_view(self, request):
-        target_ids  = request.session.get('copy_dept_target_ids', [])
-        target_users = User.objects.filter(id__in=target_ids)
-
-        if not target_users.exists():
-            self.message_user(request, "No users selected.", messages.WARNING)
-            return redirect('..')
-
-        if request.method == 'POST':
-            form = CopyDepartmentForm(request.POST)
-            if form.is_valid():
-                source_user  = form.cleaned_data['source_user']
-                replace      = form.cleaned_data['replace']
-                source_depts = source_user.department.all()
-
-                if not source_depts.exists():
-                    self.message_user(
-                        request,
-                        f"'{source_user.username}' has no departments assigned.",
-                        messages.WARNING,
-                    )
-                    return redirect('..')
-
-                for user in target_users:
-                    if user == source_user:
-                        continue
-                    if replace:
-                        user.department.set(source_depts)
-                    else:
-                        existing_ids = set(user.department.values_list('id', flat=True))
-                        new_depts    = source_depts.exclude(id__in=existing_ids)
-                        if new_depts.exists():
-                            user.department.add(*new_depts)
-
-                target_names = ", ".join(u.username for u in target_users)
-                self.message_user(
-                    request,
-                    f"Departments from '{source_user.username}' copied to: {target_names}",
-                    messages.SUCCESS,
-                )
-                del request.session['copy_dept_target_ids']
-                return redirect('..')
-        else:
-            form = CopyDepartmentForm()
-
-        return render(request, 'admin/copy_departments.html', {
-            'form':         form,
-            'target_users': target_users,
-            'opts':         User._meta,
-            'title':        'Copy Departments',
-        })
+        return _copy_departments_page(self, request, 'admin:auth_user_changelist')
 
 
-# Unregister the default UserAdmin, re-register with ours
+class ProfileAdmin(admin.ModelAdmin):
+    actions = [copy_profile_departments_action]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'copy-departments/',
+                self.admin_site.admin_view(self.copy_departments_view),
+                name='copy_profile_departments_intermediate',
+            ),
+        ]
+        return custom_urls + urls
+
+    def copy_departments_view(self, request):
+        return _copy_departments_page(self, request, 'admin:employee_profile_changelist')
+
+
+# Unregister the default UserAdmin / ProfileAdmin, re-register with ours
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+admin.site.unregister(Profile)
+admin.site.register(Profile, ProfileAdmin)
