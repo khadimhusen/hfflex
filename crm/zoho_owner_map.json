@@ -1,0 +1,12 @@
+{
+    "_note": "Zoho CRM owner name -> our username, for the Zoho importers. Checked first, before username / first name / full name matching. Keys are case-insensitive. Verified 2026-09-13 by record-id overlap against the 9 Aug import.",
+    "firoz": "firoj",
+    "ANAS GADKARI": "anas",
+    "AKSHAY ALHAT": "akshay",
+    "CHANDSAHAB SHAIKH": "cmshaikh",
+    "SAMEER MULANI": "samir",
+    "TAYYAB SHAIKH": "tayyab",
+    "IMDAD SHIKALGAR": "imdad",
+    "DEEPAK CHIKBASARGE": "deepak",
+    "KSHITIJ DESHMUKH": "kshitij"
+}

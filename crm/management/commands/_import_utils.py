@@ -1,5 +1,6 @@
 import argparse
 import glob
+import json
 import os
 import re
 from collections import Counter
@@ -9,23 +10,58 @@ import pandas as pd
 from django.contrib.auth.models import User
 from django.core.management.base import CommandError
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 
 LOG_DIR = os.path.join('crm', 'import_logs')
+OWNER_MAP_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'zoho_owner_map.json')
+
+_owner_map = None
+_owner_cache = {}
+
+
+def _load_owner_map():
+    global _owner_map
+    if _owner_map is None:
+        try:
+            with open(OWNER_MAP_PATH, encoding='utf-8') as f:
+                raw = json.load(f)
+        except FileNotFoundError:
+            raw = {}
+        _owner_map = {k.strip().lower(): v for k, v in raw.items() if not k.startswith('_')}
+    return _owner_map
 
 
 def resolve_owner(owner_name, log, row_context):
-    """Best-effort match a Zoho owner name to a Django User. Falls back to
-    None if no match — caller decides whether that's fatal for this model."""
+    """Match a Zoho owner name to a Django User, or None -- the caller decides
+    whether that's fatal for this model.
+
+    crm/zoho_owner_map.json is checked first: Zoho's names don't always match
+    ours ("firoz" is our firoj, "SAMEER MULANI" our samir). Then username,
+    first name, email, and "first last" -- Zoho exports owners either way."""
     if not owner_name or str(owner_name).strip() == '' or str(owner_name) == 'nan':
         return None
 
     owner_name = str(owner_name).strip()
-    user = (
-            User.objects.filter(username__iexact=owner_name).first()
-            or User.objects.filter(first_name__iexact=owner_name).first()
-            or User.objects.filter(email__iexact=owner_name).first()
-    )
+    key = owner_name.lower()
+    if key not in _owner_cache:
+        mapped = _load_owner_map().get(key)
+        if mapped:
+            user = User.objects.filter(username__iexact=mapped).first()
+            if user is None:
+                raise CommandError(
+                    f'crm/zoho_owner_map.json maps "{owner_name}" to "{mapped}", but there is no such user.')
+        else:
+            user = (
+                User.objects.filter(username__iexact=owner_name).first()
+                or User.objects.filter(first_name__iexact=owner_name).first()
+                or User.objects.filter(email__iexact=owner_name).first()
+                or User.objects.annotate(full=Concat('first_name', Value(' '), 'last_name'))
+                .filter(full__iexact=owner_name).first()
+            )
+        _owner_cache[key] = user
+
+    user = _owner_cache[key]
     if user is None:
         log.append(f'UNMATCHED OWNER "{owner_name}" — {row_context}')
     return user
