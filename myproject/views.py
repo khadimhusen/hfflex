@@ -46,14 +46,14 @@ def user_login(request):
 
             if user.department.filter(department_name='machine').exists():
                 messages.success(request, f'Welcome {username} ')
-                return HttpResponseRedirect(reverse('planning:machine_schedule',kwargs={'machine_id':1}))
+                return HttpResponseRedirect(reverse('planning:machine_schedule', kwargs={'machine_id': 1}))
+
+            if request.GET.get('next', None):
+                return HttpResponseRedirect(request.GET['next'])
 
             if user.department.filter(department_name="Marketing_only").exists():
                 messages.success(request, f'Welcome {username} ')
                 return HttpResponseRedirect(reverse('quotation:quotationlist'))
-
-            if request.GET.get('next', None):
-                return HttpResponseRedirect(request.GET['next'])
 
             messages.success(request, f'Welcome {username} To H F FLEX PVT. LTD. ', )
             return HttpResponseRedirect(reverse('order:joblist'))
@@ -63,7 +63,6 @@ def user_login(request):
             return render(request, "login.html", context)
     else:
         return render(request, "login.html", context)
-
 
 
 def user_logout(request):
