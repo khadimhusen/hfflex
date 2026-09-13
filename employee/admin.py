@@ -126,6 +126,7 @@ copy_profile_departments_action.short_description = "Copy departments from anoth
 
 class CustomUserAdmin(BaseUserAdmin):
     actions = [copy_departments_action]
+    list_display = BaseUserAdmin.list_display + ('is_active',)
 
     def get_urls(self):
         urls = super().get_urls()
