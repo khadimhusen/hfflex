@@ -1,4 +1,6 @@
 *.log
+# Zoho import logs and review files -- customer data
+crm/import_logs/
 local_settings.py
 db.sqlite3
 elasticsearch.zip
