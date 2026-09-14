@@ -143,6 +143,7 @@ class Command(BaseCommand):
                     'closing_date': closing_date,
                     'owner': owner,
                     'description': clean_str(row.get('Description')),
+                    'url': clean_str(row.get('URL 1'), 500),
                 },
             )
             set_created_at(Deal, obj.pk, zoho_created)

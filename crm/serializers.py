@@ -89,7 +89,7 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
             'stage', 'stage_name', 'is_won', 'is_lost',
             'account', 'account_name', 'contact', 'contact_name',
             'amount', 'expected_revenue', 'deal_type', 'city', 'lost_reason', 'lead_source',
-            'closing_date', 'owner', 'owner_name', 'description', 'created_at', 'updated_at',
+            'closing_date', 'owner', 'owner_name', 'description', 'url', 'created_at', 'updated_at',
             'stage_entered_at', 'is_stalled', 'days_in_stage',
         ]
         read_only_fields = ['zoho_record_id', 'created_at', 'updated_at']

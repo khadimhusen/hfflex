@@ -144,6 +144,9 @@ class Deal(models.Model):
         limit_choices_to={'department__department_name__iexact': 'crm_user'},
     )
     description = models.TextField(blank=True)
+    # Zoho's "URL 1" -- usually the customer's website or IndiaMART page.
+    # Text, not URLField: Zoho kept values like "www.example.com" too.
+    url = models.CharField(max_length=500, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
