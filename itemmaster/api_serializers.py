@@ -303,4 +303,7 @@ class ItemMasterSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if not request:
             return False
-        return can_edit_itemmaster(request.user, obj)
+        # View-only users (CRM users, IsItemmasterUserOrCrmReadOnly) never edit --
+        # not even an item they created back in the old app.
+        from .permissions import has_full_itemmaster_access
+        return has_full_itemmaster_access(request.user) and can_edit_itemmaster(request.user, obj)

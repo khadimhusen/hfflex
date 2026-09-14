@@ -20,7 +20,7 @@ from .api_serializers import (
     MaterialLookupSerializer, MatTypeLookupSerializer, GradeLookupSerializer, UnitLookupSerializer,
     CommodityLookupSerializer,
 )
-from .permissions import IsItemmasterUser
+from .permissions import IsItemmasterUser, IsItemmasterUserOrCrmReadOnly
 from .querysets import can_edit_itemmaster
 from .filters import ItemmasterFilter
 
@@ -178,7 +178,7 @@ class ItemMasterViewSet(NoDeleteMixin, viewsets.ModelViewSet):
         'cylinder_manufacture', 'createdby', 'editedby',
     )
     serializer_class = ItemMasterSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_class = ItemmasterFilter
 
     def perform_create(self, serializer):
@@ -201,7 +201,7 @@ class ItemMasterViewSet(NoDeleteMixin, viewsets.ModelViewSet):
 class ItemImageViewSet(viewsets.ModelViewSet):
     queryset = ItemImage.objects.select_related('itemname', 'createdby', 'editedby').order_by('id')
     serializer_class = ItemImageSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     parser_classes = [MultiPartParser, FormParser]
     filterset_fields = ['itemname']
 
@@ -227,7 +227,7 @@ class RawMaterialViewSet(viewsets.ModelViewSet):
         'itemmaster', 'materialname', 'item_mat_type', 'item_grade', 'createdby', 'editedby',
     )
     serializer_class = RawMaterialSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['itemmaster']
 
     def perform_create(self, serializer):
@@ -257,7 +257,7 @@ class ItemProcessViewSet(viewsets.ModelViewSet):
         'itemmaster', 'process', 'unit', 'machine', 'createdby', 'editedby',
     ).order_by('id')
     serializer_class = ItemProcessSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['itemmaster']
 
     def perform_create(self, serializer):
@@ -280,7 +280,7 @@ class ItemProcessViewSet(viewsets.ModelViewSet):
 class ItemColorViewSet(viewsets.ModelViewSet):
     queryset = ItemColor.objects.select_related('itemmaster', 'color')
     serializer_class = ItemColorSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['itemmaster']
 
     def perform_create(self, serializer):
@@ -303,7 +303,7 @@ class ItemColorViewSet(viewsets.ModelViewSet):
 class ItemAttributeViewSet(viewsets.ModelViewSet):
     queryset = ItemAttribute.objects.select_related('itemmaster', 'item_attirbuate').order_by('id')
     serializer_class = ItemAttributeSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['itemmaster']
 
     def perform_create(self, serializer):
@@ -326,7 +326,7 @@ class ItemAttributeViewSet(viewsets.ModelViewSet):
 class ItemStandardParameterViewSet(viewsets.ModelViewSet):
     queryset = ItemStandardParameter.objects.select_related('itemmaster', 'standard_parameter').order_by('id')
     serializer_class = ItemStandardParameterSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['itemmaster']
 
     def perform_create(self, serializer):
@@ -351,7 +351,7 @@ class CylinderMovementViewSet(NoDeleteMixin, viewsets.ModelViewSet):
     (there's no hard-delete view in the old app for this either)."""
     queryset = CylinderMovement.objects.select_related('item', 'location', 'createdby').order_by('-id')
     serializer_class = CylinderMovementSerializer
-    permission_classes = [IsItemmasterUser]
+    permission_classes = [IsItemmasterUserOrCrmReadOnly]
     filterset_fields = ['item', 'deleted']
 
     def perform_create(self, serializer):

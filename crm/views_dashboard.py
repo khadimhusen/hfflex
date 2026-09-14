@@ -320,6 +320,8 @@ def me_payload(u):
             'crm': is_crm,
             'customer': is_customer,
             'itemmaster': is_itemmaster,
+            # Read-only item master list/detail -- IsItemmasterUserOrCrmReadOnly.
+            'itemmasterView': is_itemmaster or is_crm,
             'preorder': is_preorder,
             'purchase': is_purchase,
             'order': is_order,
