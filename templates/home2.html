@@ -64,6 +64,19 @@
     {% block javascripts %}
     {% endblock javascripts %}
 
+    <script>
+        // A focused number input steps its value on the mouse wheel, silently
+        // changing quantities while scrolling the page. Blur it first so the
+        // wheel scrolls the page and the value stays as typed. Outside every
+        // block on purpose: a page overriding its scripts can't drop this.
+        document.addEventListener('wheel', function (event) {
+            var el = document.activeElement;
+            if (el && el.tagName === 'INPUT' && el.type === 'number' && el === event.target) {
+                el.blur();
+            }
+        }, { passive: true });
+    </script>
+
 
 </body>
 
