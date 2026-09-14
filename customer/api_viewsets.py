@@ -122,10 +122,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
             if d <= radius_km:
                 distance_by_pincode[c.code] = round(d, 1)
 
-        addresses = (
-            Address.objects.filter(pincode__in=distance_by_pincode.keys(), customer__active=True)
-            .select_related('customer', 'customer__marketing_person')
-        )
+        # Customers only by default; the page's Suppliers checkbox adds
+        # suppliers. A record flagged as both matches either box.
+        def flag(name, default):
+            raw = request.query_params.get(name)
+            return default if raw is None else raw.strip().lower() in ('1', 'true', 'yes')
+
+        want_customers, want_suppliers = flag('customers', True), flag('suppliers', False)
+        if not (want_customers or want_suppliers):
+            return Response({'type': ['Choose customers, suppliers, or both.']}, status=400)
+
+        addresses = Address.objects.filter(pincode__in=distance_by_pincode.keys(), customer__active=True)
+        if want_customers and want_suppliers:
+            addresses = addresses.exclude(customer__is_customer=False, customer__is_supplier=False)
+        elif want_customers:
+            addresses = addresses.filter(customer__is_customer=True)
+        else:
+            addresses = addresses.filter(customer__is_supplier=True)
+        addresses = addresses.select_related('customer', 'customer__marketing_person')
 
         results = [
             {
