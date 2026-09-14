@@ -552,30 +552,34 @@ def jobdcancel(request, id=None):
 @login_required(login_url='/login/')
 @accessview
 def rate(request):
-    context = {}
-    rateform = modelform_factory(Stockdetail, fields=["materialname", "item_mat_type", "item_grade", "rate"])
-    if request.method == 'POST':
+    if Department.objects.filter(department_name="directors",
+                              user=request.user).exists():
+        context = {}
+        rateform = modelform_factory(Stockdetail, fields=["materialname", "item_mat_type", "item_grade", "rate"])
+        if request.method == 'POST':
 
-        materialname = request.POST['materialname']
-        item_mat_type = request.POST['item_mat_type']
-        item_grade = request.POST['item_grade']
-        rate = request.POST['rate']
-        obj = Stockdetail.objects.filter(materialname=materialname,
-                                         item_mat_type=item_mat_type,
-                                         item_grade=item_grade,
-                                         rate__isnull=True)
-        obj.update(rate=rate)
-        obj = Stockdetail.objects.filter(materialname=materialname,
-                                         item_mat_type=item_mat_type,
-                                         item_grade=item_grade,
-                                         rate__lte=0.1)
-        obj.update(rate=rate)
+            materialname = request.POST['materialname']
+            item_mat_type = request.POST['item_mat_type']
+            item_grade = request.POST['item_grade']
+            rate = request.POST['rate']
+            obj = Stockdetail.objects.filter(materialname=materialname,
+                                             item_mat_type=item_mat_type,
+                                             item_grade=item_grade,
+                                             rate__isnull=True)
+            obj.update(rate=rate)
+            obj = Stockdetail.objects.filter(materialname=materialname,
+                                             item_mat_type=item_mat_type,
+                                             item_grade=item_grade,
+                                             rate__lte=0.1)
+            obj.update(rate=rate)
 
-        context["mainform"] = rateform()
-        return render(request, 'other/rate.html', context)
+            context["mainform"] = rateform()
+            return render(request, 'other/rate.html', context)
+        else:
+            context["mainform"] = rateform()
+            return render(request, 'other/rate.html', context)
     else:
-        context["mainform"] = rateform()
-        return render(request, 'other/rate.html', context)
+        return redirect(reverse('order:joblist'))
 
 
 @login_required(login_url='/login/')
