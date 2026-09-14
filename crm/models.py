@@ -258,6 +258,7 @@ def deal_attachment_path(instance, filename):
 
 
 class DealAttachment(models.Model):
+    zoho_record_id = models.CharField(max_length=64, unique=True, null=True, blank=True)  # import_zoho_backup re-run safety
     deal = models.ForeignKey(Deal, on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(upload_to=deal_attachment_path)
     original_filename = models.CharField(max_length=255, blank=True)
