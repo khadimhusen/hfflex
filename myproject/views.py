@@ -53,7 +53,7 @@ def user_login(request):
 
             if user.department.filter(department_name="Marketing_only").exists():
                 messages.success(request, f'Welcome {username} ')
-                return HttpResponseRedirect(reverse('quotation:quotationlist'))
+                return HttpResponseRedirect(reverse('crm-spa'))
 
             messages.success(request, f'Welcome {username} To H F FLEX PVT. LTD. ', )
             return HttpResponseRedirect(reverse('order:joblist'))
