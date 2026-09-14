@@ -1,0 +1,1 @@
+import{t as e}from"./wrappers-Dfvzj6n2.js";var t=e(()=>{document.addEventListener(`wheel`,e=>{let t=document.activeElement;t instanceof HTMLInputElement&&t.type===`number`&&t===e.target&&t.blur()},{passive:!0})});export{t as default};
