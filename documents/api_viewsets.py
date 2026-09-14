@@ -82,23 +82,29 @@ class DocumentViewSet(viewsets.ModelViewSet):
         substring search otherwise -- e.g. if ES isn't running, matching
         the graceful-degradation the rest of this app already has for it
         (see signal_processors.ResilientSignalProcessor)."""
+        # Plain substring matches -- "pan" finds "PANCARD". Elasticsearch's
+        # fuzzy multi_match only matches whole words (and allows no typo at
+        # all in a 3-letter word), so on its own it never found them.
+        substring = qs.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+            | Q(uploaded_by__username__icontains=query),
+        )
         try:
             es_results = DocumentIndex.search().query(
                 'multi_match', query=query,
                 fields=['title^2', 'description', 'uploaded_by_username'],
                 fuzziness='AUTO',
-            )
-            pks = [hit.meta.id for hit in es_results]
+            )[:500]  # without a size, ES returns only its top 10 hits
+            pks = [int(hit.meta.id) for hit in es_results]
         except TransportError:
             logger.warning('Elasticsearch search failed (is it running?) -- falling back to a DB search.')
-            return qs.filter(
-                Q(title__icontains=query) | Q(description__icontains=query)
-                | Q(uploaded_by__username__icontains=query),
-            )
+            return substring
 
+        # ES's relevance-ranked (typo-tolerant) hits first, then any substring
+        # match ES didn't return. qs.filter() keeps the per-user access scope.
+        pks += list(substring.exclude(pk__in=pks).values_list('pk', flat=True))
         if not pks:
             return qs.none()
-        pks = [int(pk) for pk in pks]
         preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pks)])
         return qs.filter(pk__in=pks).order_by(preserved_order)
 
