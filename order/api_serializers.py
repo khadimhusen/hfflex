@@ -262,6 +262,19 @@ class JobSerializer(serializers.ModelSerializer):
 
 # ---- Job sub-resource lookups -------------------------------------------
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Cost, sale value and profit are internal margins: users who only
+        # have read-only job access (CRM users, IsOrderUserOrCrmReadOnly)
+        # can look a job up but don't get them.
+        from .permissions import has_full_order_access
+        request = self.context.get('request')
+        if request is not None and not has_full_order_access(request.user):
+            for field in ('cost', 'salecost', 'profit'):
+                data.pop(field, None)
+        return data
+
+
 class MaterialLookupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material

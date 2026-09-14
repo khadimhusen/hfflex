@@ -30,7 +30,7 @@ from .api_serializers import (
     BulkMaterialRateSerializer, AssignMarketingPersonSerializer,
     StockdetailLookupSerializer, JobMaterialStatusSerializer, JobDispatchItemSerializer,
 )
-from .permissions import IsOrderUser
+from .permissions import IsOrderUser, IsOrderUserOrCrmReadOnly
 from .querysets import (
     can_edit_order, can_cancel_job, can_delete_job_subresource, can_delete_material_allotment,
     can_approve_account_clearance,
@@ -130,13 +130,13 @@ class StdParameterLookupViewSet(viewsets.ReadOnlyModelViewSet):
 class PouchTypeLookupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PouchType.objects.order_by('pouchtype')
     serializer_class = PouchTypeLookupSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
 
 
 class LamiRubberLookupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LamiRubber.objects.order_by('-id')
     serializer_class = LamiRubberLookupSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -181,7 +181,7 @@ class JobViewSet(viewsets.ModelViewSet):
         'marketing_person', 'approvedby', 'createdby', 'editedby',
     ).order_by('id')
     serializer_class = JobSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_class = JobFilter
 
     def get_serializer_context(self):
@@ -321,7 +321,7 @@ class JobMaterialViewSet(viewsets.ModelViewSet):
         'job', 'job__joborder', 'materialname', 'item_mat_type', 'item_grade', 'po', 'createdby', 'editedby',
     ).order_by('id')
     serializer_class = JobMaterialSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_fields = ['job']
 
     def perform_create(self, serializer):
@@ -341,7 +341,7 @@ class JobProcessViewSet(viewsets.ModelViewSet):
         'job', 'job__joborder', 'process', 'unit', 'createdby', 'editedby',
     ).order_by('id')
     serializer_class = JobProcessSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_fields = ['job']
 
     def perform_create(self, serializer):
@@ -359,7 +359,7 @@ class JobProcessViewSet(viewsets.ModelViewSet):
 class JobColorViewSet(viewsets.ModelViewSet):
     queryset = JobColor.objects.select_related('job', 'job__joborder', 'color').order_by('id')
     serializer_class = JobColorSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_fields = ['job']
 
     def perform_destroy(self, instance):
@@ -374,7 +374,7 @@ class JobImageViewSet(viewsets.ModelViewSet):
     # view, but the formset's can_delete flag covers it same as the rest.
     queryset = JobImage.objects.select_related('job', 'job__joborder', 'createdby', 'editedby').order_by('-id')
     serializer_class = JobImageSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     parser_classes = [MultiPartParser, FormParser]
     filterset_fields = ['job']
 
@@ -393,7 +393,7 @@ class JobImageViewSet(viewsets.ModelViewSet):
 class JobItemAttributeViewSet(viewsets.ModelViewSet):
     queryset = JobItemAttribute.objects.select_related('job', 'job__joborder', 'item_attirbuate').order_by('id')
     serializer_class = JobItemAttributeSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_fields = ['job']
 
     def perform_destroy(self, instance):
@@ -405,7 +405,7 @@ class JobItemAttributeViewSet(viewsets.ModelViewSet):
 class JobCoaViewSet(viewsets.ModelViewSet):
     queryset = JobCoa.objects.select_related('job', 'job__joborder', 'standard_parameter').order_by('id')
     serializer_class = JobCoaSerializer
-    permission_classes = [IsOrderUser]
+    permission_classes = [IsOrderUserOrCrmReadOnly]
     filterset_fields = ['job']
 
     def perform_destroy(self, instance):

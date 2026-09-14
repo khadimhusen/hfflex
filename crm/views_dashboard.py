@@ -323,6 +323,8 @@ def me_payload(u):
             'preorder': is_preorder,
             'purchase': is_purchase,
             'order': is_order,
+            # Read-only job lookup (top-bar Job Search) -- IsOrderUserOrCrmReadOnly.
+            'jobView': is_order or is_crm,
             'productionReport': is_production_report,
             'dispatch': is_dispatch,
             'stock': is_stock,
