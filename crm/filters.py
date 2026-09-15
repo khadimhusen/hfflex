@@ -13,6 +13,8 @@ class DealFilter(django_filters.FilterSet):
         method='filter_status',
     )
     stalled = django_filters.BooleanFilter(field_name='is_stalled')
+    # Part of the name, any case: imported cities read "Pune, Maharashtra, India".
+    city = django_filters.CharFilter(field_name='city', lookup_expr='icontains')
 
     class Meta:
         model = Deal
