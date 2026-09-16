@@ -21,6 +21,22 @@ class QuotationItemSerializer(serializers.ModelSerializer):
             'item_cylinder_cost', 'itemtotalcost',
         ]
 
+    def validate(self, attrs):
+        """Without a material rate there is nothing to price a Kg by:
+        QuotationItem.save() can't derive per_pouch_cost (material_rate /
+        pouch_per_kg), and itemtotalcost for a Kg item is material_rate x moq,
+        i.e. 0. So such an item has to be sold per pouch, with the pouch cost
+        typed in by hand."""
+        if not attrs.get('material_rate'):
+            errors = {}
+            if not attrs.get('per_pouch_cost'):
+                errors['per_pouch_cost'] = 'Required when there is no material rate.'
+            if attrs.get('unit') == 'Kg':
+                errors['unit'] = 'Cannot be Kg without a material rate -- use Nos.'
+            if errors:
+                raise serializers.ValidationError(errors)
+        return attrs
+
 
 class AdditionTermSerializer(serializers.ModelSerializer):
     class Meta:

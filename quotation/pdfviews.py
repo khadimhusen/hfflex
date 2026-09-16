@@ -581,12 +581,7 @@ def letterheadquotepdf(_, id):
 #      which doesn't interpret \n at all -- it draws the tofu/box glyph for
 #      it inline instead of starting a new line. Now split and drawn one
 #      line at a time.
-#   3. Per Pouch Cost / Pouch Per Kg were always printed even for Kg-unit
-#      items, where they're not used in the total at all (itemtotalcost is
-#      material_rate x moq for Kg, per_pouch_cost x moq for Nos.) -- same
-#      "don't show a number that isn't actually in play" treatment the
-#      table already gives cylinder detail/cost when there's no cylinder.
-#   4. The signature always fell back to Firoj's image for literally any
+#   3. The signature always fell back to Firoj's image for literally any
 #      approver whose username isn't 'khadimhusen' -- so a PDF approved by
 #      a third staff member would print showing the wrong person's
 #      signature. Now shows a signature only for a recognized approver,
@@ -758,21 +753,10 @@ def quotepdf_v2(_, id):
             if item.material_rate else Paragraph('<font size=8>-</font>', styleN)
         )
 
-        # Per Pouch Cost / Pouch Per Kg only actually feed the total for a
-        # Nos.-unit item (see QuotationItem.itemtotalcost) -- printing them
-        # for a Kg-unit item suggests they matter here when they don't.
-        is_pouch_unit = item.unit == 'Nos.'
-        pouch_per_kg = Paragraph(
-            f'<font size=8>{item.pouch_per_kg or "-"}</font>' if is_pouch_unit else '<font size=8>-</font>', styleN,
-        )
-        per_pouch_cost = Paragraph(
-            f'<font size=8>Rs. {item.per_pouch_cost or "-"}</font>' if is_pouch_unit else '<font size=8>-</font>',
-            styleN,
-        )
-
         data.append([
             str(i), para, cyl_detail, cyl_cost, mat_rate,
-            pouch_per_kg, per_pouch_cost,
+            Paragraph(f'<font size=8>{item.pouch_per_kg or "-"}</font>', styleN),
+            Paragraph(f'<font size=8>Rs. {item.per_pouch_cost or "-"}</font>', styleN),
             Paragraph(f'<font size=8>{item.moq} {item.unit}</font>', styleN),
             Paragraph(f'<font size=8>Rs.{round(item.itemtotalcost)}</font>', styleN),
         ])
