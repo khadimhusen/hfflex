@@ -30,6 +30,11 @@ class JobFilter(django_filters.FilterSet):
                                             input_formats=('%d/%m/%Y',))
     created__lt = django_filters.DateFilter(label="To Date", field_name='created', lookup_expr='lt',
                                             input_formats=('%d/%m/%Y',))
+    # Order date (the job's created date) as an inclusive yyyy-mm-dd range, for
+    # the CRM job list. created__gt/__lt above stay the old joblist.html's
+    # exclusive dd/mm/yyyy pair.
+    order_date__gte = django_filters.DateFilter(field_name='created', lookup_expr='date__gte')
+    order_date__lte = django_filters.DateFilter(field_name='created', lookup_expr='date__lte')
     film__gte = django_filters.NumberFilter(field_name='film_size', label='From size', lookup_expr='gte')
     film__lte = django_filters.NumberFilter(field_name='film_size', label='To size', lookup_expr='lte')
     itemname = django_filters.CharFilter(field_name='itemname', lookup_expr='icontains')
