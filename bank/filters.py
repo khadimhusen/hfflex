@@ -11,6 +11,10 @@ class ChequeFilter(django_filters.FilterSet):
     party=django_filters.CharFilter(label='Party Name',field_name="party",lookup_expr="icontains")
     from_bill = django_filters.DateFilter(label="From Bill",field_name='bill_date', lookup_expr='gte',input_formats=('%d/%m/%Y',))
     to_bill = django_filters.DateFilter(label="To Bill",field_name='bill_date', lookup_expr='lte',input_formats=('%d/%m/%Y',))
+    expected_from = django_filters.DateFilter(label="From Expected", field_name='expected_date', lookup_expr='gte',
+                                              input_formats=('%d/%m/%Y',))
+    expected_to = django_filters.DateFilter(label="To Expected", field_name='expected_date', lookup_expr='lte',
+                                            input_formats=('%d/%m/%Y',))
 
 
     class Meta:
