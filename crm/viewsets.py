@@ -50,7 +50,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.select_related('account', 'owner')
     serializer_class = ContactSerializer
     filterset_class = ContactFilter
-    search_fields = ['first_name', 'last_name', 'email', 'phone']
+    search_fields = ['first_name', 'last_name', 'email', 'phone', 'mobile']
 
 
 class DealViewSet(viewsets.ModelViewSet):

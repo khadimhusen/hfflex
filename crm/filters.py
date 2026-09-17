@@ -52,6 +52,10 @@ class AccountFilter(django_filters.FilterSet):
 
 
 class ContactFilter(django_filters.FilterSet):
+    # Part of the name, any case -- same as the deals City filter.
+    company = django_filters.CharFilter(field_name='account__name', lookup_expr='icontains')
+    city = django_filters.CharFilter(field_name='mailing_city', lookup_expr='icontains')
+
     class Meta:
         model = Contact
         fields = {'owner': ['exact'], 'account': ['exact']}
