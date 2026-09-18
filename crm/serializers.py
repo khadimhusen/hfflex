@@ -81,6 +81,7 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
     stage_entered_at = serializers.DateTimeField(read_only=True)
     is_stalled = serializers.BooleanField(read_only=True)
     days_in_stage = serializers.SerializerMethodField()
+    days_stalled = serializers.SerializerMethodField()
 
     class Meta:
         model = Deal
@@ -90,7 +91,7 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
             'account', 'account_name', 'contact', 'contact_name',
             'amount', 'expected_revenue', 'deal_type', 'city', 'lost_reason', 'lead_source',
             'closing_date', 'owner', 'owner_name', 'description', 'url', 'created_at', 'updated_at',
-            'stage_entered_at', 'is_stalled', 'days_in_stage',
+            'stage_entered_at', 'is_stalled', 'days_in_stage', 'days_stalled',
         ]
         read_only_fields = ['zoho_record_id', 'created_at', 'updated_at']
 
@@ -110,6 +111,15 @@ class DealSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
         if not entered:
             return None
         return (timezone.now() - entered).days
+
+    def get_days_stalled(self, obj):
+        # Days since the stage's stall time ran out (stall_deadline =
+        # stage entry + max_stall_time) -- not days in the stage, which also
+        # counts the allowed time before the deal became stalled.
+        deadline = getattr(obj, 'stall_deadline', None)
+        if not getattr(obj, 'is_stalled', False) or not deadline:
+            return None
+        return (timezone.now() - deadline).days
 
     def validate(self, attrs):
         pipeline = attrs.get('pipeline', getattr(self.instance, 'pipeline', None))
