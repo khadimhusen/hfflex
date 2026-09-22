@@ -147,6 +147,9 @@ class Deal(models.Model):
     # Zoho's "URL 1" -- usually the customer's website or IndiaMART page.
     # Text, not URLField: Zoho kept values like "www.example.com" too.
     url = models.CharField(max_length=500, blank=True, default='')
+    # Same as the lead's, and copied from it on conversion.
+    website = models.CharField(max_length=500, blank=True, default='')
+    map_link = models.CharField(max_length=500, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

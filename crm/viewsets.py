@@ -249,6 +249,8 @@ class LeadViewSet(viewsets.ModelViewSet):
                     closing_date=deal_data.get('closing_date') or None,
                     description=deal_data.get('description') or lead.description or '',
                     city=lead.city,
+                    website=lead.website,
+                    map_link=lead.map_link,
                     lead_source=lead.lead_source,
                     # Lead itself has no equivalent field -- inferred from
                     # which account this deal landed on, matching this
