@@ -147,6 +147,9 @@ class Deal(models.Model):
     # Zoho's "URL 1" -- usually the customer's website or IndiaMART page.
     # Text, not URLField: Zoho kept values like "www.example.com" too.
     url = models.CharField(max_length=500, blank=True, default='')
+    # Same as the lead's, and copied from it on conversion.
+    website = models.CharField(max_length=500, blank=True, default='')
+    map_link = models.CharField(max_length=500, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -191,6 +194,11 @@ class Lead(models.Model):
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
     mobile = models.CharField(max_length=30, blank=True)
+
+    # Plain text rather than URLField, same as Deal.url: people paste
+    # addresses without a scheme ("www.x.com") and long Google Maps links.
+    website = models.CharField(max_length=500, blank=True, default='')
+    map_link = models.CharField(max_length=500, blank=True, default='')
 
     street = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
