@@ -168,7 +168,8 @@ class LeadSerializer(OwnerSerializerMixin, serializers.ModelSerializer):
         model = Lead
         fields = [
             'id', 'zoho_record_id', 'first_name', 'last_name', 'name', 'company', 'title',
-            'email', 'phone', 'mobile', 'street', 'city', 'state', 'country', 'zip_code',
+            'email', 'phone', 'mobile', 'website', 'map_link',
+            'street', 'city', 'state', 'country', 'zip_code',
             'lead_source', 'lead_status', 'industry', 'annual_revenue', 'description',
             'im_query_type', 'im_query_id', 'im_enquiry_time', 'im_product',
             'is_converted', 'converted_account', 'converted_contact', 'converted_deal', 'converted_at',

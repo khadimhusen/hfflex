@@ -192,6 +192,11 @@ class Lead(models.Model):
     phone = models.CharField(max_length=30, blank=True)
     mobile = models.CharField(max_length=30, blank=True)
 
+    # Plain text rather than URLField, same as Deal.url: people paste
+    # addresses without a scheme ("www.x.com") and long Google Maps links.
+    website = models.CharField(max_length=500, blank=True, default='')
+    map_link = models.CharField(max_length=500, blank=True, default='')
+
     street = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
