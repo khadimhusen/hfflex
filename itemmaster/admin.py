@@ -33,7 +33,10 @@ class ColorAdmin(AutocompleteMixin,admin.ModelAdmin):
 
 
 class ItemMasterAdmin(AutocompleteMixin,admin.ModelAdmin):
-    search_fields = ['name', 'id']
+    # ItemMaster has no 'name' field -- it's itemname -- so every search here
+    # raised FieldError (a 500 on the admin list). '=id' is an exact match,
+    # since an icontains on the integer pk is a database error of its own.
+    search_fields = ['itemname', 'itemcode', 'barcode', 'itemcustomer__name', '=id']
     inlines = [ItemImage, RawMaterialTabular, ItemProcessTabular]
 
     class Meta:
