@@ -1,4 +1,5 @@
 from django.db import models
+import logging
 import os
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -10,7 +11,12 @@ from django.contrib import messages
 from .models import Document, DocumentDownloadLog
 from .forms import DocumentUploadForm, ManageViewersForm
 
+from django.db.models import Q
+from elastic_transport import TransportError
+
 from documents.search_indexes import DocumentIndex
+
+logger = logging.getLogger(__name__)
 
 
 @login_required(login_url='/login/')
@@ -18,14 +24,29 @@ def document_list(request):
     query = request.GET.get('q', '').strip()
 
     if query:
-        es_results = DocumentIndex.search().query(
-            'multi_match', query=query,
-            fields=['title^2', 'description', 'uploaded_by_username'],
-            fuzziness='AUTO')
+        # Plain substring matches -- "pan" finds "PANCARD". Elasticsearch's
+        # fuzzy multi_match matches whole words only (and allows no typo at
+        # all in a 3-letter word), so on its own it never found them. Same
+        # union the CRM's documents API does (api_viewsets._search).
+        substring = Document.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+            | Q(uploaded_by__username__icontains=query))
 
-        pks = [hit.meta.id for hit in es_results]
+        try:
+            es_results = DocumentIndex.search().query(
+                'multi_match', query=query,
+                fields=['title^2', 'description', 'uploaded_by_username'],
+                fuzziness='AUTO')[:500]  # without a size, ES returns its top 10 only
+            pks = [str(hit.meta.id) for hit in es_results]
+        except TransportError:
+            logger.warning('Elasticsearch search failed (is it running?) -- falling back to a DB search.')
+            pks = []
+
+        # ES's relevance-ranked (typo-tolerant) hits first, then any
+        # substring match ES didn't return.
         docs = list(Document.objects.filter(pk__in=pks))
         docs.sort(key=lambda d: pks.index(str(d.pk)))
+        docs += [d for d in substring if str(d.pk) not in pks]
     else:
         docs = list(Document.objects.all())
 
