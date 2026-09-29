@@ -224,6 +224,19 @@ def quoteapproval(request, id=None):
     context = {}
     quote = get_object_or_404(Quotation, id=id)
     if request.method == "POST" and request.user:
+        # The template already hides this form from anyone but a
+        # can_approve_quote user who isn't the quote's own creator -- this
+        # is the real gate, since @accessview is a no-op (see its own
+        # docstring) and this view previously had no check at all: any
+        # logged-in user could POST here and approve any quote, including
+        # their own.
+        if not Department.objects.filter(department_name="can_approve_quote", user=request.user).exists():
+            messages.error(request, "You don't have permission to approve quotations.")
+            return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
+        if quote.createdby_id == request.user.id:
+            messages.error(request, "You can't approve a quotation you created yourself.")
+            return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
+
         form = QuoteApprovalForm(request.POST, instance=quote)
         context["quoteapprovalform"] = form
         if form.is_valid():

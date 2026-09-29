@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Deal, DealStageHistory
+from employee.models import Department
 from django.utils import timezone
 
 from django.db.models import (OuterRef, Subquery, F, Q, ExpressionWrapper, DateTimeField, BooleanField, Sum, Count,
@@ -311,11 +312,17 @@ def me_payload(u):
     # login_required only), so this is the same TEMPORARY staff-only
     # rollout gate as the modules above, matching IsInkStoreUser.
     is_ink = is_staff
+    can_approve_quotation = Department.objects.filter(department_name='can_approve_quote', user=u).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
         'is_staff': is_staff,
         'is_crm_user': is_crm,  # kept for existing CRM-only checks
+        # Not nested under 'modules' -- that's page/nav visibility, this is
+        # a capability check the quotation detail page uses (alongside the
+        # server-side check in QuotationViewSet.approve, which is the real
+        # gate) to decide whether to show its Approve button at all.
+        'can_approve_quotation': can_approve_quotation,
         'modules': {
             'crm': is_crm,
             'customer': is_customer,

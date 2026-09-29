@@ -113,6 +113,9 @@ class QuotationViewSet(viewsets.ModelViewSet):
         ).exists():
             raise PermissionDenied('You are not allowed to approve quotations.')
 
+        if quote.createdby_id == request.user.id:
+            raise PermissionDenied("You can't approve a quotation you created yourself.")
+
         quote.approvedby = request.user
         quote.approved = datetime.now()
         quote.save(update_fields=['approvedby', 'approved'])
