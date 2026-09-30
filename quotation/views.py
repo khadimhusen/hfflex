@@ -233,7 +233,9 @@ def quoteapproval(request, id=None):
         if not Department.objects.filter(department_name="can_approve_quote", user=request.user).exists():
             messages.error(request, "You don't have permission to approve quotations.")
             return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
-        if quote.createdby_id == request.user.id and not (request.user.is_staff or request.user.is_superuser):
+        if quote.createdby_id == request.user.id and not Department.objects.filter(
+            department_name='can_approve_self_quotation', user=request.user
+        ).exists():
             messages.error(request, "You can't approve a quotation you created yourself.")
             return HttpResponseRedirect(reverse('quotation:quotationdetail', kwargs={'id': quote.id}))
 

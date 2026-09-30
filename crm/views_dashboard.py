@@ -313,6 +313,9 @@ def me_payload(u):
     # rollout gate as the modules above, matching IsInkStoreUser.
     is_ink = is_staff
     can_approve_quotation = Department.objects.filter(department_name='can_approve_quote', user=u).exists()
+    can_approve_self_quotation = Department.objects.filter(
+        department_name='can_approve_self_quotation', user=u
+    ).exists()
     return {
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
@@ -323,6 +326,7 @@ def me_payload(u):
         # server-side check in QuotationViewSet.approve, which is the real
         # gate) to decide whether to show its Approve button at all.
         'can_approve_quotation': can_approve_quotation,
+        'can_approve_self_quotation': can_approve_self_quotation,
         'modules': {
             'crm': is_crm,
             'customer': is_customer,
