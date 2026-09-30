@@ -40,6 +40,14 @@ class JobFilter(django_filters.FilterSet):
     itemname = django_filters.CharFilter(field_name='itemname', lookup_expr='icontains')
     joborder__customer = django_filters.CharFilter(field_name='joborder__customer__name', lookup_expr='icontains',
                                                    label='customer')
+    ordering = django_filters.OrderingFilter(
+        fields=(
+            ('account_clearance_date', 'account_clearance_date'),
+        ),
+        field_labels={
+            'account_clearance_date': 'account clearance date',
+        },
+    )
 
     class Meta:
         model = Job
