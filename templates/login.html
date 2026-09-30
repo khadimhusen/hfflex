@@ -62,7 +62,9 @@
                 "button[type='submit'], input[type='submit']"
             );
 
+            const originalLabels = [];
             buttons.forEach(btn => {
+                originalLabels.push(btn.tagName === "BUTTON" ? btn.innerText : btn.value);
                 btn.disabled = true;
                 if (btn.tagName === "BUTTON") {
                     btn.innerText = "Submitting...";
@@ -70,6 +72,24 @@
                     btn.value = "Submitting...";
                 }
             });
+
+            // A real submit navigates away right after this, which discards
+            // all of it along with the page. If we're still here 4s later --
+            // client-side validation silently blocked it, a confirm() was
+            // declined, an AJAX handler swallowed the request -- put the
+            // button back instead of leaving it stuck on "Submitting..."
+            // forever.
+            setTimeout(function () {
+                submitted = false;
+                buttons.forEach((btn, i) => {
+                    btn.disabled = false;
+                    if (btn.tagName === "BUTTON") {
+                        btn.innerText = originalLabels[i];
+                    } else {
+                        btn.value = originalLabels[i];
+                    }
+                });
+            }, 4000);
         });
 
     });
