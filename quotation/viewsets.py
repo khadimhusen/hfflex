@@ -113,7 +113,9 @@ class QuotationViewSet(viewsets.ModelViewSet):
         ).exists():
             raise PermissionDenied('You are not allowed to approve quotations.')
 
-        if quote.createdby_id == request.user.id:
+        # Staff/superuser are exempt from the self-approval rule below --
+        # same is_staff-or-superuser definition me_payload uses.
+        if quote.createdby_id == request.user.id and not (request.user.is_staff or request.user.is_superuser):
             raise PermissionDenied("You can't approve a quotation you created yourself.")
 
         quote.approvedby = request.user

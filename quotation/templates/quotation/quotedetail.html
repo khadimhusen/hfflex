@@ -17,7 +17,8 @@
         <a class="btn btn-warning btn-sm m-2 p-2" href="{% url 'quotation:quotepdf' quote.id %}">Download Quote Pdf</a>
         {% else %}
         <a class="btn btn-primary btn-sm m-2 p-2" href="{% url 'quotation:editquote' quote.id %}">Edit Quote</a>
-        {% if user|user_in_department:"can_approve_quote" and user != quote.createdby %}
+        {% if user|user_in_department:"can_approve_quote" %}
+        {% if user != quote.createdby or user.is_staff or user.is_superuser %}
 
         <form action="{% url 'quotation:quoteapproval' quote.id %}" method="post">
             {% csrf_token %}
@@ -25,6 +26,7 @@
             <button class="btn btn-warning btn-sm m-2 p-2" type="submit">Quote Approval
             </button>
         </form>
+        {% endif %}
         {% endif %}
         {% endif %}
 
