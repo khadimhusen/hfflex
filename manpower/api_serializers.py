@@ -75,13 +75,14 @@ class ShiftListSerializer(serializers.ModelSerializer):
     efficiency = serializers.ReadOnlyField()
     joblist = serializers.SerializerMethodField()
     totalqty = serializers.SerializerMethodField()
+    totaldowntime = serializers.SerializerMethodField()
 
     class Meta:
         model = Shift
         fields = [
             'id', 'shift', 'machine', 'machine_display', 'production_date',
             'joblist', 'totalqty',
-            'actualtime', 'efficiency', 'is_approved',
+            'actualtime', 'totaldowntime', 'efficiency', 'is_approved',
         ]
 
     # Both come from the activities ShiftViewSet already prefetches, rather
@@ -98,6 +99,11 @@ class ShiftListSerializer(serializers.ModelSerializer):
 
     def get_totalqty(self, obj):
         return sum(act.qty for act in obj.activity.all())
+
+    def get_totaldowntime(self, obj):
+        # activity__downtimes is prefetched too; Shift.totaldowntime would
+        # run its own aggregate query for every row.
+        return sum(d.downtime for act in obj.activity.all() for d in act.downtimes.all())
 
 
 class ShiftSerializer(serializers.ModelSerializer):
