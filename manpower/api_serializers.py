@@ -88,12 +88,13 @@ class ShiftListSerializer(serializers.ModelSerializer):
     # than the Shift.totalqty property, which runs its own aggregate query
     # for every row of the page.
     def get_joblist(self, obj):
-        """Job numbers worked this shift, once each, in the order entered."""
-        seen = []
+        """Jobs worked this shift, once each, in the order entered -- id and
+        name, so the list can show the name and still link to the job."""
+        seen = {}
         for act in sorted(obj.activity.all(), key=lambda a: a.id):
             if act.jobid_id not in seen:
-                seen.append(act.jobid_id)
-        return seen
+                seen[act.jobid_id] = {'id': act.jobid_id, 'name': act.jobid.itemname}
+        return list(seen.values())
 
     def get_totalqty(self, obj):
         return sum(act.qty for act in obj.activity.all())
