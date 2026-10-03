@@ -1,0 +1,167 @@
+{% extends 'home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block customcss%}
+<style> .table{  font-size: 12px;}</style>
+{% endblock customcss %}
+
+{% block topscript %}
+
+{% endblock topscript %}
+
+
+{% block content %}
+
+<!--table start from here-->
+<div class="content p-4">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ">
+                        <h2 class="card-title text-center">Manpower Job List</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET">
+                            <div class="form-row">
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.jobid|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-2 mb-0 ">
+                                    {{myFilter.form.itemname|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-2 mb-0 ">
+                                    {{myFilter.form.customer|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.shift__machine|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.shift__shift|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.makeready|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.shift__is_approved|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.date__gt|as_crispy_field}}
+                                </div>
+                                <div class="form-group col-md-1 mb-0 ">
+                                    {{myFilter.form.date__lt|as_crispy_field}}
+                                </div>
+                            </div>
+                            <div class="form-row mb-2">
+                                <div class="form-group col-md-1 mb-0">
+                                    <label for="filter">Page No.</label>
+                                    <select class="form-control" id="filter" name="page">
+                                        {% for i in activities.paginator.page_range %}
+                                        {% if activities.number == i %}
+                                        <option value="{{i}}" selected>{{ i }}</option>
+                                        {% else %}
+                                        <option value="{{i}}">{{ i }}</option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-0 align-self-end">
+                                    <button class="btn btn-primary btn-sm" type="submit">search</button>
+                                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'manpower:joblist' %}">clear</a>
+                                </div>
+                                <div class="col-md-3 mb-0 align-self-end">
+                                    <small class="text-muted">{{ activities.paginator.count }} job entr{{ activities.paginator.count|pluralize:"y,ies" }}</small>
+                                </div>
+                            </div>
+
+
+                            <div class="table-responsive " id="table">
+                                <table class="table table-striped table-bordered zero-configuration table-sm">
+                                    <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Shift</th>
+                                        <th>Machine</th>
+                                        <th>Job</th>
+                                        <th>Item Name</th>
+                                        <th>Customer</th>
+                                        <th>Qty</th>
+                                        <th>Speed</th>
+                                        <th>Make Ready</th>
+                                        <th>Rolls</th>
+                                        <th>Lot</th>
+                                        <th>Tag</th>
+                                        <th>Run Time</th>
+                                        <th>Total Time</th>
+                                        <th>Downtime</th>
+                                        <th>Shift</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    {% for act in activities %}
+                                    <tr>
+                                        <td>{{ act.shift.production_date|date:"d/m/Y" }}</td>
+                                        <td>{{ act.shift.shift }}</td>
+                                        <td>{{ act.shift.machine }}</td>
+                                        <td><a href="{% url 'order:jobdetail' act.jobid_id %}">{{ act.jobid_id }}</a></td>
+                                        <td>{{ act.jobid.itemname }}</td>
+                                        <td>{{ act.jobid.joborder.customer }}</td>
+                                        <td>{{ act.qty }}</td>
+                                        <td>{{ act.speed }}</td>
+                                        <td>{{ act.makeready }}</td>
+                                        <td>{{ act.rolls }}</td>
+                                        <td>{{ act.lot }}</td>
+                                        <td>{{ act.tag }}</td>
+                                        <td>{{ act.runningtime }}</td>
+                                        <td>{{ act.totaltime }}</td>
+                                        <td>{{ act.downtime_total }}</td>
+                                        <td>
+                                            <a href="{% url 'manpower:shiftdetail' act.shift_id %}">
+                                                {% if act.shift.is_approved %}Approved{% else %}Edit{% endif %}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="16" class="text-center text-muted">No job entries match.</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                    <tr class="font-weight-bold">
+                                        <td colspan="6" class="text-right">Total (all {{ activities.paginator.count }} filtered entries)</td>
+                                        <td>{{ totals.qty|default:0 }}</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>{{ totals.rolls|default:0 }}</td>
+                                        <td>{{ totals.lot|default:0 }}</td>
+                                        <td>{{ totals.tag|default:0 }}</td>
+                                        <td></td>
+                                        <td>{{ totals.totaltime|default:0 }}</td>
+                                        <td>{{ totals.downtime|default:0 }}</td>
+                                        <td></td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}">
+<script src="{% static 'js/jquery.datetimepicker.full.min.js' %} "></script>
+<script>$(function () {$( "#id_date__lt" ).datetimepicker({format: 'd/m/Y', timepicker: false});});</script>
+<script>$(function () {$( "#id_date__gt" ).datetimepicker({format: 'd/m/Y', timepicker: false});});</script>
+
+{% endblock javascripts %}

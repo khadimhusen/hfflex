@@ -34,6 +34,32 @@ class DowntimeFilter(django_filters.FilterSet):
         self.filters['activity__shift__shift'].label = "Shift"
 
 
+class ActivityJobFilter(django_filters.FilterSet):
+    """Filters for the manpower Job List -- one row per Activity (a job
+    worked on in a shift), so the shift's machine/shift/date and the job's
+    own details are all filterable."""
+    jobid = django_filters.NumberFilter(field_name='jobid__id', label='Job ID')
+    itemname = django_filters.CharFilter(field_name='jobid__itemname', label='Item Name',
+                                         lookup_expr='icontains')
+    customer = django_filters.CharFilter(field_name='jobid__joborder__customer__name', label='Customer',
+                                         lookup_expr='icontains')
+    date__gt = django_filters.DateFilter(label="From Date", field_name='shift__production_date',
+                                         lookup_expr='gte', input_formats=('%d/%m/%Y',))
+    date__lt = django_filters.DateFilter(label="To Date", field_name='shift__production_date',
+                                         lookup_expr='lte', input_formats=('%d/%m/%Y',))
+
+    class Meta:
+        model = Activity
+        fields = ['shift__machine', 'shift__shift', 'makeready', 'shift__is_approved']
+
+    def __init__(self, *args, **kwargs):
+        super(ActivityJobFilter, self).__init__(*args, **kwargs)
+        self.filters['shift__machine'].label = "Machine"
+        self.filters['shift__shift'].label = "Shift"
+        self.filters['makeready'].label = "Make Ready"
+        self.filters['shift__is_approved'].label = "Approved"
+
+
 class JobQcFilter(django_filters.FilterSet):
     time__gt = django_filters.DateFilter(
         label="From Date",

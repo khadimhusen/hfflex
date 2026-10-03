@@ -5,9 +5,11 @@ from django.forms import inlineformset_factory, modelform_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from manpower.models import Shift, Activity, Machine, ShiftPerson, DowntimeReport
 from myproject.access import accessview
-from .filters import ShiftFilter, DowntimeFilter, JobQcFilter
+from .filters import ShiftFilter, DowntimeFilter, JobQcFilter, ActivityJobFilter
 from .forms import NewShiftForm, ActivityForm, ShiftPersonForm , DowntimeReportForm
 import datetime
+from django.db.models import OuterRef, Subquery, Sum, IntegerField
+from django.db.models.functions import Coalesce
 from production.models import JobQc
 
 @login_required(login_url='/login/')
@@ -183,3 +185,40 @@ def qctestlist(request):
 
     return render(request, 'activity/qclist.html', {"qclist": qc_list,
                                                           'myFilter': myFilter})
+
+
+@login_required(login_url='/login/')
+@accessview
+def joblist(request):
+    """Every job worked on in a shift (one row per Activity), filterable by
+    job / item / customer / machine / shift / date -- with page-wide totals
+    for the filtered set, same shape as the other manpower lists."""
+    # One downtime total per activity in the query itself, instead of the
+    # Activity.totaldowntime property running a query for every row.
+    downtime_sq = (DowntimeReport.objects.filter(activity=OuterRef('pk'))
+                   .values('activity').annotate(total=Sum('downtime')).values('total'))
+    activity_list = (Activity.objects
+                     .select_related('shift', 'shift__machine', 'jobid', 'jobid__joborder__customer')
+                     .annotate(downtime_total=Coalesce(Subquery(downtime_sq, output_field=IntegerField()), 0))
+                     .order_by('-shift__production_date', '-shift__id', '-id'))
+
+    myFilter = ActivityJobFilter(request.GET, activity_list)
+    activity_list = myFilter.qs
+
+    totals = activity_list.aggregate(
+        qty=Sum('qty'), rolls=Sum('rolls'), lot=Sum('lot'), tag=Sum('tag'),
+        totaltime=Sum('totaltime'), downtime=Sum('downtime_total'),
+    )
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(activity_list, 100)
+    try:
+        activities = paginator.page(page)
+    except PageNotAnInteger:
+        activities = paginator.page(1)
+    except EmptyPage:
+        activities = paginator.page(paginator.num_pages)
+
+    return render(request, 'activity/joblist.html', {"activities": activities,
+                                                     'myFilter': myFilter,
+                                                     'totals': totals})
