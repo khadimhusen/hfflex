@@ -3,7 +3,13 @@
 {% load crispy_forms_tags %}
 
 {% block customcss%}
-<style> .table{  font-size: 12px;}</style>
+<style>
+    .table{  font-size: 12px;}
+    /* Night-shift rows in light grey. The selector is as specific as it needs
+       to be to beat table-striped's odd-row tint, so odd and even rows match. */
+    .table.table-striped tbody tr.shift-night,
+    .table.table-striped tbody tr.shift-night > td { background-color: lightgrey; }
+</style>
 {% endblock customcss %}
 
 {% block topscript %}
@@ -101,7 +107,7 @@
 
                                     <tbody>
                                     {% for act in activities %}
-                                    <tr>
+                                    <tr{% if act.shift.shift == 'Night' %} class="shift-night"{% endif %}>
                                         <td>{{ act.shift.production_date|date:"d/m/Y" }}</td>
                                         <td>{{ act.shift.shift }}</td>
                                         <td>{{ act.shift.machine }}</td>
