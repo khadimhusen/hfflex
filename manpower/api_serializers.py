@@ -73,13 +73,30 @@ class ShiftListSerializer(serializers.ModelSerializer):
     machine_display = serializers.CharField(source='machine.machinename', read_only=True)
     actualtime = serializers.ReadOnlyField()
     efficiency = serializers.ReadOnlyField()
+    joblist = serializers.SerializerMethodField()
+    totalqty = serializers.SerializerMethodField()
 
     class Meta:
         model = Shift
         fields = [
             'id', 'shift', 'machine', 'machine_display', 'production_date',
+            'joblist', 'totalqty',
             'actualtime', 'efficiency', 'is_approved',
         ]
+
+    # Both come from the activities ShiftViewSet already prefetches, rather
+    # than the Shift.totalqty property, which runs its own aggregate query
+    # for every row of the page.
+    def get_joblist(self, obj):
+        """Job numbers worked this shift, once each, in the order entered."""
+        seen = []
+        for act in sorted(obj.activity.all(), key=lambda a: a.id):
+            if act.jobid_id not in seen:
+                seen.append(act.jobid_id)
+        return seen
+
+    def get_totalqty(self, obj):
+        return sum(act.qty for act in obj.activity.all())
 
 
 class ShiftSerializer(serializers.ModelSerializer):
