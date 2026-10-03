@@ -200,7 +200,11 @@ def joblist(request):
     activity_list = (Activity.objects
                      .select_related('shift', 'shift__machine', 'jobid', 'jobid__joborder__customer')
                      .annotate(downtime_total=Coalesce(Subquery(downtime_sq, output_field=IntegerField()), 0))
-                     .order_by('-shift__production_date', '-shift__id', '-id'))
+                     # Newest entry first -- by when it was added, not by the
+                     # shift's production date: a mistyped date (three shifts
+                     # carry the year 2033) would otherwise sit above every
+                     # real recent entry.
+                     .order_by('-id'))
 
     myFilter = ActivityJobFilter(request.GET, activity_list)
     activity_list = myFilter.qs
