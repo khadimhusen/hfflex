@@ -5,8 +5,11 @@
 {% block customcss%}
 <style>
     .table{  font-size: 12px;}
-    /* Night-shift rows in light grey. The selector is as specific as it needs
-       to be to beat table-striped's odd-row tint, so odd and even rows match. */
+    /* Day rows white, Night rows light grey. The selectors are as specific as
+       they need to be to beat table-striped's odd-row tint, so odd and even
+       rows of the same shift match instead of alternating. */
+    .table.table-striped tbody tr.shift-day,
+    .table.table-striped tbody tr.shift-day > td { background-color: white; }
     .table.table-striped tbody tr.shift-night,
     .table.table-striped tbody tr.shift-night > td { background-color: lightgrey; }
 </style>
@@ -107,7 +110,7 @@
 
                                     <tbody>
                                     {% for act in activities %}
-                                    <tr{% if act.shift.shift == 'Night' %} class="shift-night"{% endif %}>
+                                    <tr class="{% if act.shift.shift == 'Night' %}shift-night{% else %}shift-day{% endif %}">
                                         <td>{{ act.shift.production_date|date:"d/m/Y" }}</td>
                                         <td>{{ act.shift.shift }}</td>
                                         <td>{{ act.shift.machine }}</td>
