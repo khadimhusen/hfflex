@@ -50,6 +50,18 @@ class ShiftViewSet(viewsets.ModelViewSet):
             return ShiftListSerializer
         return ShiftSerializer
 
+    def list(self, request, *args, **kwargs):
+        # Footer totals over every filtered shift, not just the visible
+        # page -- same idea as the jobs list's total_kgqty. total_jobs
+        # counts a job once per shift it ran in, matching what the Job List
+        # column shows (a job on three shifts is three entries).
+        response = super().list(request, *args, **kwargs)
+        shift_ids = self.filter_queryset(self.get_queryset()).prefetch_related(None).values('pk')
+        activities = Activity.objects.filter(shift__in=shift_ids)
+        response.data['total_qty'] = activities.aggregate(qty=Sum('qty'))['qty'] or 0
+        response.data['total_jobs'] = activities.values('shift', 'jobid').distinct().count()
+        return response
+
     def perform_create(self, serializer):
         # Mirrors newshift()'s get_or_create -- creating a Shift that
         # already exists for this machine/shift/date just returns the
