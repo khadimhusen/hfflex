@@ -75,3 +75,14 @@ class Company(models.Model):
         """GST state code, the first two digits of the GSTIN ('27' =
         Maharashtra). Will decide CGST+SGST versus IGST between two parties."""
         return self.gstin[:2]
+
+
+def default_company():
+    """The company used where a document does not say which one: the active
+    company flagged is_default, or None if there isn't one."""
+    return Company.objects.filter(is_default=True, is_active=True).first()
+
+
+def default_company_id():
+    """default_company().pk, for use as a model field's callable default."""
+    return Company.objects.filter(is_default=True, is_active=True).values_list('pk', flat=True).first()

@@ -9,12 +9,13 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 
+from company.models import Company
 from customer.models import Customer, Address
 from material.models import Unit
 from .models import Po, PoItem, PoImage, ExpectedDate, Term
 from .api_serializers import (
     PoSerializer, PoItemSerializer, PoImageSerializer, ExpectedDateSerializer,
-    SupplierLookupSerializer, ShipToLookupSerializer, DeliveryAddressLookupSerializer,
+    SupplierLookupSerializer, BuyerLookupSerializer, ShipToLookupSerializer, DeliveryAddressLookupSerializer,
     UnitLookupSerializer, TermSerializer,
 )
 from .pdfviews import build_po_pdf_buffer
@@ -32,6 +33,13 @@ class SupplierLookupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SupplierLookupSerializer
     permission_classes = [IsPurchaseUser]
     search_fields = ['name']
+
+
+class BuyerLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    """Our own active companies, for the PO 'buyer' dropdown."""
+    queryset = Company.objects.filter(is_active=True).order_by('name')
+    serializer_class = BuyerLookupSerializer
+    permission_classes = [IsPurchaseUser]
 
 
 class ShipToLookupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,7 +73,7 @@ class PoViewSet(viewsets.ModelViewSet):
     a new one."""
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
     queryset = Po.objects.select_related(
-        'supplier', 'ship_to', 'delivery_at', 'createdby', 'approvedby', 'editedby',
+        'supplier', 'buyer', 'ship_to', 'delivery_at', 'createdby', 'approvedby', 'editedby',
     ).prefetch_related('poitem', 'poterm', 'itemexpecteddate', 'supplier__addresses', 'supplier__persons')
     serializer_class = PoSerializer
     permission_classes = [IsPurchaseUser]

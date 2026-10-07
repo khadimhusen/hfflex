@@ -2,6 +2,8 @@ from crispy_forms.helper import FormHelper
 from django import forms
 from .models import Po, PoItem, Term, PoImage,ExpectedDate
 from customer.models import Address, Customer
+from company.models import Company
+from django.db.models import Q
 from django.forms.widgets import CheckboxSelectMultiple
 
 
@@ -19,6 +21,15 @@ class PoForm(forms.ModelForm):
         self.fields['supplier'].queryset = Customer.objects.filter(active=True, is_supplier=True).order_by('name')
         self.fields["poterm"].widget = CheckboxSelectMultiple()
         self.fields["poterm"].queryset = Term.objects.all()
+        # Buyer: one of our active companies, always one of them (no blank
+        # entry) -- plus the order's current buyer, so editing an old PO whose
+        # company was deactivated since doesn't make its own value invalid.
+        # Not required: a post that omits it (a page loaded before this field
+        # existed) keeps the model default / the order's existing buyer.
+        self.fields['buyer'].queryset = Company.objects.filter(
+            Q(is_active=True) | Q(pk=self.instance.buyer_id)).order_by('name')
+        self.fields['buyer'].empty_label = None
+        self.fields['buyer'].required = False
 
         if 'supplier' in self.data:
             try:

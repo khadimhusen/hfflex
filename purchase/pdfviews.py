@@ -61,6 +61,30 @@ def draw_string_fit(canvas_obj, x, y, text, font, size, max_width):
     canvas_obj.drawString(x, y, truncated + ellipsis)
 
 
+# Room for the letterhead in the PDF's top banner: it is centred on
+# A4[0]/2 - 100 and must stay clear of the corner ribbons on the left and the
+# PO number / date / transport block that starts near x=330 on the right.
+HEADER_TITLE_WIDTH = 270
+HEADER_LINE_WIDTH = 255
+HEADER_ONLINE_WIDTH = 280  # the bottom line sits below most of that block
+
+
+def fit_font_size(canvas_obj, text, font, size, max_width, min_size=7):
+    """The largest font size, at most `size`, at which text fits max_width."""
+    while size > min_size and canvas_obj.stringWidth(text, font, size) > max_width:
+        size -= 0.5
+    return size
+
+
+def draw_centered_fit(canvas_obj, x, y, text, font, size, max_width):
+    """drawCentredString, shrunk (down to a floor) so a long address or email
+    cannot run into the neighbouring block of the banner."""
+    if not text:
+        return
+    canvas_obj.setFont(font, fit_font_size(canvas_obj, text, font, size, max_width, min_size=6))
+    canvas_obj.drawCentredString(x, y, text)
+
+
 @login_required(login_url='/login/')
 @accessview
 def popdf(request, id):
@@ -252,6 +276,7 @@ def build_po_pdf_buffer(purchase):
     purchase.api_viewsets.PoViewSet.pdf) can reuse the exact same layout
     instead of reimplementing it."""
     buffer = io.BytesIO()
+    lh = purchase.letterhead  # the buyer company's name, address, contact details
     pagestartposition = 250
     p = canvas.Canvas(buffer, pagesize=A4, bottomup=1)
     page = 1
@@ -279,7 +304,7 @@ def build_po_pdf_buffer(purchase):
         p.rotate(90)
         p.setFont("times", 14)
         p.setFillColorRGB(0.1, 0.4, 0.6)
-        HF = "   H F FLEX  "
+        HF = f"   {lh.watermark}  "
         p.drawCentredString(450, -590, HF * 12)
         p.rotate(-90)
         p.setFont("arial", 10)
@@ -307,17 +332,22 @@ def build_po_pdf_buffer(purchase):
         p.drawRightString(A4[0] - 170, A4[1] - 80, 'Payment Terms:- ')
         p.drawString(A4[0] - 170, A4[1] - 80, str(purchase.payment_terms or ""))
         p.setFillColorRGB(0.95, 0.95, 0.95)
-        p.setFont("timesbd", 25)
-        p.drawCentredString(A4[0] / 2 - 98, A4[1] - 25, "H F Flex Pvt. Ltd.")
+        # Title shadow, then title. Fitted, because a longer company name
+        # would otherwise run into the PO number block on the right.
+        title_size = fit_font_size(p, lh.title_name, "timesbd", 25, HEADER_TITLE_WIDTH)
+        p.setFont("timesbd", title_size)
+        p.drawCentredString(A4[0] / 2 - 98, A4[1] - 25, lh.title_name)
         p.setFillColorRGB(0.80, 0, 0)
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 28, "H F Flex Pvt. Ltd.")
+        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 28, lh.title_name)
         p.setFillColorRGB(0, 0.2, 0.5)
-        p.setFont("arial", 9)
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 42,
-                            "25, Lucky Lark Textile Park, Gardi, Vita")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 55, "Tal- Khanapur, Dist- Sangli, Maharashtra-415311")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 68, "Contact:- 8552827683, 9765643576,")
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 81, " Email:- hfflexpvtltd@gmail.com, Website: www.hfflex.co.in")
+        header_x = A4[0] / 2 - 100
+        draw_centered_fit(p, header_x, A4[1] - 42, lh.address_line1, "arial", 9, HEADER_LINE_WIDTH)
+        draw_centered_fit(p, header_x, A4[1] - 55, lh.address_line2, "arial", 9, HEADER_LINE_WIDTH)
+        draw_centered_fit(p, header_x, A4[1] - 68, f"Contact:- {lh.phone}" if lh.phone else "",
+                          "arial", 9, HEADER_LINE_WIDTH)
+        online = ", ".join(part for part in (f"Email:- {lh.email}" if lh.email else "",
+                                              f"Website: {lh.website}" if lh.website else "") if part)
+        draw_centered_fit(p, header_x, A4[1] - 81, online, "arial", 9, HEADER_ONLINE_WIDTH)
         p.drawString(500, 20, f'Page({page})')
         page = page + 1
         p.setFillColorRGB(0.90, 0, 0, 1)

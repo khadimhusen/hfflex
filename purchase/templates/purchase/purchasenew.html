@@ -21,6 +21,11 @@
         {{ po_form.non_field_errors }}
         {{ po_form.errors }}
         <div class="form-row">
+            <div class="form-group col-md-11 mb-0">
+                {{ po_form.buyer|as_crispy_field }}
+            </div>
+        </div>
+        <div class="form-row">
 
             <div class="form-group col-md-11 mb-0">
                 {{ po_form.supplier|as_crispy_field }}

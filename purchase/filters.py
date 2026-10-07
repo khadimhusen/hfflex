@@ -21,7 +21,7 @@ class PoFilter(django_filters.FilterSet):
 
     class Meta:
         model = Po
-        fields = ['id', 'supplier', 'status', 'createdby']
+        fields = ['id', 'supplier', 'buyer', 'status', 'createdby']
 
 
 

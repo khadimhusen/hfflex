@@ -2,12 +2,13 @@ from rest_framework.routers import DefaultRouter
 
 from .api_viewsets import (
     PoViewSet, PoItemViewSet, PoImageViewSet, ExpectedDateViewSet,
-    SupplierLookupViewSet, ShipToLookupViewSet, DeliveryAddressLookupViewSet,
+    SupplierLookupViewSet, BuyerLookupViewSet, ShipToLookupViewSet, DeliveryAddressLookupViewSet,
     UnitLookupViewSet, TermLookupViewSet,
 )
 
 router = DefaultRouter()
 router.register('supplier-lookup', SupplierLookupViewSet, basename='purchase-supplier-lookup')
+router.register('buyer-lookup', BuyerLookupViewSet, basename='purchase-buyer-lookup')
 router.register('ship-to-lookup', ShipToLookupViewSet, basename='purchase-ship-to-lookup')
 router.register('delivery-address-lookup', DeliveryAddressLookupViewSet, basename='purchase-delivery-address-lookup')
 router.register('unit-lookup', UnitLookupViewSet, basename='purchase-unit-lookup')

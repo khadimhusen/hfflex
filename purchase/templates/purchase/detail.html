@@ -52,17 +52,20 @@
                     <div class="col-12"><h5 class="text-center"><u>Purchase Order</u></h5></div>
                 </div>
                 <div class="row mt-4">
+                    {# The buying company's letterhead (from the Company table) #}
+                    {% with lh=po.letterhead %}
                     <div class="col-2 text-center">
                         <div id="logo">
-                            <img src="/static/images/hflogo.png" width="90" height="100">
+                            {% if lh.logo_url %}<img src="{{ lh.logo_url }}" width="90" height="100">{% endif %}
                         </div>
                     </div>
                     <div class="col-6 text-center">
-                        <h1 class="name font-weight-bold">H F FLEX PVT. LTD.</h1>
-                        <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7447456686
-                            <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+                        <h1 class="name font-weight-bold">{{ lh.name }}</h1>
+                        <p>{{ lh.address_line1 }}{% if lh.address_line2 %}, {{ lh.address_line2 }}{% endif %}{% if lh.phone %}, contact:- {{ lh.phone }}{% endif %}
+                            {% if lh.email %}<a href="mailto:{{ lh.email }}">{{ lh.email }}</a>{% endif %}
                         </p>
                     </div>
+                    {% endwith %}
                     <div class="col-4">
                         <h3>Po # {{po.id}} </h3>
                         <h6 class="text-danger">(Order Status:{{po.status}})</h6>

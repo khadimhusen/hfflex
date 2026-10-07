@@ -2,6 +2,7 @@ from math import floor
 from django.db import models
 from myproject.utils import num2words
 from customer.models import Customer, Address
+from company.models import Company, default_company_id
 from .choices import pochoices, material_category
 from django.contrib.auth.models import User
 from material.models import Unit
@@ -37,6 +38,12 @@ class Po(models.Model):
     transport = models.CharField(max_length=64, blank=True)
     remark = models.CharField(max_length=512, null=True, blank=True, default="-")
     ship_to=models.ForeignKey(Customer,related_name='po_ship_to',null=True,blank=True, on_delete=models.PROTECT,default=hfflex)
+    # Which of our companies is buying -- its letterhead and GSTIN head the
+    # printed PO. Nullable and defaulting to the default company, so a PO made
+    # by code that never mentions it (or before companies existed) still works;
+    # a missing buyer prints as the default company (see `letterhead`).
+    buyer = models.ForeignKey(Company, related_name='purchase_orders', null=True, blank=True,
+                              on_delete=models.PROTECT, default=default_company_id)
     delivery_at = models.ForeignKey(Address, related_name='po', on_delete=models.PROTECT,
                                     null=True, blank=True, default=146)
     poterm = models.ManyToManyField(Term, related_name='poterms', default=allterm, blank=True)
@@ -67,6 +74,12 @@ class Po(models.Model):
                 po=self,
                 expected_date=self.delivery_date,
                 createdby=self.createdby)
+
+    @property
+    def letterhead(self):
+        """The buyer's letterhead details, for the PDF and the detail page."""
+        from company.letterhead import letterhead
+        return letterhead(self.buyer)
 
     @property
     def totalqty(self):

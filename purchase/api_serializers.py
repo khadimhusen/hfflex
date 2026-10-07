@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
+from company.models import Company
 from customer.models import Customer, Address
 from material.models import Unit
 from myproject.thumbnails import get_or_create_thumbnail
@@ -16,6 +17,15 @@ class SupplierLookupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['id', 'name']
+
+
+class BuyerLookupSerializer(serializers.ModelSerializer):
+    """Our own companies, for the PO 'buyer' dropdown. is_default marks the
+    one to preselect on a new PO."""
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'short_name', 'is_default']
 
 
 class ShipToLookupSerializer(serializers.ModelSerializer):
@@ -139,6 +149,7 @@ class PoSerializer(serializers.ModelSerializer):
     supplier_email = serializers.CharField(source='supplier.email', read_only=True, default=None)
     supplier_addresses = serializers.SerializerMethodField()
     supplier_contact = serializers.SerializerMethodField()
+    buyer_name = serializers.CharField(source='buyer.name', read_only=True, default=None)
     ship_to_name = serializers.CharField(source='ship_to.name', read_only=True, default=None)
     delivery_at_display = serializers.CharField(source='delivery_at.addname', read_only=True, default=None)
     delivery_at_detail = serializers.SerializerMethodField()
@@ -164,7 +175,7 @@ class PoSerializer(serializers.ModelSerializer):
         model = Po
         fields = [
             'id', 'supplier', 'supplier_name', 'supplier_gst', 'supplier_email', 'supplier_addresses',
-            'supplier_contact', 'delivery_date', 'payment_terms', 'tax1', 'tax2',
+            'supplier_contact', 'buyer', 'buyer_name', 'delivery_date', 'payment_terms', 'tax1', 'tax2',
             'transport', 'remark', 'ship_to', 'ship_to_name', 'delivery_at', 'delivery_at_display',
             'delivery_at_detail', 'poterm', 'status', 'itemcount', 'totalqty', 'totalrecqty', 'totalpendingqty',
             'pototal', 'cgst', 'sgst', 'grosstotal', 'inword', 'delayed', 'can_add_price', 'can_approve', 'pdf_url',
@@ -188,6 +199,14 @@ class PoSerializer(serializers.ModelSerializer):
         if request and not can_add_price(request.user):
             for field in ('pototal', 'cgst', 'sgst', 'grosstotal', 'inword'):
                 self.fields.pop(field, None)
+
+    def validate_buyer(self, value):
+        # An inactive company can't be newly chosen as buyer; an order that
+        # already has one (since deactivated) may keep it.
+        if value is not None and not value.is_active:
+            if self.instance is None or self.instance.buyer_id != value.pk:
+                raise serializers.ValidationError('This company is not active.')
+        return value
 
     def get_delayed(self, obj):
         if not obj.delivery_date:
