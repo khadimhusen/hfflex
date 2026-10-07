@@ -76,6 +76,18 @@ class SeedCommandTests(TestCase):
         self.assertEqual(company.gstin, '27AADCH3462K1ZF')
         self.assertTrue(company.is_default and company.is_active)
 
+    def test_recognises_h_f_flex_after_its_short_code_was_edited(self):
+        self.run_seed()
+        Company.objects.filter(gstin='27AADCH3462K1ZF').update(short_name='FLEX')
+        self.assertIn('already exists', self.run_seed())  # must not try to create a second one
+        self.assertEqual(Company.objects.count(), 1)
+
+    def test_recognises_h_f_flex_by_name_when_gstin_was_blanked(self):
+        self.run_seed()
+        Company.objects.update(gstin='', short_name='FLEX')
+        self.assertIn('already exists', self.run_seed())
+        self.assertEqual(Company.objects.count(), 1)
+
     def test_rerun_changes_nothing(self):
         self.run_seed()
         Company.objects.filter(short_name='HF').update(phone='edited in admin')

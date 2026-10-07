@@ -8,6 +8,7 @@ from company.models import Company
 # matches Customer "H F FLEX PRIVATE LIMITED".
 HF_FLEX = dict(
     name='H F FLEX PVT. LTD.',
+    short_name='HF',
     gstin='27AADCH3462K1ZF',
     address_line1='25, Lucky Lark Textile Park, Gardi, Vita',
     address_line2='Tal- Khanapur, Dist- Sangli, Maharashtra-415311',
@@ -26,8 +27,14 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        company, created = Company.objects.get_or_create(short_name='HF', defaults=HF_FLEX)
-        if created:
-            self.stdout.write(self.style.SUCCESS(f'Created {company.name} (default company).'))
-        else:
-            self.stdout.write(f'{company.name} already exists -- left as it is.')
+        # Recognise an existing H F Flex by its GSTIN (or its name), not by the
+        # short code: the code is edited in the admin (FLEX, HF, ...), and
+        # looking it up by 'HF' would try to create a second copy and crash
+        # on the unique name.
+        existing = (Company.objects.filter(gstin=HF_FLEX['gstin']).first()
+                    or Company.objects.filter(name=HF_FLEX['name']).first())
+        if existing:
+            self.stdout.write(f'{existing.name} already exists -- left as it is.')
+            return
+        company = Company.objects.create(**HF_FLEX)
+        self.stdout.write(self.style.SUCCESS(f'Created {company.name} (default company).'))
