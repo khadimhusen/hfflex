@@ -2,7 +2,7 @@ from math import floor
 from django.db import models
 from myproject.utils import num2words
 from customer.models import Customer, Address
-from company.models import Company, default_company_id
+from company.models import Company, company_for_customer, default_company_id
 from .choices import pochoices, material_category
 from django.contrib.auth.models import User
 from material.models import Unit
@@ -80,6 +80,12 @@ class Po(models.Model):
         """The buyer's letterhead details, for the PDF and the detail page."""
         from company.letterhead import letterhead
         return letterhead(self.buyer)
+
+    @property
+    def ship_to_company(self):
+        """Our own company the order ships to (its ship_to is that company's
+        customer record), or None when it ships to an outside party."""
+        return company_for_customer(self.ship_to)
 
     @property
     def totalqty(self):

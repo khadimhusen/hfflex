@@ -376,7 +376,10 @@ def build_po_pdf_buffer(purchase):
     p.drawString(325, A4[1] - 105, 'Delivery To:-')
     p.setFillColorRGB(0.8, 0, 0)
     draw_string_fit(p, 20, A4[1] - 118, f'{purchase.supplier}', "arial", 12, LEFT_COL_WIDTH)
-    draw_string_fit(p, 325, A4[1] - 118, f'{purchase.ship_to}', "arial", 12, RIGHT_COL_WIDTH)
+    ship_to = purchase.ship_to
+    delivery_at = purchase.delivery_at
+    if ship_to:
+        draw_string_fit(p, 325, A4[1] - 118, f'{ship_to}', "arial", 12, RIGHT_COL_WIDTH)
 
     p.setFillColorRGB(0.0, 0.2, 0.4)
 
@@ -391,17 +394,24 @@ def build_po_pdf_buffer(purchase):
     draw_string_fit(p, 20, A4[1] - 169, contact_line, "arial", 9, LEFT_COL_WIDTH)
 
     draw_string_fit(p, 20, A4[1] - 182, f'Email: - {purchase.supplier.email or ""}', "arial", 9, LEFT_COL_WIDTH)
-    draw_string_fit(
-        p, 325, A4[1] - 130, join_parts(purchase.delivery_at.addname, purchase.delivery_at.add1),
-        "arial", 9, RIGHT_COL_WIDTH,
-    )
-    draw_string_fit(
-        p, 325, A4[1] - 143, join_parts(purchase.delivery_at.add2, purchase.delivery_at.pincode),
-        "arial", 9, RIGHT_COL_WIDTH,
-    )
-    draw_string_fit(p, 325, A4[1] - 156, f'{purchase.ship_to.gst or ""}', "arial", 9, RIGHT_COL_WIDTH)
+    # An order can have no delivery address or ship-to (e.g. a company not yet
+    # linked to a customer record); print what there is rather than fail.
+    if delivery_at:
+        draw_string_fit(
+            p, 325, A4[1] - 130, join_parts(delivery_at.addname, delivery_at.add1),
+            "arial", 9, RIGHT_COL_WIDTH,
+        )
+        draw_string_fit(
+            p, 325, A4[1] - 143, join_parts(delivery_at.add2, delivery_at.pincode),
+            "arial", 9, RIGHT_COL_WIDTH,
+        )
+    if ship_to:
+        draw_string_fit(p, 325, A4[1] - 156, f'{ship_to.gst or ""}', "arial", 9, RIGHT_COL_WIDTH)
 
-    if purchase.ship_to.name == "H F FLEX PRIVATE LIMITED":
+    if ship_to is None:
+        pass
+    elif purchase.ship_to_company is not None:
+        # Delivered to one of our own companies: the contact is whoever made the order.
         full_name = join_parts(purchase.createdby.profile.prefix, purchase.createdby.get_full_name(), sep=' ')
         draw_string_fit(
             p, 325, A4[1] - 169, f'Contact Person: -{join_parts(full_name, purchase.createdby.profile.mobile)}',
@@ -413,13 +423,13 @@ def build_po_pdf_buffer(purchase):
         # contact person on file — which previously crashed this branch
         # with an AttributeError (confirmed live: any PO shipped to a real
         # third-party customer without a recorded contact person 500'd here).
-        ship_to_person = purchase.ship_to.persons.first()
+        ship_to_person = ship_to.persons.first()
         contact_line = (
             f'Contact Person: -{join_parts(ship_to_person.name, ship_to_person.mobile, sep=" - ")}'
             if ship_to_person else 'Contact Person: -'
         )
         draw_string_fit(p, 325, A4[1] - 169, contact_line, "arial", 9, RIGHT_COL_WIDTH)
-        draw_string_fit(p, 325, A4[1] - 182, f'Email:- {purchase.ship_to.email or ""}', "arial", 9, RIGHT_COL_WIDTH)
+        draw_string_fit(p, 325, A4[1] - 182, f'Email:- {ship_to.email or ""}', "arial", 9, RIGHT_COL_WIDTH)
 
     styles = getSampleStyleSheet()
     styleN = styles["BodyText"]

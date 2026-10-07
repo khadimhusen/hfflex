@@ -11,6 +11,10 @@ gstin_validator = RegexValidator(
 )
 
 
+# H F Flex's own record in the customer table (what Po.ship_to defaulted to).
+LEGACY_CUSTOMER_NAME = 'H F FLEX PRIVATE LIMITED'
+
+
 class Company(models.Model):
     """One of our own legal entities (H F Flex, H F Printpack, ...) -- what a
     document's letterhead, GSTIN and sign-off should say.
@@ -31,6 +35,10 @@ class Company(models.Model):
     email = models.EmailField(blank=True)
     website = models.CharField(max_length=128, blank=True)
     logo = models.ImageField(upload_to='company/', blank=True, null=True, max_length=256)
+    customer = models.ForeignKey(
+        'customer.Customer', null=True, blank=True, on_delete=models.PROTECT, related_name='company_records',
+        help_text='The customer record that stands for this company -- where goods bought by it are '
+                  'delivered. Its addresses are the delivery addresses offered on its purchase orders.')
     is_default = models.BooleanField(
         default=False,
         help_text='Used wherever a document does not say which company. Only one company can be the default.')
@@ -71,6 +79,30 @@ class Company(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def receiving_customer(self):
+        """The customer record goods bought by this company are delivered to.
+
+        The linked customer, or -- for H F Flex only, which was wired to its
+        customer record before companies existed -- that record found by name.
+        None for any other company that has not been linked yet.
+        """
+        if self.customer_id:
+            return self.customer
+        from .defaults import HF_FLEX
+        if self.gstin == HF_FLEX['gstin']:
+            from customer.models import Customer
+            return Customer.objects.filter(name=LEGACY_CUSTOMER_NAME).first()
+        return None
+
+    def delivery_addresses(self):
+        """Addresses of the receiving customer, for a purchase order's delivery address."""
+        from customer.models import Address
+        customer = self.receiving_customer
+        if customer is None:
+            return Address.objects.none()
+        return Address.objects.filter(customer=customer).order_by('addname', 'id')
+
+    @property
     def state_code(self):
         """GST state code, the first two digits of the GSTIN ('27' =
         Maharashtra). Will decide CGST+SGST versus IGST between two parties."""
@@ -81,6 +113,19 @@ def default_company():
     """The company used where a document does not say which one: the active
     company flagged is_default, or None if there isn't one."""
     return Company.objects.filter(is_default=True, is_active=True).first()
+
+
+def company_for_customer(customer):
+    """Our company that `customer` is the record of, or None if it is an
+    ordinary customer/supplier. H F Flex's record counts even before it is
+    linked in the admin."""
+    if customer is None:
+        return None
+    from .defaults import HF_FLEX
+    company = Company.objects.filter(customer_id=customer.pk).first()
+    if company is None and customer.name == LEGACY_CUSTOMER_NAME:
+        company = Company.objects.filter(gstin=HF_FLEX['gstin']).first()
+    return company
 
 
 def default_company_id():

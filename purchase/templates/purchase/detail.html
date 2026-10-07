@@ -98,14 +98,20 @@
 
                         <div id="delivery" class="col-5 side-border ">
                             <div class="to">Delivery To:</div>
-                            <h4 class="name">{{po.ship_to}}</h4>
+                            <h4 class="name">{{po.ship_to|default_if_none:""}}</h4>
+                            {% if po.delivery_at %}
                             <div class="address">{{po.delivery_at.addname}}, {{po.delivery_at.add1}}</div>
                             <div class="address">{{po.delivery_at.add2}} Pincode- {{po.delivery_at.pincode}}</div>
-                            <div>Gst:- 27AADCH3462K1ZF</div>
+                            {% endif %}
+                            {% if po.ship_to.gst %}<div>Gst:- {{po.ship_to.gst}}</div>{% endif %}
+                            {% with ours=po.ship_to_company %}
+                            {% if ours %}
                             <div>Contact Person:-{{po.createdby.profile.prefix }}
                                 {{po.createdby.get_full_name|title }}<b>( {{po.createdby.profile.mobile }} )</b>
                             </div>
-                            <div class="email"><a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a></div>
+                            {% if ours.email %}<div class="email"><a href="mailto:{{ours.email}}">{{ours.email}}</a></div>{% endif %}
+                            {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
                     <hr>

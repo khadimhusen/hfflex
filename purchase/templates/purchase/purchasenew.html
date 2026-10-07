@@ -95,4 +95,18 @@
 
 
 </script>
+<script>
+    // The buyer decides who receives the goods: swap the delivery address
+    // list (and the Ship to customer, where the page has that field) for the
+    // newly chosen buyer's.
+    $("#id_buyer").on("change", function () {
+        $.getJSON("{% url 'purchase:buyerdelivery' %}", {buyer: $(this).val()}, function (data) {
+            var $address = $("#id_delivery_at").empty();
+            $.each(data.addresses, function (i, a) { $address.append($("<option>").val(a.id).text(a.label)); });
+            if (data.addresses.length) { $address.val(data.addresses[0].id); }
+            var $shipTo = $("#id_ship_to");
+            if ($shipTo.length && data.customer) { $shipTo.val(data.customer); }
+        });
+    });
+</script>
 {% endblock javascripts%}

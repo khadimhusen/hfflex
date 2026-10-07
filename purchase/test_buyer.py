@@ -32,7 +32,8 @@ def make_po(supplier, **extra):
     # give them values so the test doesn't depend on those rows existing.
     # Po.save() logs an ExpectedDate row whose createdby is required.
     extra.setdefault('createdby', User.objects.get(username='buyerstaff'))
-    return Po.objects.create(supplier=supplier, delivery_date=timezone.now(), delivery_at=None, **extra)
+    extra.setdefault('delivery_at', None)
+    return Po.objects.create(supplier=supplier, delivery_date=timezone.now(), **extra)
 
 
 class BuyerTestBase(TestCase):

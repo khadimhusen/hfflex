@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from company.models import Company
+from company.models import Company, default_company
 from customer.models import Customer, Address
 from material.models import Unit
 from myproject.thumbnails import get_or_create_thumbnail
@@ -23,9 +23,22 @@ class BuyerLookupSerializer(serializers.ModelSerializer):
     """Our own companies, for the PO 'buyer' dropdown. is_default marks the
     one to preselect on a new PO."""
 
+    # The customer record deliveries to this company go to (and whose
+    # addresses are its delivery addresses); null until it is linked.
+    customer = serializers.SerializerMethodField()
+    customer_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Company
-        fields = ['id', 'name', 'short_name', 'is_default']
+        fields = ['id', 'name', 'short_name', 'is_default', 'customer', 'customer_name']
+
+    def get_customer(self, obj):
+        customer = obj.receiving_customer
+        return customer.pk if customer else None
+
+    def get_customer_name(self, obj):
+        customer = obj.receiving_customer
+        return customer.name if customer else None
 
 
 class ShipToLookupSerializer(serializers.ModelSerializer):
@@ -207,6 +220,41 @@ class PoSerializer(serializers.ModelSerializer):
             if self.instance is None or self.instance.buyer_id != value.pk:
                 raise serializers.ValidationError('This company is not active.')
         return value
+
+    def validate(self, attrs):
+        # Ship-to and delivery address follow the buyer. A new order that
+        # doesn't name them gets the buyer's own customer record and its first
+        # address; changing the buyer of an existing order carries along any
+        # of the two that were still the old buyer's. An address that is
+        # named has to be one of the buyer's.
+        instance = self.instance
+        if instance is None:
+            buyer = attrs.get('buyer') or default_company()
+            attrs['buyer'] = buyer
+            old_customer = None
+            following_ship_to = following_address = True
+        else:
+            buyer = attrs.get('buyer') or instance.buyer or default_company()
+            old_buyer = instance.buyer or default_company()
+            changed = buyer != old_buyer
+            old_customer = old_buyer.receiving_customer if old_buyer else None
+            following_ship_to = changed and instance.ship_to_id == (old_customer.pk if old_customer else None)
+            following_address = changed and (
+                instance.delivery_at_id is None or
+                (old_customer is not None and instance.delivery_at.customer_id == old_customer.pk))
+
+        customer = buyer.receiving_customer if buyer else None
+        if following_ship_to and 'ship_to' not in attrs:
+            attrs['ship_to'] = customer
+        if following_address and 'delivery_at' not in attrs:
+            attrs['delivery_at'] = buyer.delivery_addresses().first() if buyer else None
+
+        address = attrs.get('delivery_at')
+        unchanged = instance is not None and address is not None and instance.delivery_at_id == address.pk
+        if address is not None and customer is not None and not unchanged and address.customer_id != customer.pk:
+            raise serializers.ValidationError(
+                {'delivery_at': f'This address does not belong to {customer.name} -- pick one of the buyer\'s addresses.'})
+        return attrs
 
     def get_delayed(self, obj):
         if not obj.delivery_date:

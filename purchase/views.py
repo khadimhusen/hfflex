@@ -372,3 +372,19 @@ def poexpeteddate(request, id):
             print("form error", form.errors)
             return HttpResponseRedirect(reverse('purchase:purchasedetail', kwargs={'id': po.id}))
     return HttpResponseRedirect(reverse('purchase:purchasedetail', kwargs={'id': po.id}))
+
+
+@login_required(login_url='/login/')
+def buyerdelivery(request):
+    """For the order forms: when the buyer changes, the customer record it
+    ships to and that company's delivery addresses."""
+    from django.http import JsonResponse
+    from company.models import Company
+    company = Company.objects.filter(pk=request.GET.get('buyer') or 0).first()
+    customer = company.receiving_customer if company else None
+    addresses = company.delivery_addresses() if company else []
+    return JsonResponse({
+        'customer': customer.pk if customer else None,
+        'customer_name': customer.name if customer else '',
+        'addresses': [{'id': a.pk, 'label': f'{a.addname} - {a.add1}'} for a in addresses],
+    })

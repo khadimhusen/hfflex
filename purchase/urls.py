@@ -9,6 +9,8 @@ urlpatterns = [
 
     path('xlpurchaselist/', xlviews.xlpolist, name='xlpurchaselist'),
 
+    path('buyerdelivery/', views.buyerdelivery, name='buyerdelivery'),
+
     path('purchasenew/', views.purchasenew, name='purchasenew'),
     # 127.0.0.1:8000/purchase/purchasenew/
 

@@ -50,9 +50,18 @@ class ShipToLookupViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class DeliveryAddressLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    """Delivery addresses: with ?buyer=<company id>, that company's own; without,
+    H F Flex's as before."""
     queryset = Address.objects.filter(customer_id=HFFLEX_CUSTOMER_ID).order_by('addname')
     serializer_class = DeliveryAddressLookupSerializer
     permission_classes = [IsPurchaseUser]
+
+    def get_queryset(self):
+        buyer = self.request.query_params.get('buyer')
+        if buyer and buyer.isdigit():
+            company = Company.objects.filter(pk=int(buyer)).first()
+            return company.delivery_addresses() if company else Address.objects.none()
+        return super().get_queryset()
 
 
 class UnitLookupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -139,6 +148,7 @@ class PoViewSet(viewsets.ModelViewSet):
         source = self.get_object()
         new_po = Po.objects.create(
             supplier=source.supplier,
+            buyer=source.buyer,
             delivery_date=source.delivery_date,
             payment_terms=source.payment_terms,
             tax1=source.tax1,
