@@ -24,15 +24,17 @@
     </div>
 
     <div class="row mt-2 align-items-center">
+        {% with lh=dispatch.letterhead %}
         <div class="col-2 text-center">
-            <img src="/static/images/hflogo.png" width="90" height="100" alt="HF Flex Logo">
+            {% if lh.logo_url %}<img src="{{ lh.logo_url }}" width="90" height="100" alt="{{ lh.name }} Logo">{% endif %}
         </div>
         <div class="col-8 text-center">
-            <h2 class="name font-weight-bold">H F FLEX PVT. LTD.</h2>
-            <h5>Gst:- 27AADCH3462K1ZF</h5>
-            <p>25 Lucky Lark Textile Park, Gardi, Vita, Dist-Sangli Maharashtra, contact:- 7219530793</p>
-            <a href="mailto:hfflexpvtltd@gmail.com">hfflexpvtltd@gmail.com</a>
+            <h2 class="name font-weight-bold">{{ lh.name }}</h2>
+            {% if lh.gstin %}<h5>Gst:- {{ lh.gstin }}</h5>{% endif %}
+            <p>{{ lh.address_line1 }}{% if lh.address_line2 %}, {{ lh.address_line2 }}{% endif %}{% if lh.phone %}, contact:- {{ lh.phone }}{% endif %}</p>
+            {% if lh.email %}<a href="mailto:{{ lh.email }}">{{ lh.email }}</a>{% endif %}
         </div>
+        {% endwith %}
     </div>
     <hr>
 

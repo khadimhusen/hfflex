@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from rest_framework import serializers
 
+from company.models import Company
 from customer.models import Customer, Address
 from material.models import Material, MatType, Grade, Unit
 from itemmaster.models import Problem
@@ -29,6 +30,14 @@ class CustomerLookupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['id', 'name']
+
+
+class CompanyLookupSerializer(serializers.ModelSerializer):
+    """Our own companies, for a challan's 'sending company' dropdown."""
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'short_name', 'is_default']
 
 
 class AddressLookupSerializer(serializers.ModelSerializer):
@@ -450,6 +459,7 @@ class DispatchRegisterSerializer(serializers.ModelSerializer):
     createdby/editedby) and DispatchForm (edit: adds dispatch_material,
     excludes only createdby/editedby/lock)."""
     customer_name = serializers.CharField(source='customer.name', read_only=True)
+    company_name = serializers.CharField(source='company.name', read_only=True, default=None)
     address_display = serializers.CharField(source='address.addname', read_only=True, default=None)
     totalsum = serializers.ReadOnlyField()
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
@@ -457,12 +467,20 @@ class DispatchRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = DispatchRegister
         fields = [
-            'id', 'customer', 'customer_name', 'dispatch_material', 'dispatchdate', 'address',
+            'id', 'customer', 'customer_name', 'company', 'company_name', 'dispatch_material', 'dispatchdate', 'address',
             'address_display', 'value', 'recievedby', 'contact', 'recieptnumber', 'transport', 'person',
             'vehicle', 'remark', 'imagename1', 'imagename2', 'lock', 'totalsum',
             'created', 'createdby', 'created_by_name', 'edited', 'editedby',
         ]
         read_only_fields = ['lock', 'created', 'createdby', 'edited', 'editedby']
+
+    def validate_company(self, value):
+        # An inactive company can't be newly chosen as the sender; a challan
+        # that already has one (since deactivated) may keep it.
+        if value is not None and not value.is_active:
+            if self.instance is None or self.instance.company_id != value.pk:
+                raise serializers.ValidationError('This company is not active.')
+        return value
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

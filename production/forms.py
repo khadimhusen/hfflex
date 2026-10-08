@@ -8,6 +8,8 @@ from quality.models import QCTest
 from .models import (Stockdetail, Inward, ProdReport, ProdInput, JobMaterialStatus,
                      DispatchRegister, ProdPerson, ProdProblem, JobQc, ProblemTag, ProductionProblem, OtherDispatchItem)
 from customer.models import Customer, Address
+from company.models import Company
+from django.db.models import Q
 from employee.models import Worker, Department
 from crispy_forms.helper import FormHelper
 from django.forms.widgets import CheckboxSelectMultiple
@@ -243,10 +245,25 @@ class JobMaterialStatusForm(forms.ModelForm):
                 size__gte=sizes, available__gt=0).order_by('materialname', 'size', 'micron')
 
 
+def sending_company_field(field, instance):
+    """Make a dispatch form's `company` one of our active companies, always
+    one of them (no blank entry), plus the challan's current company so an
+    old challan whose company was deactivated stays editable. Not required: a
+    post that omits it keeps the model default / the challan's company."""
+    field.queryset = Company.objects.filter(Q(is_active=True) | Q(pk=instance.company_id)).order_by('name')
+    field.empty_label = None
+    field.required = False
+    field.label = 'Sending company'
+
+
 class DispatchNewForm(forms.ModelForm):
     class Meta:
         model = DispatchRegister
         exclude = ["dispatch_material", "createdby", "editedby"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        sending_company_field(self.fields['company'], self.instance)
 
 
 class DispatchForm(forms.ModelForm):
@@ -260,6 +277,7 @@ class DispatchForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        sending_company_field(self.fields['company'], self.instance)
         self.fields['dispatch_material'].queryset = Stockdetail.objects.none()
         self.fields['dispatch_material'].label_from_instance = lambda \
                 obj: f"{obj.prodreports.all().first().prodprocess.job.rate}/{obj.prodreports.all().first().prodprocess.job.unit}-{obj.prodreports.all().first().prodprocess.job.itemname}= Gross Wt. {obj.gross_wt}"

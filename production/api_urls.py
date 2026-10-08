@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .api_viewsets import (
-    SupplierLookupViewSet, CustomerLookupViewSet, AddressLookupViewSet, WorkerLookupViewSet,
+    SupplierLookupViewSet, CustomerLookupViewSet, CompanyLookupViewSet, AddressLookupViewSet, WorkerLookupViewSet,
     ProblemLookupViewSet, QcTestLookupViewSet, ProductionProblemLookupViewSet,
     MaterialLookupViewSet, MatTypeLookupViewSet, GradeLookupViewSet, UnitLookupViewSet,
     SupervisorLookupViewSet, JobProcessLookupViewSet, ProdInputMaterialLookupViewSet,
@@ -16,6 +16,7 @@ from .api_viewsets import (
 router = DefaultRouter()
 router.register('supplier-lookup', SupplierLookupViewSet, basename='production-supplier-lookup')
 router.register('customer-lookup', CustomerLookupViewSet, basename='production-customer-lookup')
+router.register('company-lookup', CompanyLookupViewSet, basename='production-company-lookup')
 router.register('address-lookup', AddressLookupViewSet, basename='production-address-lookup')
 router.register('worker-lookup', WorkerLookupViewSet, basename='production-worker-lookup')
 router.register('problem-lookup', ProblemLookupViewSet, basename='production-problem-lookup')

@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from order.models import JobProcess, JobMaterial
 from customer.models import Customer, Address
+from company.models import Company, default_company_id
 from itemmaster.models import Problem, Process
 from django.db.models import Sum
 from employee.models import Worker
@@ -327,6 +328,12 @@ class JobMaterialStatus(models.Model):
 
 class DispatchRegister(models.Model):
     customer = models.ForeignKey(Customer, related_name='dispatches', on_delete=models.PROTECT)
+    # Which of our companies is sending the goods -- its letterhead and GSTIN
+    # head the printed challan. Nullable and defaulting to the default company,
+    # so code that never mentions it (and challans made before companies
+    # existed) keeps working; a missing company prints as the default one.
+    company = models.ForeignKey(Company, related_name='dispatches', null=True, blank=True,
+                                on_delete=models.PROTECT, default=default_company_id)
     dispatch_material = models.ManyToManyField(Stockdetail, related_name="dispached", blank=True)
     dispatchdate = models.DateTimeField()
     address = models.ForeignKey(Address, related_name='address', on_delete=models.PROTECT)
@@ -353,6 +360,12 @@ class DispatchRegister(models.Model):
 
     class Meta:
         ordering = ["-id"]
+
+    @property
+    def letterhead(self):
+        """The sending company's letterhead details, for the printed challan."""
+        from company.letterhead import letterhead
+        return letterhead(self.company)
 
     @property
     def totalsum(self):

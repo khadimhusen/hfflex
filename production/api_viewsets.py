@@ -9,6 +9,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from company.models import Company
 from customer.models import Customer, Address
 from material.models import Material, MatType, Grade, Unit
 from itemmaster.models import Problem
@@ -20,7 +21,7 @@ from .models import (
     DispatchRegister, OtherDispatchItem, ProductionProblem, ProblemTag, JobMaterialStatus,
 )
 from .api_serializers import (
-    SupplierLookupSerializer, CustomerLookupSerializer, AddressLookupSerializer, WorkerLookupSerializer,
+    SupplierLookupSerializer, CustomerLookupSerializer, CompanyLookupSerializer, AddressLookupSerializer, WorkerLookupSerializer,
     ProblemLookupSerializer, QcTestLookupSerializer, ProductionProblemLookupSerializer,
     MaterialLookupSerializer, MatTypeLookupSerializer, GradeLookupSerializer, UnitLookupSerializer,
     SupervisorLookupSerializer, JobProcessLookupSerializer,
@@ -48,6 +49,13 @@ class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CustomerLookupSerializer
     permission_classes = [IsDispatchUser]
     search_fields = ['name']
+
+
+class CompanyLookupViewSet(viewsets.ReadOnlyModelViewSet):
+    """Our own active companies, for a challan's sending-company dropdown."""
+    queryset = Company.objects.filter(is_active=True).order_by('name')
+    serializer_class = CompanyLookupSerializer
+    permission_classes = [IsDispatchUser]
 
 
 class AddressLookupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -442,7 +450,7 @@ class ProblemTagViewSet(viewsets.ModelViewSet):
 
 class DispatchRegisterViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
-    queryset = DispatchRegister.objects.select_related('customer', 'address', 'createdby', 'editedby')
+    queryset = DispatchRegister.objects.select_related('customer', 'company', 'address', 'createdby', 'editedby')
     serializer_class = DispatchRegisterSerializer
     permission_classes = [IsDispatchUser]
     filterset_class = DispatchFilter
