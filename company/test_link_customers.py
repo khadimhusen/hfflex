@@ -91,3 +91,28 @@ class ReceivingCustomerTests(TestCase):
         outside = Customer.objects.create(name='AN OUTSIDE PARTY')
         self.assertIsNone(company_for_customer(outside))
         self.assertIsNone(company_for_customer(None))
+
+
+class AdminSaveLinksCustomerTests(TestCase):
+    def save_in_admin(self, company, **extra):
+        from unittest import mock
+        from django.contrib import admin
+        from django.contrib.auth.models import User
+        user = User.objects.create_superuser('linkadmin', 'l@example.com', 'x')
+        request = mock.Mock(user=user)
+        admin.site._registry[Company].save_model(request, company, form=None, change=False)
+
+    def test_a_company_saved_in_the_admin_gets_a_customer_with_its_address(self):
+        company = Company(name='TEST ADMIN PVT. LTD.', short_name='TA', gstin='', address_line1='Vita')
+        self.save_in_admin(company)
+        company.refresh_from_db()
+        self.assertEqual(company.customer.name, 'TEST ADMIN PVT. LTD.')
+        self.assertEqual([a.add1 for a in company.delivery_addresses()], ['Vita'])
+
+    def test_a_customer_picked_in_the_admin_is_kept(self):
+        mine = Customer.objects.create(name='PICKED BY HAND')
+        company = Company(name='TEST ADMIN PVT. LTD.', short_name='TA', customer=mine)
+        self.save_in_admin(company)
+        company.refresh_from_db()
+        self.assertEqual(company.customer, mine)
+        self.assertFalse(Customer.objects.filter(name='TEST ADMIN PVT. LTD.').exists())

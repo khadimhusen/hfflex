@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .linking import link_customer
 from .models import Company
 
 
@@ -21,3 +22,6 @@ class CompanyAdmin(admin.ModelAdmin):
             obj.createdby = request.user
         obj.editedby = request.user
         super().save_model(request, obj, form, change)
+        # A company needs a customer record of its own -- that is what its
+        # purchase orders ship to. Make or find one unless it was picked here.
+        link_customer(obj, create=True)
