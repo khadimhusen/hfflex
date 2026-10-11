@@ -40,6 +40,7 @@ urlpatterns = [
 
     path('jobmateriallist/', views.jobmateriallist, name='jobmateriallist'),
 
+    path('ajax/prejob-detail/', views.prejob_detail, name='prejob_detail'),
     path('ajax/load-address/', views.load_address, name='ajax_load_address'),
 
     path('process/excel/<str:status>/', xlviews.processlist, name='processexcel'),

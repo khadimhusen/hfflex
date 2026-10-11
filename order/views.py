@@ -684,3 +684,32 @@ def get_marketing_person(request):
         except Customer.DoesNotExist:
             pass
     return JsonResponse(data)
+
+@login_required(login_url='/login/')
+def prejob_detail(request):
+    """The preorder's own details for one preorder job, shown under the
+    'prejob' select on the add-job page once one is picked."""
+    from django.http import JsonResponse
+    from preorder.models import JobName
+    job = JobName.objects.select_related('unit', 'preorder', 'preorder__createdby', 'createdby').filter(
+        pk=request.GET.get('prejob') or 0).first()
+    if job is None:
+        return JsonResponse({})
+    return JsonResponse({
+        'rows': [
+            ['Preorder', f'#{job.preorder_id} - {job.preorder.customer}'],
+            ['Job name', job.jobname + job.job_status],
+            ['Qty', f'{job.qty} {job.unit}'],
+            ['Rate', str(job.rate)],
+            ['New cylinder qty', str(job.new_cyl_qty) if job.new_cylinder else ''],
+            ['Cylinder invoice', job.cyl_invoice or ''],
+            ['Cylinder cost', str(job.cyl_cost)],
+            ['Design charges', str(job.design_charges)],
+            ['Schedule', job.preorder.schedule.strftime('%d/%m/%Y')],
+            ['Contact', job.preorder.contact_number],
+            ['Preorder by', job.preorder.createdby.get_full_name() if job.preorder.createdby else ''],
+        ],
+        'remark': job.remark or '',
+        'image': job.preimg.url if job.preimg else '',
+        'file': job.prefile.url if job.prefile else '',
+    })

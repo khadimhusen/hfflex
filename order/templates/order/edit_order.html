@@ -113,4 +113,30 @@
 </script>
 
 
+<script>
+// Picking a preorder job shows that preorder's own details and remark under
+// the select, so the person adding the job sees what was agreed.
+$(document).on('change', 'select[name$="-prejob"]', function () {
+    var $select = $(this), $box = $select.closest('.form-row').next('.prejob-detail');
+    if (!$box.length) { $box = $('<div class="prejob-detail"></div>').insertAfter($select.closest('.form-row')); }
+    $box.empty();
+    if (!$select.val()) { return; }
+    $.getJSON("{% url 'order:prejob_detail' %}", {prejob: $select.val()}, function (d) {
+        if (!d.rows) { return; }
+        var $card = $('<div class="alert alert-info py-2 px-3 mb-2"></div>');
+        var $list = $('<div class="row small"></div>');
+        $.each(d.rows, function (i, r) {
+            if (!r[1]) { return; }
+            $('<div class="col-md-4"></div>').append($('<b></b>').text(r[0] + ': ')).append(document.createTextNode(r[1])).appendTo($list);
+        });
+        $card.append($list);
+        if (d.remark) { $card.append($('<div class="mt-1"></div>').append($('<b></b>').text('Remark: ')).append(document.createTextNode(d.remark))); }
+        if (d.image) { $card.append($('<div class="mt-1"></div>').append($('<a target="_blank"></a>').attr('href', d.image).append($('<img style="max-height:120px">').attr('src', d.image)))); }
+        if (d.file) { $card.append($('<div class="mt-1"></div>').append($('<a target="_blank"></a>').attr('href', d.file).text('Attached file'))); }
+        $box.append($card);
+    });
+});
+$(function () { $('select[name$="-prejob"]').each(function () { if ($(this).val()) { $(this).trigger('change'); } }); });
+</script>
+
 {% endblock content %}

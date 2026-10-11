@@ -58,13 +58,29 @@ class PrejobLookupSerializer(serializers.ModelSerializer):
     second round trip once a prejob is picked."""
     unit_display = serializers.CharField(source='unit.unit', read_only=True)
     preorder_customer = serializers.CharField(source='preorder.customer', read_only=True)
+    # What the Add Job dialog shows once one is picked, so the order taker
+    # sees the preorder's own notes and details, not just a name.
+    preorder_schedule = serializers.DateField(source='preorder.schedule', read_only=True)
+    preorder_contact = serializers.CharField(source='preorder.contact_number', read_only=True)
+    preorder_created_by = serializers.CharField(source='preorder.createdby.get_full_name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+    preimg_thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = JobName
         fields = [
             'id', 'jobname', 'qty', 'unit', 'unit_display', 'rate', 'remark', 'new_cylinder', 'new_cyl_qty',
-            'preorder_customer',
+            'preorder', 'preorder_customer', 'preorder_schedule', 'preorder_contact', 'preorder_created_by',
+            'cyl_invoice', 'cyl_cost', 'design_charges', 'preimg', 'preimg_thumbnail_url', 'prefile',
+            'created', 'created_by_name',
         ]
+
+    def get_preimg_thumbnail_url(self, obj):
+        url = get_or_create_thumbnail(obj.preimg)
+        if not url:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
 
 
 class OrderSerializer(serializers.ModelSerializer):
