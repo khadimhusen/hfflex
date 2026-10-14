@@ -66,12 +66,34 @@ class DispatchFilter(django_filters.FilterSet):
         fields = ["id", "dispatch_material", "company"]
 
 
+class StableOrderingFilter(django_filters.OrderingFilter):
+    """OrderingFilter that ends every ordering with id, so rows that tie on the
+    sorted column don't shuffle between pages."""
+
+    def filter(self, qs, value):
+        qs = super().filter(qs, value)
+        if value:
+            qs = qs.order_by(*qs.query.order_by, 'id')
+        return qs
+
+
 class JobQcListFilter(django_filters.FilterSet):
     """Mirrors manpower's qctestlist() JobQcFilter -- the standalone
     'Qc List' page's filters, on top of JobQcViewSet's existing
     ?prodreport= scoping used by the per-report QC-add flow."""
     time__gt = django_filters.DateFilter(label="From Date", field_name='created', lookup_expr='date__gte')
     time__lt = django_filters.DateFilter(label="To Date", field_name='created', lookup_expr='date__lte')
+    # ?ordering=created_by_name (or -created_by_name); the names are the
+    # list's column names. Ties fall back to id so paging stays stable.
+    ordering = StableOrderingFilter(
+        fields=(
+            ('created', 'created'),
+            ('createdby__first_name', 'created_by_name'),
+            ('qctest__name', 'qctest_display'),
+            ('result', 'result'),
+            ('prodreport', 'prodreport_display'),
+        ),
+    )
 
     class Meta:
         model = JobQc
