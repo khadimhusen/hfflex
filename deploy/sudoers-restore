@@ -1,0 +1,9 @@
+# Install on the NEW (Contabo) server so the nightly restore can run from cron
+# without a password, while sammy still needs a password for everything else:
+#
+#   sudo install -m 440 -o root -g root sudoers-restore /etc/sudoers.d/91-hfflex-restore
+#   sudo visudo -c
+#
+# Only these exact commands are allowed without a password.
+sammy ALL=(root) NOPASSWD: /usr/bin/systemctl stop gunicorn.socket gunicorn.service, /usr/bin/systemctl start gunicorn.socket
+sammy ALL=(postgres) NOPASSWD: /usr/bin/pg_dump, /usr/bin/dropdb, /usr/bin/createdb

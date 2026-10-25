@@ -5,6 +5,11 @@
 # before it leaves the server, so no large temporary files are written locally
 # (the disk is small) and nothing readable ends up in Drive.
 #
+# The website keeps running the whole time (pg_dump is a consistent snapshot).
+# The database is dumped BEFORE the media is copied, so every file the dump
+# refers to is already on disk when the media copy runs; a file uploaded in
+# between is simply picked up the next night.
+#
 #   database(s)   pg_dump -Fc  ->  gcrypt:db/<name>-<date>.dump       (kept KEEP_DB_DAYS)
 #   media files   rclone copy  ->  gcrypt:media/                      (new files only; never deletes)
 #   config files  tar.gz       ->  gcrypt:config/config-<date>.tar.gz (kept KEEP_CONFIG_DAYS)
@@ -78,8 +83,14 @@ fi
 
 # ---- 3. config files -------------------------------------------------------
 log "config: archive and upload"
+# Besides settings.py, include everything the app needs that git does not hold:
+# .env (SECRET_KEY), static/ (css/js/fonts), and every app's migrations/ folder.
+# Not included on purpose: /etc/letsencrypt (certbot re-issues certificates).
+UNTRACKED=$(cd "$PROJECT" && find . -type d -name migrations -not -path './myprojectenv/*' \
+        -not -path './media/*' -not -path './staticfiles/*' | sed "s|^\./|${PROJECT#/}/|")
 if tar czf - --ignore-failed-read -C / \
-        "${PROJECT#/}/myproject/settings.py" etc/nginx etc/systemd/system 2>/dev/null \
+        "${PROJECT#/}/myproject/settings.py" "${PROJECT#/}/.env" "${PROJECT#/}/static" $UNTRACKED \
+        etc/nginx etc/systemd/system 2>/dev/null \
         | rc rcat "${REMOTE}config/config-${DATE}.tar.gz"; then
     log "config: ok"
 else
@@ -94,6 +105,8 @@ rc delete "${REMOTE}config" --min-age "${KEEP_CONFIG_DAYS}d" --log-level NOTICE 
 # ---- result ----------------------------------------------------------------
 if [ "$failed" -eq 0 ]; then
     date '+%F %T' > /var/log/hfflex-backup.last-ok
+    # Marker in Drive for the standby server (restore.sh --auto): today's backup is complete.
+    echo "$DATE" | rc rcat "${REMOTE}last-ok.txt" || log "WARN: could not write last-ok.txt"
     log "=== backup finished OK ==="
     [ -n "${HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" > /dev/null
 else
