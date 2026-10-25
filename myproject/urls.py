@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from . import views
+from . import views, public_views
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -23,6 +23,10 @@ urlpatterns = [
                   path('manpower/', include('manpower.urls')),
                   path('quotation/', include('quotation.urls')),
                   path('coa/', include('coa.urls')),
+                  # public pages (no login), e.g. for the Google OAuth consent screen
+                  path('about/', public_views.AboutView.as_view(), name='public-about'),
+                  path('privacy/', public_views.PrivacyView.as_view(), name='public-privacy'),
+                  path('terms/', public_views.TermsView.as_view(), name='public-terms'),
                   path('', views.user_login),
                   path('test/', views.test, name='test'),
                   path('test1/', views.test1, name='test1'),

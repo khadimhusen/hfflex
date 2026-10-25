@@ -1,0 +1,46 @@
+{% extends "public/base.html" %}
+{% block title %}Terms of Service &ndash; {{ business_name }}{% endblock %}
+{% block content %}
+<h1>Terms of Service</h1>
+<p class="muted">Last updated: {{ policy_updated }}</p>
+
+<p>These terms apply to the {{ business_name }} business management system at www.hfflex.com
+(&ldquo;the system&rdquo;).</p>
+
+<h2>1. Who may use the system</h2>
+<p>The system is for {{ business_name }} employees and others who have been given an account by the
+company. There is no public sign-up. Using the system without authorisation is not permitted.</p>
+
+<h2>2. Your account</h2>
+<p>Keep your password confidential, do not share your account, and tell us straight away if you think it
+has been misused. You are responsible for activity under your account.</p>
+
+<h2>3. Acceptable use</h2>
+<ul>
+    <li>Use the system only for {{ business_name }} business purposes.</li>
+    <li>Enter accurate information and do not upload unlawful or harmful content.</li>
+    <li>Do not try to bypass access controls, disrupt the service, or access data you are not permitted
+        to see.</li>
+</ul>
+
+<h2>4. Company data</h2>
+<p>Records entered into the system belong to {{ business_name }}. We may back up, restore, monitor and
+administer the system to keep it secure and running; see the
+<a href="{% url 'public-privacy' %}">Privacy Policy</a>.</p>
+
+<h2>5. Availability</h2>
+<p>We work to keep the system available but do not guarantee uninterrupted service. It may be unavailable
+for maintenance or because of events outside our control.</p>
+
+<h2>6. Suspension</h2>
+<p>We may suspend or remove access at any time, for example when employment ends or these terms are
+broken.</p>
+
+<h2>7. Liability</h2>
+<p>The system is provided &ldquo;as is&rdquo;. To the extent permitted by law, {{ business_name }} is not
+liable for indirect or consequential losses arising from its use.</p>
+
+<h2>8. Changes and contact</h2>
+<p>We may update these terms; the date above shows the latest version. Questions:
+<a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "public/base.html" %}
+{% block title %}Privacy Policy &ndash; {{ business_name }}{% endblock %}
+{% block content %}
+<h1>Privacy Policy</h1>
+<p class="muted">Last updated: {{ policy_updated }}</p>
+
+<p>This policy explains what information the {{ business_name }} business management system
+(www.hfflex.com, &ldquo;the system&rdquo;) handles and how it is protected.</p>
+
+<h2>1. What the system is</h2>
+<p>The system is a private tool used by {{ business_name }} and its authorised employees to run the
+business. It is not offered to the general public.</p>
+
+<h2>2. Information we handle</h2>
+<ul>
+    <li><strong>Business records</strong> entered by staff: customer and supplier details, quotations,
+        orders, production, quality, purchasing, inventory and similar records, including contact
+        names, phone numbers and email addresses of business contacts.</li>
+    <li><strong>Employee account details</strong>: username, name, department and access permissions,
+        and a securely hashed password.</li>
+    <li><strong>Uploaded files</strong> such as documents, images and certificates.</li>
+    <li><strong>Technical data</strong> needed to run the site, such as server access and error logs.</li>
+</ul>
+
+<h2>3. How we use it</h2>
+<p>Only to operate {{ business_name }}'s business: managing orders and production, keeping records,
+and securing and backing up the system. We do not sell information, and we do not use it for
+advertising.</p>
+
+<h2>4. Cookies</h2>
+<p>The system uses only the cookies required to keep an employee signed in and to protect forms
+against forgery. It does not use advertising or third-party tracking cookies.</p>
+
+<h2>5. Google Drive backups</h2>
+<p>To protect against data loss, the server makes a nightly backup of the system's database, files and
+configuration. The backup is <strong>encrypted on our server before it is uploaded</strong> to a Google
+Drive account owned and controlled by {{ business_name }}. The system accesses Google only through that
+company-owned account, solely to upload and restore these encrypted backups. It does not access, collect,
+store or share any other person's Google data, and it does not use Google data for advertising or sell
+it. Our use of information received from Google APIs adheres to the
+<a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>,
+including its Limited Use requirements.</p>
+
+<h2>6. Where data is stored and who can see it</h2>
+<p>Data is stored on servers operated for {{ business_name }} with commercial hosting providers.
+Access is limited to authorised employees and to administrators who maintain the system. We do not share
+business records with third parties except where required by law or needed to provide hosting and
+backup services as described above.</p>
+
+<h2>7. Security</h2>
+<p>We protect the system with password sign-in, HTTPS encryption in transit, restricted server access,
+firewalls and encrypted backups. No system can be guaranteed completely secure, but we work to keep
+the information safe.</p>
+
+<h2>8. Retention</h2>
+<p>Business records are kept for as long as the business needs them. Nightly database backups are kept
+for about 14 days and configuration backups for about 60 days, after which they are deleted.</p>
+
+<h2>9. Your choices</h2>
+<p>If you are an employee or a business contact and want to see, correct or delete information about
+you, contact us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+
+<h2>10. Changes</h2>
+<p>We may update this policy; the date above shows the latest version.</p>
+
+<h2>11. Contact</h2>
+<p>{{ business_name }} &ndash; <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+{% endblock %}

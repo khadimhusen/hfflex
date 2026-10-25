@@ -1,0 +1,23 @@
+{% extends "public/base.html" %}
+{% block title %}{{ business_name }} &ndash; Business Management Software{% endblock %}
+{% block content %}
+<h1>{{ business_name }}</h1>
+<p>{{ business_name }} runs its own web-based business management system for day-to-day operations:
+customers and leads, quotations, orders, production planning, quality control, purchasing, inventory,
+documents and tasks.</p>
+
+<h2>Who uses it</h2>
+<p>The system is an internal tool for {{ business_name }} employees. Accounts are created by the
+company; there is no public sign-up. Staff sign in with their company credentials at
+<a href="/login/">www.hfflex.com/login/</a>.</p>
+
+<h2>Use of Google services</h2>
+<p>The company's server connects to a Google Drive account owned by {{ business_name }} for one purpose
+only: storing encrypted backup copies of the company's own data. The system does not read, collect or
+share data from the Google accounts of any other person, and it offers no &ldquo;Sign in with Google&rdquo;.</p>
+
+<h2>More information</h2>
+<p>Read our <a href="{% url 'public-privacy' %}">Privacy Policy</a> and
+<a href="{% url 'public-terms' %}">Terms of Service</a>, or contact us at
+<a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+{% endblock %}
