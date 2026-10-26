@@ -4,6 +4,7 @@ from customer.models import Customer
 from material.models import Material, MatType, Grade, Unit, Commodity
 from myproject.thumbnails import get_or_create_thumbnail
 from .querysets import can_edit_itemmaster
+from .locations import cylinder_locations_for
 from .models import (
     Machine, MachineTask, PouchType, LamiRubber, ItemMaster, ItemImage,
     RawMaterial, Process, ItemProcess, Color, ItemColor, Problem,
@@ -211,8 +212,8 @@ class ItemStandardParameterSerializer(serializers.ModelSerializer):
 
 
 class CylinderMovementSerializer(serializers.ModelSerializer):
-    # Matches CylinderMovementForm's old restriction — only these named
-    # locations, or the item's own customer, are valid drop points.
+    # Valid drop points: our own storage places (customers ticked "Cylinder
+    # location") or the item's own customer -- see itemmaster.locations.
     location = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
     location_name = serializers.CharField(source='location.name', read_only=True)
     created_by_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
@@ -227,11 +228,13 @@ class CylinderMovementSerializer(serializers.ModelSerializer):
         item = attrs.get('item') or getattr(self.instance, 'item', None)
         location = attrs.get('location') or getattr(self.instance, 'location', None)
         if item and location:
-            allowed_names = ['GODOWN-1', 'GODOWN-2', 'PRODUCTION', item.itemcustomer.name]
-            if location.name not in allowed_names:
+            # A movement already sitting in a place that has since been
+            # deactivated may still be edited (e.g. marked deleted).
+            unchanged = self.instance is not None and self.instance.location_id == location.pk
+            if not unchanged and not cylinder_locations_for(item).filter(pk=location.pk).exists():
                 raise serializers.ValidationError({
-                    'location': f'Must be one of GODOWN-1, GODOWN-2, PRODUCTION, or the '
-                                 f'item\'s own customer ({item.itemcustomer.name}).'
+                    'location': f'Must be a cylinder location (a godown or production) or the '
+                                f"item's own customer ({item.itemcustomer.name})."
                 })
         return attrs
 

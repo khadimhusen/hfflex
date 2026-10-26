@@ -53,6 +53,9 @@ class ItemColorForm(forms.ModelForm):
         self.helper.form_show_labels = False
 
 
+from .locations import cylinder_locations_for
+
+
 class CylinderMovementForm(forms.ModelForm):
     movementdate = forms.DateTimeField(input_formats=('%d/%m/%Y',))
 
@@ -62,12 +65,8 @@ class CylinderMovementForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         itemmaster = kwargs.pop('itemmaster')
-        cust = itemmaster.itemcustomer.name
         super(CylinderMovementForm, self).__init__(*args, **kwargs)
-        self.fields['location'].queryset = Customer.objects.filter(name="GODOWN-1") | \
-                                           Customer.objects.filter(name="GODOWN-2") | \
-                                           Customer.objects.filter(name="PRODUCTION") | \
-                                           Customer.objects.filter(name=cust)
+        self.fields['location'].queryset = cylinder_locations_for(itemmaster)
 
 
 class ItemStandardParameterForm(forms.ModelForm):

@@ -8,6 +8,12 @@ class Customer(models.Model):
     gst = models.CharField(max_length=17, unique=True, blank=True, null=True)
     is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
+    # One of our own storage places (GODOWN-1, PRODUCTION, ...) where a printing
+    # cylinder can be kept -- offered as a cylinder movement's location. Tick it
+    # on a customer record to add a godown; no code change needed.
+    is_cylinder_location = models.BooleanField(
+        default=False, verbose_name='Cylinder location',
+        help_text='Tick for our own storage places (godowns, production) where cylinders are kept.')
     email = models.EmailField(null=True, blank=True)
     marketing_person = models.ForeignKey(User,related_name='customers',on_delete=models.PROTECT, null=True,
                                          limit_choices_to={'department__department_name': 'marketing',

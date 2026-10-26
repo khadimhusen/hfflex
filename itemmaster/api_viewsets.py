@@ -23,6 +23,7 @@ from .api_serializers import (
 from .permissions import IsItemmasterUser, IsItemmasterUserOrCrmReadOnly
 from .querysets import can_edit_itemmaster
 from .filters import ItemmasterFilter
+from .locations import cylinder_locations_for
 
 
 class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,19 +41,14 @@ class CustomerLookupViewSet(viewsets.ReadOnlyModelViewSet):
                 is_supplier=True, active=True, supplier_item__itemname='Cylinder',
             ).distinct()
 
-        # Exact match on CylinderMovementForm's old queryset — GODOWN-1,
-        # GODOWN-2, PRODUCTION, or the item's own customer. Deliberately
-        # exact names, not a substring search, so a real customer like
-        # "Production House Pvt Ltd" can never slip in as a false match.
+        # Our own storage places (customers ticked "Cylinder location", active)
+        # plus the item's own customer -- the same rule as the movement form.
         item_id = self.request.query_params.get('cylinder_locations_for_item')
         if item_id:
-            itemmaster = ItemMaster.objects.filter(pk=item_id).select_related('itemcustomer').first()
+            itemmaster = ItemMaster.objects.filter(pk=item_id).first()
             if not itemmaster:
                 return qs.none()
-            return qs.filter(
-                Q(name='GODOWN-1') | Q(name='GODOWN-2') | Q(name='PRODUCTION')
-                | Q(name=itemmaster.itemcustomer.name)
-            )
+            return cylinder_locations_for(itemmaster)
 
         return qs
 
