@@ -27,7 +27,10 @@ ALLOWED_HOST=vmi3694826
 PROJECT=$HOME/myprojectdir
 DB=myproject
 DB_USER=myprojectuser
-DB_PASSWORD=${DB_PASSWORD:-password}   # same as DATABASES in settings.py
+# The database password: from the environment, else from DB_PASSWORD in .env (see
+# rotate-db-password.sh), else the old default.
+DB_PASSWORD=${DB_PASSWORD:-$(sed -n 's/^DB_PASSWORD=//p' "$HOME/myprojectdir/.env" 2>/dev/null | tail -n 1)}
+DB_PASSWORD=${DB_PASSWORD:-password}
 REMOTE=gcrypt:
 RCLONE_CONFIG_FILE=$HOME/.config/rclone/rclone.conf
 MIN_DUMP_BYTES=100000
