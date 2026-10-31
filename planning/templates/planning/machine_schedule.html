@@ -145,7 +145,7 @@
 
                   <th>#</th>
                   <th>Job / Reason</th>
-                  {% if machine.machinename == 'PRINTING-1' %}
+                  {% if show_cylinder %}
                   <th>Cylinder</th>
                   <th>Approval</th>
                   {% endif %}
@@ -188,7 +188,7 @@
                     {% endif %}
                   </td>
 
-                  {% if machine.machinename == "PRINTING-1" %}
+                  {% if show_cylinder %}
                   <td>
                     {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}
                     <span class="badge badge-success">
@@ -274,7 +274,7 @@
                       </a>
                     {% endif %}
                   </td>
-                  {% if machine.machinename == "PRINTING-1" %}
+                  {% if show_cylinder %}
                   <td>
 
                      {% if running.jobprocess.job.itemmaster.cylinder_status == "Available" %}
@@ -401,7 +401,7 @@
                     {% endif %}
                   </td>
 
-                  {% if machine.machinename == "PRINTING-1" %}
+                  {% if show_cylinder %}
                   <td>
 
                     {% if s.jobprocess.job.itemmaster.cylinder_status == "Available" %}

@@ -100,6 +100,7 @@ def machine_schedule(request, machine_id):
 
     context = {
         'machine'         : machine,
+        'show_cylinder'   : machine.machinename.upper().startswith('PRINTING'),
         'machines'        : machines,
         'running'         : running,
         'queue'           : queue,
