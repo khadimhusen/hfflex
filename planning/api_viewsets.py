@@ -24,6 +24,11 @@ from .utils import (
 )
 
 
+# The board shows this many of the newest completed rows; CompletedHistoryView
+# serves the older ones behind them.
+BOARD_COMPLETED_SHOWN = 5
+
+
 def task_duration_mins(task, qty, persons_assigned):
     """Verbatim port of planning/views.py's task_duration_mins."""
     if task.persons_required == 0:
@@ -569,7 +574,7 @@ class MachineBoardView(APIView):
         completed_qs = (
             MachineSchedule.objects.filter(machine=machine, queue_position=-1)
             .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
-            .order_by('-end_time')[:5]
+            .order_by('-end_time', '-id')[:BOARD_COMPLETED_SHOWN]
         )
         completed = sorted(completed_qs, key=lambda x: x.end_time or x.created)
         completed_count = MachineSchedule.objects.filter(machine=machine, queue_position=-1).count()
@@ -618,6 +623,41 @@ class MachineBoardView(APIView):
             'is_viewer': role == 'viewer',
             'last_end_time': last_end_time,
             'running_start_time': running.start_time if running else None,
+        })
+
+
+class CompletedHistoryView(APIView):
+    """Older completed rows for the board's scroll-up history.
+
+    Same ordering as the board (newest first, id breaks ties), so `offset` is
+    "how many of the newest rows the client already holds". Each page comes
+    back oldest-first, ready to be placed above what the client has."""
+    permission_classes = [IsPlanningUser]
+
+    def get(self, request, machine_id):
+        machine = get_object_or_404(Machine, pk=machine_id)
+        if get_planning_role(request.user) == 'operator':
+            op_machine = get_operator_machine(request.user)
+            if not op_machine or op_machine.id != machine.id:
+                raise PermissionDenied('You can only see your own machine.')
+
+        try:
+            offset = max(int(request.query_params.get('offset', BOARD_COMPLETED_SHOWN)), 0)
+            limit = min(max(int(request.query_params.get('limit', 10)), 1), 50)
+        except ValueError:
+            raise ValidationError('offset and limit must be whole numbers.')
+
+        completed = (
+            MachineSchedule.objects.filter(machine=machine, queue_position=-1)
+            .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
+            .order_by('-end_time', '-id')
+        )
+        total = completed.count()
+        page = sorted(completed[offset:offset + limit], key=lambda x: x.end_time or x.created)
+        return Response({
+            'results': MachineScheduleBoardSerializer(page, many=True).data,
+            'count': total,
+            'has_more': offset + limit < total,
         })
 
 

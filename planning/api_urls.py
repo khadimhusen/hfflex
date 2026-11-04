@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .api_viewsets import (
     MachineLookupViewSet, IdleTimeLookupViewSet, MachineScheduleViewSet,
-    MachineBoardView, ReorderQueueView, AddIdleSlotView,
+    MachineBoardView, CompletedHistoryView, ReorderQueueView, AddIdleSlotView,
 )
 
 router = DefaultRouter()
@@ -13,6 +13,7 @@ router.register('machine-schedules', MachineScheduleViewSet)
 
 urlpatterns = [
     path('machines/<int:machine_id>/board/', MachineBoardView.as_view(), name='planning-machine-board'),
+    path('machines/<int:machine_id>/completed/', CompletedHistoryView.as_view(), name='planning-completed-history'),
     path('machines/<int:machine_id>/reorder/', ReorderQueueView.as_view(), name='planning-reorder-queue'),
     path('machines/<int:machine_id>/add-idle/', AddIdleSlotView.as_view(), name='planning-add-idle'),
 ] + router.urls
