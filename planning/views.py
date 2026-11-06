@@ -12,6 +12,7 @@ from django.utils.dateparse import parse_datetime
 from django.db.models import Sum, F
 from django.db import IntegrityError
 from .utils import get_planning_role, manager_or_supervisor_required
+from .utils import can_edit_completed, CompletedEditError, edit_completed_schedule, set_completed_variance
 from .pdfs import generate_schedule_pdf
 
 
@@ -111,6 +112,7 @@ def machine_schedule(request, machine_id):
         'completed'       : completed,
         'completed_count' : completed_count,
         'role'            : role,
+        'can_edit_completed': can_edit_completed(request.user, machine),
         'is_manager'      : role == 'manager',
         'is_supervisor'   : role == 'supervisor',
         'is_operator'     : role == 'operator',
@@ -732,13 +734,19 @@ def delete_idle_slot(request, machine_id, schedule_id):
 # Schedule tasks                                                       #
 # ------------------------------------------------------------------ #
 @login_required(login_url='/login/')
-@manager_or_supervisor_required
 def schedule_tasks(request, machine_id, schedule_id):
     machine  = get_object_or_404(Machine, pk=machine_id)
     schedule = get_object_or_404(
         MachineSchedule, pk=schedule_id, machine=machine,
-        queue_position__gte=0
+        queue_position__gte=-1
     )
+    # Running/queued rows: manager or supervisor. A completed row: staff users.
+    if schedule.queue_position == -1:
+        allowed = can_edit_completed(request.user, machine)
+    else:
+        allowed = get_planning_role(request.user) in ('manager', 'supervisor')
+    if not allowed:
+        return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
 
     if request.method == 'POST':
         try:
@@ -751,6 +759,8 @@ def schedule_tasks(request, machine_id, schedule_id):
                 task.qty           = t['qty']
                 task.time_per_task = t['time_per_task']
                 task.save()
+            if schedule.queue_position == -1:
+                set_completed_variance(schedule.pk)
             return JsonResponse({'status': 'ok'})
         except Exception as e:
             print(f"schedule_tasks POST error: {e}")
@@ -783,11 +793,15 @@ def add_downtime(request, machine_id, schedule_id):
     machine  = get_object_or_404(Machine, pk=machine_id)
     schedule = get_object_or_404(
         MachineSchedule, pk=schedule_id,
-        machine=machine, queue_position=0, schedule_type='Production'
+        machine=machine, queue_position__in=[0, -1], schedule_type='Production'
     )
     role = get_planning_role(request.user)
     if role is None or role == 'viewer':
         return JsonResponse({'status': 'error', 'message': 'Permission denied.'}, status=403)
+    # The running row: any planner. Changing a completed row: staff users only.
+    is_completed = schedule.queue_position == -1
+    if is_completed and request.method == 'POST' and not can_edit_completed(request.user, machine):
+        return JsonResponse({'status': 'error', 'message': 'Only staff users can edit completed jobs.'}, status=403)
 
     if request.method == 'GET':
         downtimes = schedule.downtimes.select_related('reason').all()
@@ -854,6 +868,8 @@ def add_downtime(request, machine_id, schedule_id):
                 downtime_duration  = total_downtime,
                 estimated_duration = new_estimated,
             )
+            if is_completed:
+                set_completed_variance(schedule.pk)
             recalculate_timeline(machine)
             return JsonResponse({
                 'status'            : 'ok',
@@ -864,6 +880,50 @@ def add_downtime(request, machine_id, schedule_id):
         except Exception as e:
             print(f"add_downtime error: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# ------------------------------------------------------------------ #
+# Edit a completed row (staff users only)                              #
+# ------------------------------------------------------------------ #
+@login_required(login_url='/login/')
+@require_POST
+def edit_completed(request, machine_id, schedule_id):
+    machine  = get_object_or_404(Machine, pk=machine_id)
+    schedule = get_object_or_404(
+        MachineSchedule, pk=schedule_id, machine=machine, queue_position=-1
+    )
+    if not can_edit_completed(request.user, machine):
+        return JsonResponse(
+            {'status': 'error', 'message': 'Only staff users can edit completed jobs.'}, status=403
+        )
+
+    try:
+        data = json.loads(request.body)
+
+        def when(key):
+            value = data.get(key)
+            if not value:
+                return None
+            parsed = parse_datetime(value)
+            if not parsed:
+                raise CompletedEditError('Invalid datetime format.')
+            return parsed
+
+        def whole_number(key):
+            value = data.get(key)
+            if value in (None, ''):
+                return None
+            return int(value)
+
+        edit_completed_schedule(
+            schedule, request.user,
+            start_time=when('start_time'), end_time=when('end_time'),
+            speed=whole_number('speed'), persons_assigned=whole_number('persons_assigned'),
+            remark=data.get('remark'), raw_material_status=data.get('material_status'),
+        )
+    except (CompletedEditError, ValueError) as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'ok'})
 
 
 # ------------------------------------------------------------------ #

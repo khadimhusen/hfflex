@@ -22,6 +22,9 @@ urlpatterns = [
     path('machine/<int:machine_id>/schedule/<int:schedule_id>/edit/',
          views.edit_schedule, name='edit_schedule'),
 
+    path('machine/<int:machine_id>/schedule/<int:schedule_id>/edit-completed/',
+         views.edit_completed, name='edit_completed'),
+
     path('machine/<int:machine_id>/schedule/<int:schedule_id>/tasks/',
          views.schedule_tasks, name='schedule_tasks'),
 

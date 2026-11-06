@@ -70,6 +70,7 @@
   data-complete="{% url 'planning:complete_schedule' machine.id 0 %}"
   data-downtime="{% url 'planning:add_downtime' machine.id 0 %}"
   data-detail="{% url 'planning:schedule_detail' machine.id 0 %}"
+  data-edit-completed="{% url 'planning:edit_completed' machine.id 0 %}"
   style="display:none">
 </span>
 
@@ -251,6 +252,29 @@
                           onclick="openScheduleDetail({{ s.id }})">
                     <i class="fa fa-info-circle"></i> Detail
                   </button>
+                  {% if can_edit_completed %}
+                  {# Staff users may correct a completed job #}
+                  <button class="btn btn-xs btn-primary ml-1"
+                          data-id="{{ s.id }}"
+                          data-idle="{% if s.schedule_type == 'Idle' %}1{% endif %}"
+                          data-start="{{ s.start_time|date:'d/m/Y H:i' }}"
+                          data-end="{{ s.end_time|date:'d/m/Y H:i' }}"
+                          data-speed="{{ s.speed|default:'' }}"
+                          data-persons="{{ s.persons_assigned }}"
+                          data-material="{{ s.raw_material_status }}"
+                          data-remark="{{ s.remark|default:'' }}"
+                          onclick="openEditCompletedModal(this)">
+                    <i class="fa fa-edit"></i> Edit
+                  </button>
+                  {% if s.schedule_type == 'Production' %}
+                  <button class="btn btn-xs btn-info ml-1" onclick="openTasksModal({{ s.id }})">
+                    <i class="fa fa-list"></i> Tasks
+                  </button>
+                  <button class="btn btn-xs btn-danger ml-1" onclick="openDowntimeModal({{ s.id }})">
+                    <i class="fa fa-exclamation-triangle"></i> Downtime
+                  </button>
+                  {% endif %}
+                  {% endif %}
                   </td>
                   {% endif %}
 
@@ -1048,6 +1072,72 @@
 </div>
 
 
+{% endif %}
+
+{% if can_edit_completed %}
+{# ================================================================== #}
+{# MODAL: Edit a completed job (staff users only)                      #}
+{# ================================================================== #}
+<div class="modal fade" id="editCompletedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-edit"></i> Edit completed job</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ecId">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Actual start</label>
+            <input type="text" class="form-control form-control-sm" id="ecStart" placeholder="DD/MM/YYYY HH:MM">
+          </div>
+          <div class="form-group col-md-6">
+            <label>Actual end</label>
+            <input type="text" class="form-control form-control-sm" id="ecEnd" placeholder="DD/MM/YYYY HH:MM">
+          </div>
+        </div>
+        <div id="ecProductionFields">
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Speed</label>
+              <input type="number" class="form-control form-control-sm" id="ecSpeed" min="1">
+            </div>
+            <div class="form-group col-md-6">
+              <label>Persons assigned</label>
+              <input type="number" class="form-control form-control-sm" id="ecPersons" min="1" max="20">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Raw material status</label>
+            <select class="form-control form-control-sm" id="ecMaterial">
+              <option value="Not Available">Not Available</option>
+              <option value="Available">Available</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Remark</label>
+            <textarea class="form-control form-control-sm" id="ecRemark" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="alert alert-info py-2 mb-0">
+          <i class="fa fa-info-circle"></i>
+          The variance is recalculated. If nothing is running, the newest completed job's end time is
+          where the queued jobs' planned times start, so changing it moves them.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmEditCompleted()">
+          <i class="fa fa-save"></i> Save changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if is_manager or is_supervisor or can_edit_completed %}
 {# ================================================================== #}
 {# MODAL: Edit ProductionTasks                                         #}
 {# ================================================================== #}
@@ -1099,6 +1189,7 @@
 $(function() {
   $('#startTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
   $('#endTime').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
+  $('#ecStart, #ecEnd').datetimepicker({ format: 'd/m/Y H:i', step: 5 });
 
 
   {% if is_manager or is_supervisor %}
@@ -1767,6 +1858,8 @@ function confirmChangeMachine() {
   });
 }
 
+{% endif %}
+{% if is_manager or is_supervisor or can_edit_completed %}
 function openTasksModal(id) {
   $('#tasksScheduleId').val(id);
   $('#tasksLoading').show(); $('#tasksContent').hide(); $('#tasksEmpty').hide();
@@ -1816,6 +1909,60 @@ function confirmEditTasks() {
   });
 }
 
+{% endif %}
+
+{% if can_edit_completed %}
+// ------------------------------------------------------------------ //
+// Edit a completed job -- staff users only                             //
+// ------------------------------------------------------------------ //
+function openEditCompletedModal(btn) {
+  const d = $(btn).data();
+  $('#ecId').val(d.id);
+  $('#ecStart').val(d.start);
+  $('#ecEnd').val(d.end);
+  // The pickers only hold minutes: remember the originals and send a time only
+  // if it was changed, so an untouched time keeps its seconds.
+  window.ecOriginal = { start: d.start, end: d.end };
+  $('#ecSpeed').val(d.speed);
+  $('#ecPersons').val(d.persons);
+  $('#ecMaterial').val(d.material);
+  $('#ecRemark').val($(btn).attr('data-remark'));
+  // An idle slot only has times
+  $('#ecProductionFields').toggle(!d.idle);
+  $('#editCompletedModal').modal('show');
+}
+
+function confirmEditCompleted() {
+  const id    = $('#ecId').val();
+  const start = $('#ecStart').val();
+  const end   = $('#ecEnd').val();
+  if (start && end && new Date(pickerToISO(end)) < new Date(pickerToISO(start))) {
+    showError('End time cannot be earlier than start time.<br>समाप्ति समय शुरू होने के समय से पहले नहीं हो सकता।');
+    return;
+  }
+  const payload = {
+    start_time: start && start !== window.ecOriginal.start ? pickerToISO(start) : '',
+    end_time  : end   && end   !== window.ecOriginal.end   ? pickerToISO(end)   : '',
+  };
+  if ($('#ecProductionFields').is(':visible')) {
+    payload.speed            = $('#ecSpeed').val();
+    payload.persons_assigned = $('#ecPersons').val();
+    payload.material_status  = $('#ecMaterial').val();
+    payload.remark           = $('#ecRemark').val();
+  }
+  $.ajax({
+    url: buildUrl('edit-completed', id), method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(payload),
+    headers: { 'X-CSRFToken': CSRF },
+    success: function(resp) {
+      if (resp.status === 'ok') { $('#editCompletedModal').modal('hide'); location.reload(); }
+    },
+    error: function(xhr) {
+      showError(xhr.responseJSON ? xhr.responseJSON.message : 'Error saving.<br>सहेजने में त्रुटि।');
+    }
+  });
+}
 {% endif %}
 
 // Global session expiry handler

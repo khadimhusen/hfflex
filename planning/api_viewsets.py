@@ -20,7 +20,8 @@ from .api_serializers import (
 from .permissions import IsPlanningUser
 from .utils import (
     get_planning_role, get_operator_machine, can_manage_schedule,
-    recalculate_timeline,
+    recalculate_timeline, can_edit_completed, CompletedEditError,
+    edit_completed_schedule, set_completed_variance,
 )
 
 
@@ -46,6 +47,11 @@ def require_not_viewer(user):
 def require_manager_or_supervisor(user):
     if not can_manage_schedule(user):
         raise PermissionDenied('Only a manager or supervisor can do this.')
+
+
+def require_completed_editor(user, machine):
+    if not can_edit_completed(user, machine):
+        raise PermissionDenied('Only staff users can edit completed jobs.')
 
 
 def parse_client_datetime(value):
@@ -85,7 +91,7 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
     the old app never exposed a way to delete a production schedule row)."""
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
     queryset = MachineSchedule.objects.select_related(
-        'machine', 'unit', 'jobprocess__job', 'jobprocess__process', 'idle_reason', 'createdby', 'editedby',
+        'machine', 'unit', 'jobprocess__job__itemmaster', 'jobprocess__process', 'idle_reason', 'createdby', 'editedby',
     )
     permission_classes = [IsPlanningUser]
     filterset_fields = ['jobprocess', 'jobprocess__job', 'machine']
@@ -201,6 +207,40 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
             )
 
         recalculate_timeline(machine)
+        schedule.refresh_from_db()
+        return Response(MachineScheduleBoardSerializer(schedule).data)
+
+    # ---- edit a completed row (staff only) ---------------------------------
+
+    @action(detail=True, methods=['post'], url_path='edit-completed')
+    def edit_completed(self, request, pk=None):
+        """Staff correction of a completed row: actual start/end time, speed,
+        persons, remark, raw material status (tasks and downtime go through
+        their own actions). See utils.edit_completed_schedule."""
+        schedule = get_object_or_404(MachineSchedule, pk=pk, queue_position=-1)
+        require_completed_editor(request.user, schedule.machine)
+
+        def whole_number(name):
+            value = request.data.get(name)
+            if value in (None, ''):
+                return None
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                raise ValidationError(f'{name} must be a whole number.')
+
+        try:
+            edit_completed_schedule(
+                schedule, request.user,
+                start_time=parse_client_datetime(request.data.get('start_time')),
+                end_time=parse_client_datetime(request.data.get('end_time')),
+                speed=whole_number('speed'),
+                persons_assigned=whole_number('persons_assigned'),
+                remark=request.data.get('remark'),
+                raw_material_status=request.data.get('material_status'),
+            )
+        except CompletedEditError as exc:
+            raise ValidationError(str(exc))
         schedule.refresh_from_db()
         return Response(MachineScheduleBoardSerializer(schedule).data)
 
@@ -442,10 +482,14 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
         duration) now recalculates the schedule's estimated duration and
         reflows the machine's timeline, same as changing persons_assigned
         already does in edit_schedule()."""
-        schedule = get_object_or_404(MachineSchedule, pk=pk, queue_position__gte=0)
+        schedule = get_object_or_404(MachineSchedule, pk=pk, queue_position__gte=-1)
+        is_completed = schedule.queue_position == -1
 
         if request.method == 'POST':
-            require_manager_or_supervisor(request.user)
+            if is_completed:
+                require_completed_editor(request.user, schedule.machine)
+            else:
+                require_manager_or_supervisor(request.user)
             for t in request.data.get('tasks', []):
                 task = get_object_or_404(ProductionTask, pk=t['id'], machine_schedule=schedule)
                 task.qty = t['qty']
@@ -468,6 +512,8 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
                 estimated_duration=new_estimated,
                 editedby=request.user,
             )
+            if is_completed:
+                set_completed_variance(schedule.pk)
             recalculate_timeline(schedule.machine)
             return Response({'status': 'ok'})
 
@@ -479,12 +525,15 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get', 'post'])
     def downtime(self, request, pk=None):
         """Mirrors add_downtime() (GET lists, POST add/edit/delete via
-        action field) -- restricted to the currently-running row, same as
-        the old view."""
+        action field) -- the currently-running row, or (staff only, for
+        changes) a completed row."""
         schedule = get_object_or_404(
-            MachineSchedule, pk=pk, queue_position=0, schedule_type='Production',
+            MachineSchedule, pk=pk, queue_position__in=[0, -1], schedule_type='Production',
         )
         require_not_viewer(request.user)
+        is_completed = schedule.queue_position == -1
+        if is_completed and request.method == 'POST':
+            require_completed_editor(request.user, schedule.machine)
 
         if request.method == 'GET':
             downtimes = schedule.downtimes.select_related('reason').all()
@@ -528,6 +577,8 @@ class MachineScheduleViewSet(viewsets.ModelViewSet):
         MachineSchedule.objects.filter(pk=schedule.pk).update(
             downtime_duration=total_downtime, estimated_duration=new_estimated,
         )
+        if is_completed:
+            set_completed_variance(schedule.pk)
         recalculate_timeline(schedule.machine)
         downtimes = schedule.downtimes.select_related('reason').all()
         return Response(MachineDowntimeSerializer(downtimes, many=True).data)
@@ -573,7 +624,7 @@ class MachineBoardView(APIView):
 
         completed_qs = (
             MachineSchedule.objects.filter(machine=machine, queue_position=-1)
-            .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
+            .select_related('jobprocess__job__itemmaster', 'jobprocess__process', 'idle_reason')
             .order_by('-end_time', '-id')[:BOARD_COMPLETED_SHOWN]
         )
         completed = sorted(completed_qs, key=lambda x: x.end_time or x.created)
@@ -581,13 +632,13 @@ class MachineBoardView(APIView):
 
         running = (
             MachineSchedule.objects.filter(machine=machine, queue_position=0)
-            .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
+            .select_related('jobprocess__job__itemmaster', 'jobprocess__process', 'idle_reason')
             .first()
         )
 
         queue = (
             MachineSchedule.objects.filter(machine=machine, queue_position__gt=0)
-            .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
+            .select_related('jobprocess__job__itemmaster', 'jobprocess__process', 'idle_reason')
             .order_by('queue_position')
         )
 
@@ -617,6 +668,8 @@ class MachineBoardView(APIView):
             'pending_count': queue.filter(schedule_type='Production', status='Pending').count(),
             'idle_count': queue.filter(schedule_type='Idle').count(),
             'role': role,
+            'can_edit_completed': can_edit_completed(request.user, machine),
+            'show_cylinder': machine.machinename.upper().startswith('PRINTING'),
             'is_manager': role == 'manager',
             'is_supervisor': role == 'supervisor',
             'is_operator': role == 'operator',
@@ -649,7 +702,7 @@ class CompletedHistoryView(APIView):
 
         completed = (
             MachineSchedule.objects.filter(machine=machine, queue_position=-1)
-            .select_related('jobprocess__job', 'jobprocess__process', 'idle_reason')
+            .select_related('jobprocess__job__itemmaster', 'jobprocess__process', 'idle_reason')
             .order_by('-end_time', '-id')
         )
         total = completed.count()
