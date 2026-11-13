@@ -73,6 +73,39 @@ def letterhead_logo_path(lh):
     return path if os.path.isfile(path) else None
 
 
+class NumberedCanvas(canvas.Canvas):
+    """A canvas that prints "Page x of y" at the bottom of every page.
+
+    The total is only known once the last page is finished, so each finished
+    page is held back and numbered when the document is saved."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        if len(self._code):  # the last page is closed by save(), not by showPage()
+            self.showPage()
+        total = len(self._saved_page_states)
+        for number, state in enumerate(self._saved_page_states, start=1):
+            self.__dict__.update(state)
+            self.draw_page_number(number, total)
+            super().showPage()
+        super().save()
+
+    def draw_page_number(self, number, total):
+        self.setFont('arial', 9)
+        # alpha=1: the last page ends with the semi-transparent "Approved" /
+        # "Pending" stamp, and a colour set without alpha keeps that transparency
+        self.setFillColorRGB(0.0, 0.2, 0.5, alpha=1)
+        # right edge stays clear of the green strip on the right (from x = A4[0] - 20)
+        self.drawRightString(A4[0] - 35, 20, f'Page {number} of {total}')
+
+
 def too_long_html(error):
     """Plain page shown instead of a bare 500 when a PO's PDF cannot be built."""
     return HttpResponse(
@@ -345,12 +378,10 @@ def build_po_pdf_buffer(purchase):
     buffer = io.BytesIO()
     lh = purchase.letterhead  # the buyer company's name, address, contact details
     pagestartposition = 250
-    p = canvas.Canvas(buffer, pagesize=A4, bottomup=1)
-    page = 1
+    p = NumberedCanvas(buffer, pagesize=A4, bottomup=1)  # prints "Page x of y" itself
 
     #CREATE HEADER ON TOP OF EVERY PAGE
     def pageheader():
-        nonlocal page
 
         p.setLineWidth(1)
         p.setStrokeColor(yellow)
@@ -424,8 +455,6 @@ def build_po_pdf_buffer(purchase):
         online = ", ".join(part for part in (f"Email:- {lh.email}" if lh.email else "",
                                               f"Website: {lh.website}" if lh.website else "") if part)
         draw_left_fit(p, HEADER_TEXT_X, A4[1] - 81, online, "arial", 9, HEADER_ONLINE_WIDTH)
-        p.drawString(500, 20, f'Page({page})')
-        page = page + 1
         p.setFillColorRGB(0.90, 0, 0, 1)
         p.setFont("arial", 8)
         p.drawCentredString(A4[0] / 2, 7, "Note:-Please Don't Print This Unless Extremely Necessary")

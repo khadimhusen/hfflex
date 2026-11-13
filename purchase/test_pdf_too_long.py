@@ -82,3 +82,44 @@ class PoPdfLogoTests(SimpleTestCase):
             self.skipTest('static/images/hflogo.png is not on this machine')
         lh = SimpleNamespace(company=SimpleNamespace(logo=None), logo_url=pdfviews.LEGACY_LOGO_URL)
         self.assertEqual(pdfviews.letterhead_logo_path(lh), self.HF_LOGO)
+
+
+class NumberedCanvasTests(SimpleTestCase):
+    """The PO PDF prints "Page x of y" on every page, including the last one
+    (which save() closes rather than showPage())."""
+
+    def make(self, pages):
+        import io
+        from reportlab.lib.pagesizes import A4
+        calls = []
+
+        class Recording(pdfviews.NumberedCanvas):
+            def draw_page_number(self, number, total):
+                calls.append((number, total))
+
+        c = Recording(io.BytesIO(), pagesize=A4)
+        for n in range(pages):
+            c.drawString(50, 700, f'content {n}')
+            if n < pages - 1:
+                c.showPage()
+        c.save()
+        return calls, c
+
+    def test_every_page_is_numbered_out_of_the_total(self):
+        calls, _ = self.make(3)
+        self.assertEqual(calls, [(1, 3), (2, 3), (3, 3)])
+
+    def test_a_single_page_is_page_1_of_1(self):
+        calls, _ = self.make(1)
+        self.assertEqual(calls, [(1, 1)])
+
+    def test_the_text_is_drawn_for_real(self):
+        import io
+        from reportlab.lib.pagesizes import A4
+        buffer = io.BytesIO()
+        c = pdfviews.NumberedCanvas(buffer, pagesize=A4)
+        c.drawString(50, 700, 'x')
+        c.showPage()
+        c.drawString(50, 700, 'y')
+        c.save()
+        self.assertEqual(buffer.getvalue().count(b'/Type /Page\n'), 2)
