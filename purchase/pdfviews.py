@@ -3,9 +3,11 @@ from django.shortcuts import get_object_or_404
 
 from myproject.access import accessview
 from .models import Po
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
+from django.utils.html import escape
 from reportlab.pdfgen import canvas
 import io
+import logging
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.colors import orange, yellow
 from reportlab.lib import colors
@@ -21,6 +23,41 @@ reportlab.rl_config.warnOnMissingFontGlyphs = 0
 pdfmetrics.registerFont(TTFont('times', "times.ttf"))
 pdfmetrics.registerFont(TTFont('arial', "Arial.ttf"))
 pdfmetrics.registerFont(TTFont('timesbd', "timesbd.ttf"))
+
+logger = logging.getLogger('django')  # goes to logs/django_errors.log like other errors
+
+
+class PoPdfTooLong(RuntimeError):
+    """A Purchase Order's table cannot fit on its page (e.g. one very long
+    item description). A RuntimeError subclass, so anything already catching
+    that keeps working; `user_message` is safe to show to staff."""
+
+    def __init__(self, po_id):
+        self.po_id = po_id
+        self.user_message = (
+            f'Purchase Order #{po_id} cannot be printed because an item description is too long '
+            f'to fit on the page. Please shorten the item description (for example, split a long '
+            f'first line such as the job name over two lines), save the order, and try again.'
+        )
+        super().__init__(
+            f'Purchase Order #{po_id} PDF: a table did not fit on its page '
+            f'(likely an unusually long item description) and would have been silently dropped.'
+        )
+
+
+def too_long_html(error):
+    """Plain page shown instead of a bare 500 when a PO's PDF cannot be built."""
+    return HttpResponse(
+        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        '<title>Cannot print this Purchase Order</title></head>'
+        '<body style="font-family:Arial,sans-serif;max-width:640px;margin:60px auto;padding:0 20px;line-height:1.5">'
+        '<h2>Cannot print this Purchase Order</h2>'
+        f'<p>{escape(error.user_message)}</p>'
+        '<p><a href="javascript:history.back()">&larr; Go back</a></p>'
+        '</body></html>',
+        status=422,
+    )
 
 
 def drawpath(canvas, startpoint, nodes):
@@ -456,7 +493,13 @@ def build_po_pdf_buffer(purchase):
         t = Table(rows, colWidths=COL_WIDTHS)
         if style:
             t.setStyle(TableStyle(style))
-        return t.wrap(sum(COL_WIDTHS), 0)[1]
+        # Give wrap() a real (large) height limit, never 0: with 0 ReportLab
+        # does not grow rows for merged Paragraph cells (Terms & Conditions,
+        # amount in words), so the footer measured ~54pt short of the 132pt
+        # it really takes. Orders with a tall item list then looked like they
+        # fit on one page (measured 519 of 524pt) but the Frame refused the
+        # real table (591pt > 580pt available) -> PO #3914 got a 500.
+        return t.wrap(sum(COL_WIDTHS), 72000)[1]
 
     def flush_table(table, frame):
         """frame.addFromList() silently leaves a flowable in the list (and
@@ -469,10 +512,7 @@ def build_po_pdf_buffer(purchase):
         remaining = [table]
         frame.addFromList(remaining, p)
         if remaining:
-            raise RuntimeError(
-                f'Purchase Order #{purchase.id} PDF: a table did not fit on its page '
-                f'(likely an unusually long item description) and would have been silently dropped.'
-            )
+            raise PoPdfTooLong(purchase.id)
 
     header_height = measure_height([HEADER_ROW])
 
@@ -631,5 +671,9 @@ def build_po_pdf_buffer(purchase):
 @accessview
 def newpopdf(request, id):
     purchase = get_object_or_404(Po, id=id)
-    buffer = build_po_pdf_buffer(purchase)
+    try:
+        buffer = build_po_pdf_buffer(purchase)
+    except PoPdfTooLong as error:
+        logger.error(str(error))
+        return too_long_html(error)
     return FileResponse(buffer, as_attachment=True, filename=f'{purchase.id} - {purchase.supplier}.pdf')

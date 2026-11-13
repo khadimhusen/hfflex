@@ -18,7 +18,7 @@ from .api_serializers import (
     SupplierLookupSerializer, BuyerLookupSerializer, ShipToLookupSerializer, DeliveryAddressLookupSerializer,
     UnitLookupSerializer, TermSerializer,
 )
-from .pdfviews import build_po_pdf_buffer
+from .pdfviews import build_po_pdf_buffer, PoPdfTooLong, logger as pdf_logger
 from .permissions import IsPurchaseUser
 from .querysets import can_see_all_po, can_add_price, can_approve_po, can_edit_po
 from .filters import PoFilter, PoItemFilter
@@ -181,7 +181,12 @@ class PoViewSet(viewsets.ModelViewSet):
         see purchase.pdfviews.build_po_pdf_buffer) — not the SPA's editable
         detail page, a literal document meant to be sent to the supplier."""
         po = self.get_object()
-        buffer = build_po_pdf_buffer(po)
+        try:
+            buffer = build_po_pdf_buffer(po)
+        except PoPdfTooLong as error:
+            pdf_logger.error(str(error))
+            # 422 + the standard DRF {"detail": ...} body, readable by the CRM app
+            return Response({'detail': error.user_message}, status=422)
         return FileResponse(
             buffer, content_type='application/pdf', filename=f'{po.id} - {po.supplier}.pdf',
         )
