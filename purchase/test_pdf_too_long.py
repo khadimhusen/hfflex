@@ -1,5 +1,8 @@
+import os
+from types import SimpleNamespace
 from unittest import mock
 
+from django.conf import settings
 from django.test import RequestFactory, SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
@@ -54,3 +57,28 @@ class PoPdfTooLongTests(SimpleTestCase):
             response = viewset.pdf(viewset.request, pk=3910)
         self.assertEqual(response.status_code, 422)
         self.assertIn('Purchase Order #3910', response.data['detail'])
+
+
+class PoPdfLogoTests(SimpleTestCase):
+    """Which logo (if any) the PO PDF draws in its top-left corner."""
+
+    HF_LOGO = os.path.join(settings.BASE_DIR, 'static', 'images', 'hflogo.png')
+
+    def test_no_logo_for_a_company_that_has_none(self):
+        lh = SimpleNamespace(company=SimpleNamespace(logo=None), logo_url='')
+        self.assertIsNone(pdfviews.letterhead_logo_path(lh))
+
+    def test_a_missing_file_is_ignored_not_an_error(self):
+        company = SimpleNamespace(logo=SimpleNamespace(path='/no/such/logo.png'))
+        self.assertIsNone(pdfviews.letterhead_logo_path(SimpleNamespace(company=company, logo_url='/x')))
+
+    def test_companys_own_logo_wins_over_the_classic_one(self):
+        company = SimpleNamespace(logo=SimpleNamespace(path=__file__))  # any file that exists
+        lh = SimpleNamespace(company=company, logo_url='/media/company/x.png')
+        self.assertEqual(pdfviews.letterhead_logo_path(lh), __file__)
+
+    def test_hf_flex_without_its_own_logo_uses_the_classic_logo(self):
+        if not os.path.isfile(self.HF_LOGO):  # static/ is not in git
+            self.skipTest('static/images/hflogo.png is not on this machine')
+        lh = SimpleNamespace(company=SimpleNamespace(logo=None), logo_url=pdfviews.LEGACY_LOGO_URL)
+        self.assertEqual(pdfviews.letterhead_logo_path(lh), self.HF_LOGO)

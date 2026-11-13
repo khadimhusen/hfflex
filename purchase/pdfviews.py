@@ -1,6 +1,10 @@
+import os
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
+from company.letterhead import LEGACY_LOGO_URL
 from myproject.access import accessview
 from .models import Po
 from django.http import FileResponse, HttpResponse
@@ -43,6 +47,30 @@ class PoPdfTooLong(RuntimeError):
             f'Purchase Order #{po_id} PDF: a table did not fit on its page '
             f'(likely an unusually long item description) and would have been silently dropped.'
         )
+
+
+# Logo in the PDF's top-left corner, exactly as the quotation places it:
+# over the corner ribbons, 12pt below the top edge, the company name starting
+# to its right. hflogo.png is 365x425.
+LOGO_ASPECT = 365 / 425
+LOGO_WIDTH = 46
+LOGO_X = 20
+LOGO_TOP_GAP = 12
+
+
+def letterhead_logo_path(lh):
+    """File path of the buyer company's logo for the PDF, or None.
+
+    Same choice the on-screen page makes (company.letterhead): the company's
+    own uploaded logo, else H F Flex's classic static/images/hflogo.png."""
+    company = getattr(lh, 'company', None)
+    if company is not None and getattr(company, 'logo', None):
+        path = company.logo.path
+    elif getattr(lh, 'logo_url', '') == LEGACY_LOGO_URL:
+        path = os.path.join(settings.BASE_DIR, 'static', 'images', 'hflogo.png')
+    else:
+        return None
+    return path if os.path.isfile(path) else None
 
 
 def too_long_html(error):
@@ -98,12 +126,14 @@ def draw_string_fit(canvas_obj, x, y, text, font, size, max_width):
     canvas_obj.drawString(x, y, truncated + ellipsis)
 
 
-# Room for the letterhead in the PDF's top banner: it is centred on
-# A4[0]/2 - 100 and must stay clear of the corner ribbons on the left and the
-# PO number / date / transport block that starts near x=330 on the right.
-HEADER_TITLE_WIDTH = 270
-HEADER_LINE_WIDTH = 255
-HEADER_ONLINE_WIDTH = 280  # the bottom line sits below most of that block
+# Room for the letterhead in the PDF's top banner, laid out like the
+# quotation: logo in the corner, company name and address to its right
+# (left-aligned from HEADER_TEXT_X), clear of the PO number / date /
+# transport block that starts near x=330 on the right.
+HEADER_TEXT_X = 76          # logo x (20) + logo width (46) + 10
+HEADER_TITLE_WIDTH = 244
+HEADER_LINE_WIDTH = 250
+HEADER_ONLINE_WIDTH = 254   # the bottom line sits below most of that block
 
 
 def fit_font_size(canvas_obj, text, font, size, max_width, min_size=7):
@@ -113,13 +143,13 @@ def fit_font_size(canvas_obj, text, font, size, max_width, min_size=7):
     return size
 
 
-def draw_centered_fit(canvas_obj, x, y, text, font, size, max_width):
-    """drawCentredString, shrunk (down to a floor) so a long address or email
+def draw_left_fit(canvas_obj, x, y, text, font, size, max_width):
+    """drawString from x, shrunk (down to a floor) so a long address or email
     cannot run into the neighbouring block of the banner."""
     if not text:
         return
     canvas_obj.setFont(font, fit_font_size(canvas_obj, text, font, size, max_width, min_size=6))
-    canvas_obj.drawCentredString(x, y, text)
+    canvas_obj.drawString(x, y, text)
 
 
 @login_required(login_url='/login/')
@@ -331,6 +361,16 @@ def build_po_pdf_buffer(purchase):
         p.setStrokeColor(orange)
         drawpath(p, (0, A4[1] - 0), [(73, A4[1] - 0), (0, A4[1] - 73)])
 
+        # Company logo, top left (a missing or unreadable file never breaks the PDF)
+        logo_path = letterhead_logo_path(lh)
+        if logo_path:
+            try:
+                logo_h = LOGO_WIDTH / LOGO_ASPECT
+                p.drawImage(logo_path, LOGO_X, A4[1] - LOGO_TOP_GAP - logo_h,
+                            width=LOGO_WIDTH, height=logo_h, mask='auto',
+                            preserveAspectRatio=True)
+            except Exception:
+                logger.exception('Purchase Order PDF: could not draw the logo %s', logo_path)
 
         drawpath(p, [10, A4[1] - 90], [(A4[0] - 30, A4[1] - 90)])
 
@@ -373,18 +413,17 @@ def build_po_pdf_buffer(purchase):
         # would otherwise run into the PO number block on the right.
         title_size = fit_font_size(p, lh.title_name, "timesbd", 25, HEADER_TITLE_WIDTH)
         p.setFont("timesbd", title_size)
-        p.drawCentredString(A4[0] / 2 - 98, A4[1] - 25, lh.title_name)
+        p.drawString(HEADER_TEXT_X + 2, A4[1] - 25, lh.title_name)
         p.setFillColorRGB(0.80, 0, 0)
-        p.drawCentredString(A4[0] / 2 - 100, A4[1] - 28, lh.title_name)
+        p.drawString(HEADER_TEXT_X, A4[1] - 28, lh.title_name)
         p.setFillColorRGB(0, 0.2, 0.5)
-        header_x = A4[0] / 2 - 100
-        draw_centered_fit(p, header_x, A4[1] - 42, lh.address_line1, "arial", 9, HEADER_LINE_WIDTH)
-        draw_centered_fit(p, header_x, A4[1] - 55, lh.address_line2, "arial", 9, HEADER_LINE_WIDTH)
-        draw_centered_fit(p, header_x, A4[1] - 68, f"Contact:- {lh.phone}" if lh.phone else "",
-                          "arial", 9, HEADER_LINE_WIDTH)
+        draw_left_fit(p, HEADER_TEXT_X, A4[1] - 42, lh.address_line1, "arial", 9, HEADER_LINE_WIDTH)
+        draw_left_fit(p, HEADER_TEXT_X, A4[1] - 55, lh.address_line2, "arial", 9, HEADER_LINE_WIDTH)
+        draw_left_fit(p, HEADER_TEXT_X, A4[1] - 68, f"Contact:- {lh.phone}" if lh.phone else "",
+                      "arial", 9, HEADER_LINE_WIDTH)
         online = ", ".join(part for part in (f"Email:- {lh.email}" if lh.email else "",
                                               f"Website: {lh.website}" if lh.website else "") if part)
-        draw_centered_fit(p, header_x, A4[1] - 81, online, "arial", 9, HEADER_ONLINE_WIDTH)
+        draw_left_fit(p, HEADER_TEXT_X, A4[1] - 81, online, "arial", 9, HEADER_ONLINE_WIDTH)
         p.drawString(500, 20, f'Page({page})')
         page = page + 1
         p.setFillColorRGB(0.90, 0, 0, 1)
