@@ -1,0 +1,1 @@
+var e=[`Indiamart`,`Google+`,`Online Store`,`Cold Call`,`Employee Referral`,`External Referral`,`Advertisement`,`Public Relations`,`Web Research`,`Chat`].map(e=>({label:e,value:e}));export{e as t};
