@@ -39,6 +39,12 @@ urlpatterns = [
 
     path('schedule/pdf/', views.schedule_pdf, name='schedule_pdf'),
 
+    path('machine/<int:machine_id>/schedule/pdf/',
+         views.machine_schedule_pdf, name='machine_schedule_pdf'),
+
+    path('machine/<int:machine_id>/schedule/excel/',
+         views.machine_schedule_excel, name='machine_schedule_excel'),
+
     path('machine/<int:machine_id>/schedule/<int:schedule_id>/detail/',
          views.schedule_detail, name='schedule_detail'),
 

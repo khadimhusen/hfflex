@@ -92,8 +92,8 @@
               </a>
             {% endfor %}
             <a href="{% url 'planning:schedule_pdf' %}" target="_blank"
-             class="btn btn-secondary btn-sm mr-2">
-            <i class="fa fa-file-pdf-o"></i> Download PDF
+             class="btn btn-outline-secondary btn-sm mr-2">
+            <i class="fa fa-file-pdf-o"></i> All machines PDF
             </a>
 
           </div>
@@ -104,6 +104,16 @@
             <span class="badge badge-info">{{ machine.machinename }}</span>
           </div>
           {% endif %}
+
+          {# This machine's schedule as a PDF -- every planning role #}
+          <a href="{% url 'planning:machine_schedule_pdf' machine.id %}" target="_blank"
+             class="btn btn-secondary btn-sm mr-2">
+            <i class="fa fa-print"></i> Print schedule
+          </a>
+          <a href="{% url 'planning:machine_schedule_excel' machine.id %}"
+             class="btn btn-success btn-sm mr-2">
+            <i class="fa fa-file-excel-o"></i> Excel
+          </a>
 
           {% if is_manager or is_supervisor %}
           <span class="unsaved-indicator mr-2" id="unsavedIndicator">

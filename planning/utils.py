@@ -41,6 +41,11 @@ def is_operator(user):
     return get_planning_role(user) == 'operator'
 
 
+def shows_cylinder(machine):
+    """Printing machines show each job's cylinder status (board and PDF)."""
+    return machine.machinename.upper().startswith('PRINTING')
+
+
 def can_edit_completed(user, machine=None):
     """Django staff users (is_staff) may correct a COMPLETED schedule row, on
     top of having some planning role. A staff operator only on their own

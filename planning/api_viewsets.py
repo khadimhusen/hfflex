@@ -21,7 +21,7 @@ from .permissions import IsPlanningUser
 from .utils import (
     get_planning_role, get_operator_machine, can_manage_schedule,
     recalculate_timeline, can_edit_completed, CompletedEditError,
-    edit_completed_schedule, set_completed_variance,
+    edit_completed_schedule, set_completed_variance, shows_cylinder,
 )
 
 
@@ -669,7 +669,7 @@ class MachineBoardView(APIView):
             'idle_count': queue.filter(schedule_type='Idle').count(),
             'role': role,
             'can_edit_completed': can_edit_completed(request.user, machine),
-            'show_cylinder': machine.machinename.upper().startswith('PRINTING'),
+            'show_cylinder': shows_cylinder(machine),
             'is_manager': role == 'manager',
             'is_supervisor': role == 'supervisor',
             'is_operator': role == 'operator',

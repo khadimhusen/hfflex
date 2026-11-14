@@ -13,7 +13,10 @@ from django.db.models import Sum, F
 from django.db import IntegrityError
 from .utils import get_planning_role, manager_or_supervisor_required
 from .utils import can_edit_completed, CompletedEditError, edit_completed_schedule, set_completed_variance
+from .utils import get_operator_machine, shows_cylinder
 from .pdfs import generate_schedule_pdf
+from .exports import generate_schedule_xlsx, excel_filename
+import re
 
 
 # ------------------------------------------------------------------ #
@@ -101,7 +104,7 @@ def machine_schedule(request, machine_id):
 
     context = {
         'machine'         : machine,
-        'show_cylinder'   : machine.machinename.upper().startswith('PRINTING'),
+        'show_cylinder'   : shows_cylinder(machine),
         'machines'        : machines,
         'running'         : running,
         'queue'           : queue,
@@ -939,6 +942,52 @@ def schedule_pdf(request):
         f'attachment; filename="machine_schedule_{datetime.now().strftime("%Y%m%d_%H%M")}.pdf"'
     )
     generate_schedule_pdf(response)
+    return response
+
+
+# ------------------------------------------------------------------ #
+# One machine's schedule as a PDF (any planning role)                  #
+# ------------------------------------------------------------------ #
+def _printable_machine(request, machine_id):
+    """(machine, None) if this user may print/export the machine's schedule,
+    else (None, a 403 response). Any planning role; an operator only their own machine."""
+    machine = get_object_or_404(Machine, pk=machine_id)
+    role = get_planning_role(request.user)
+    if role is None:
+        return None, HttpResponseForbidden("You don't have access to planning.")
+    if role == 'operator':
+        op_machine = get_operator_machine(request.user)
+        if not op_machine or op_machine.id != machine.id:
+            return None, HttpResponseForbidden('You can only print your own machine.')
+    return machine, None
+
+
+@login_required(login_url='/login/')
+def machine_schedule_excel(request, machine_id):
+    machine, denied = _printable_machine(request, machine_id)
+    if denied:
+        return denied
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{excel_filename(machine)}"'
+    generate_schedule_xlsx(response, machine)
+    return response
+
+
+@login_required(login_url='/login/')
+def machine_schedule_pdf(request, machine_id):
+    machine, denied = _printable_machine(request, machine_id)
+    if denied:
+        return denied
+
+    name = re.sub(r'[^A-Za-z0-9]+', '_', machine.machinename).strip('_') or 'machine'
+    response = HttpResponse(content_type='application/pdf')
+    # inline: opens in the browser's PDF viewer, ready to print or save
+    response['Content-Disposition'] = (
+        f'inline; filename="schedule_{name}_{datetime.now().strftime("%Y%m%d_%H%M")}.pdf"'
+    )
+    generate_schedule_pdf(response, [machine])
     return response
 
 

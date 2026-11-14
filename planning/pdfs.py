@@ -8,7 +8,8 @@ from django.http import HttpResponse
 from datetime import datetime
 
 from itemmaster.models import Machine
-from .models import MachineSchedule
+from .exports import schedule_rows, STATUS_LABEL
+from .utils import shows_cylinder
 
 
 def format_duration(d):
@@ -31,8 +32,92 @@ def format_variance(d):
     return f'{sign}{h:02d}:{m:02d}'
 
 
-def generate_schedule_pdf(response):
-    machines = Machine.objects.filter(active=True)
+def columns(show_cylinder):
+    """Header labels and widths (mm) -- landscape A4 leaves 277 mm."""
+    headers = [
+        '#', 'Job / Reason', 'Process', 'Qty', 'Speed',
+        'Start', 'End', 'Makeready', 'Running', 'Downtime',
+        'Est. Duration', 'Variance', 'Status', 'Material'
+    ]
+    widths = [8, 55, 20, 18, 15, 18, 18, 18, 16, 16, 18, 16, 14, 18]
+    if show_cylinder:
+        headers.insert(2, 'Cylinder')
+        widths.insert(2, 16)
+        widths[1] = 47          # the Job column gives up the room
+    return headers, [w * mm for w in widths]
+
+
+def machine_table(machine, cell_style):
+    """Rows of one machine's table, header first: the last 5 completed, the
+    running job, then the queue -- the same rows as the schedule page.
+
+    Returns (table_data, col_widths, completed_rows, running_row_idx, hold_rows);
+    the last three are row indexes to colour. The # column uses plain ASCII
+    markers ('-' done, '>' running): the built-in PDF fonts have no check or
+    play symbols."""
+    show_cylinder = shows_cylinder(machine)
+    headers, col_widths = columns(show_cylinder)
+
+    def make_row(s, pos_label, status_label):
+        if s.schedule_type == 'Idle':
+            job_text = f'IDLE — {s.idle_reason}'
+            process  = s.idle_notes or '—'
+            cylinder = ''
+        else:
+            job_text = str(s.jobprocess) if s.jobprocess else '—'
+            process  = str(s.jobprocess.process) if s.jobprocess else '—'
+            cylinder = s.jobprocess.job.itemmaster.cylinder_status or 'Not Available'
+
+        qty   = f'{s.qty} {s.unit}'   if s.qty   else '—'
+        speed = f'{s.speed} {s.unit}/min' if s.speed else '—'
+        start = s.start_time.strftime('%d/%m %H:%M') if s.start_time else '—'
+        end   = s.end_time.strftime('%d/%m %H:%M')   if s.end_time   else '—'
+
+        row = [
+            pos_label,
+            Paragraph(job_text, cell_style),
+            Paragraph(process, cell_style),
+            qty,
+            speed,
+            start,
+            end,
+            format_duration(s.makeready_duration),
+            format_duration(s.running_duration),
+            format_duration(s.downtime_duration),
+            format_duration(s.estimated_duration),
+            format_variance(s.time_variance),
+            status_label,
+            s.raw_material_status or '—',
+        ]
+        if show_cylinder:
+            row.insert(2, Paragraph(cylinder, cell_style))
+        return row
+
+    table_data = [headers]
+    completed_rows  = []
+    hold_rows       = []
+    running_row_idx = None
+
+    for row_idx, (kind, s) in enumerate(schedule_rows(machine), start=1):
+        pos_label = {'completed': '-', 'running': '>'}.get(kind, str(s.queue_position))
+        table_data.append(make_row(s, pos_label, STATUS_LABEL[kind]))
+        if kind == 'completed':
+            completed_rows.append(row_idx)
+        elif kind == 'running':
+            running_row_idx = row_idx
+        elif kind == 'hold':
+            hold_rows.append(row_idx)
+
+    if len(table_data) == 1:
+        table_data.append(['—', Paragraph('No schedules', cell_style)] + [''] * (len(headers) - 2))
+
+    return table_data, col_widths, completed_rows, running_row_idx, hold_rows
+
+
+def generate_schedule_pdf(response, machines=None):
+    """Write the schedule PDF to `response`: one page set per machine. With no
+    `machines`, every active machine (the all-machines print)."""
+    machines = list(machines) if machines is not None else list(Machine.objects.filter(active=True))
 
     doc = SimpleDocTemplate(
         response,
@@ -40,8 +125,6 @@ def generate_schedule_pdf(response):
         leftMargin=10*mm, rightMargin=10*mm,
         topMargin=15*mm, bottomMargin=15*mm,
     )
-
-    styles = getSampleStyleSheet()
 
     title_style = ParagraphStyle(
         'title', fontSize=14, fontName='Helvetica-Bold',
@@ -72,116 +155,10 @@ def generate_schedule_pdf(response):
     ))
     story.append(Spacer(1, 3*mm))
 
-    # Column headers
-    headers = [
-        '#', 'Job / Reason', 'Process', 'Qty', 'Speed',
-        'Start', 'End', 'Makeready', 'Running', 'Downtime',
-        'Est. Duration', 'Variance', 'Status', 'Material'
-    ]
-
-    col_widths = [
-        8*mm,   # #
-        55*mm,  # Job
-        20*mm,  # Process
-        18*mm,  # Qty
-        15*mm,  # Speed
-        18*mm,  # Start
-        18*mm,  # End
-        18*mm,  # Makeready
-        16*mm,  # Running
-        16*mm,  # Downtime
-        18*mm,  # Est Duration
-        16*mm,  # Variance
-        14*mm,  # Status
-        18*mm,  # Material
-    ]
-
-    def make_row(s, pos_label, status_label):
-        if s.schedule_type == 'Idle':
-            job_text = f'IDLE — {s.idle_reason}'
-            process  = s.idle_notes or '—'
-        else:
-            job_text = str(s.jobprocess) if s.jobprocess else '—'
-            process  = str(s.jobprocess.process) if s.jobprocess else '—'
-
-        qty   = f'{s.qty} {s.unit}'   if s.qty   else '—'
-        speed = f'{s.speed} {s.unit}/min' if s.speed else '—'
-        start = s.start_time.strftime('%d/%m %H:%M') if s.start_time else '—'
-        end   = s.end_time.strftime('%d/%m %H:%M')   if s.end_time   else '—'
-
-        return [
-            pos_label,
-            Paragraph(job_text, cell_style),
-            Paragraph(process, cell_style),
-            qty,
-            speed,
-            start,
-            end,
-            format_duration(s.makeready_duration),
-            format_duration(s.running_duration),
-            format_duration(s.downtime_duration),
-            format_duration(s.estimated_duration),
-            format_variance(s.time_variance),
-            status_label,
-            s.raw_material_status or '—',
-        ]
-
     for i, machine in enumerate(machines):
         story.append(Paragraph(f'Machine: {machine.machinename}', machine_style))
 
-        completed_qs = (
-            MachineSchedule.objects
-            .filter(machine=machine, queue_position=-1)
-            .select_related('jobprocess__job', 'idle_reason', 'unit')
-            .order_by('-end_time')[:5]
-        )
-        completed = sorted(completed_qs, key=lambda x: x.end_time or x.created)
-
-        running = (
-            MachineSchedule.objects
-            .filter(machine=machine, queue_position=0)
-            .select_related('jobprocess__job', 'idle_reason', 'unit')
-            .first()
-        )
-
-        queue = (
-            MachineSchedule.objects
-            .filter(machine=machine, queue_position__gt=0)
-            .select_related('jobprocess__job', 'idle_reason', 'unit')
-            .order_by('queue_position')
-        )
-
-        table_data = [headers]
-
-        completed_rows  = []
-        hold_rows       = []
-        running_row_idx = None
-        row_idx         = 1
-
-        for s in completed:
-            table_data.append(make_row(s, '✓', 'Completed'))
-            completed_rows.append(row_idx)
-            row_idx += 1
-
-        if running:
-            table_data.append(make_row(running, '▶', 'Running'))
-            running_row_idx = row_idx
-            row_idx += 1
-
-        for s in queue:
-            status = 'Hold' if s.status == 'Hold' else (
-                'Idle' if s.schedule_type == 'Idle' else 'Pending'
-            )
-            table_data.append(make_row(s, str(s.queue_position), status))
-            if s.status == 'Hold':
-                hold_rows.append(row_idx)
-            row_idx += 1
-
-        if len(table_data) == 1:
-            table_data.append([
-                '—', Paragraph('No schedules', cell_style),
-                '', '', '', '', '', '', '', '', '', '', '', ''
-            ])
+        table_data, col_widths, completed_rows, running_row_idx, hold_rows = machine_table(machine, cell_style)
 
         table_style_cmds = [
             ('BACKGROUND',    (0, 0),  (-1, 0),  colors.HexColor('#343a40')),
