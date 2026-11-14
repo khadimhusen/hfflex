@@ -25,6 +25,19 @@ def _add_months(d, offset):
     return date(year, month, 1)
 
 
+def _monthly_totals(deals, months):
+    """Amount per month (by closing date) for `deals`, as the chart's rows:
+    one entry for each month in `months`, zero where nothing closed."""
+    rows = (
+        deals
+        .annotate(month=TruncMonth('closing_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+    )
+    by_month = {row['month']: row['total'] or 0 for row in rows}
+    return [{'month': m.strftime('%b'), 'total': by_month.get(m, 0)} for m in months]
+
+
 class DealDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -52,10 +65,12 @@ class DealDashboardView(APIView):
         )
 
         won_deals = Deal.objects.filter(stage__is_won=True)
+        lost_deals = Deal.objects.filter(stage__is_lost=True)
 
         if owner_id:
             open_deals = open_deals.filter(owner_id=owner_id)
             won_deals = won_deals.filter(owner_id=owner_id)
+            lost_deals = lost_deals.filter(owner_id=owner_id)
 
         expected_revenue_expr = ExpressionWrapper(
             F('amount') * F('stage__probability') / 100.0,
@@ -80,12 +95,28 @@ class DealDashboardView(APIView):
 
         date_from = request.query_params.get('closing_date_after')
         date_to = request.query_params.get('closing_date_before')
+        # One closing-date range for both outcomes (won and lost deals both
+        # get their closing date when they are closed).
         if date_from:
             won_deals = won_deals.filter(closing_date__gte=date_from)
+            lost_deals = lost_deals.filter(closing_date__gte=date_from)
         if date_to:
             won_deals = won_deals.filter(closing_date__lte=date_to)
+            lost_deals = lost_deals.filter(closing_date__lte=date_to)
 
         won_agg = won_deals.aggregate(total=Sum('amount'), count=Count('id'))
+        lost_agg = lost_deals.aggregate(total=Sum('amount'), count=Count('id'))
+
+        # Every deal of the selected owner: total = open + won + lost (a stage is
+        # never both won and lost). The base for the Won / Lost ratios on the
+        # cards. Not cut by the closing-date range: open deals have no closing date.
+        every_deal = Deal.objects.filter(owner_id=owner_id) if owner_id else Deal.objects.all()
+        deal_breakdown = every_deal.aggregate(
+            total=Count('id'),
+            won=Count('id', filter=Q(stage__is_won=True)),
+            lost=Count('id', filter=Q(stage__is_lost=True)),
+            open=Count('id', filter=Q(stage__is_won=False, stage__is_lost=False)),
+        )
 
         # Team-wide breakdown — always all owners, regardless of the `owner`
         # filter above (that filter narrows the stage cards, not this chart).
@@ -99,7 +130,7 @@ class DealDashboardView(APIView):
             .order_by('-total')
         )
 
-        # Last 12 months of Closed Won amount, for the `owner` filter above.
+        # Last 12 months of Closed Won and Closed Lost amount, for the `owner` filter above.
         # The frontend defaults its filter to the logged-in user on first
         # load, so this normally already scopes to "me"; an explicit "All
         # Users" selection sends no owner param, which here means sum
@@ -110,19 +141,12 @@ class DealDashboardView(APIView):
             _add_months(current_month_start, -offset) for offset in range(11, -1, -1)
         ]
         my_won_qs = Deal.objects.filter(stage__is_won=True, closing_date__gte=months[0])
+        my_lost_qs = Deal.objects.filter(stage__is_lost=True, closing_date__gte=months[0])
         if owner_id:
             my_won_qs = my_won_qs.filter(owner_id=owner_id)
-        my_won_rows = (
-            my_won_qs
-            .annotate(month=TruncMonth('closing_date'))
-            .values('month')
-            .annotate(total=Sum('amount'))
-        )
-        my_won_by_month = {row['month']: row['total'] or 0 for row in my_won_rows}
-        my_monthly_closed_won = [
-            {'month': m.strftime('%b'), 'total': my_won_by_month.get(m, 0)}
-            for m in months
-        ]
+            my_lost_qs = my_lost_qs.filter(owner_id=owner_id)
+        my_monthly_closed_won = _monthly_totals(my_won_qs, months)
+        my_monthly_closed_lost = _monthly_totals(my_lost_qs, months)
 
         return Response({
             'stage_counts': [
@@ -143,6 +167,16 @@ class DealDashboardView(APIView):
                 'total': won_agg['total'] or 0,
                 'count': won_agg['count'] or 0,
             },
+            'closed_lost': {
+                'total': lost_agg['total'] or 0,
+                'count': lost_agg['count'] or 0,
+            },
+            'total_deals': deal_breakdown['total'],
+            'deal_breakdown': {
+                'open': deal_breakdown['open'],
+                'won': deal_breakdown['won'],
+                'lost': deal_breakdown['lost'],
+            },
             'open_amount_by_owner': [
                 {
                     'owner_id': row['owner_id'],
@@ -153,6 +187,7 @@ class DealDashboardView(APIView):
                 for row in open_amount_by_owner
             ],
             'my_monthly_closed_won': my_monthly_closed_won,
+            'my_monthly_closed_lost': my_monthly_closed_lost,
         })
 
 
