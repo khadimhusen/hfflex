@@ -1,0 +1,1 @@
+import{V as e,et as t}from"./use-router-link-C2rrFOSi.js";var n={name:String};function r(t){return e(()=>({type:`hidden`,name:t.name,value:t.modelValue}))}function i(e={}){return(n,r,i)=>{n[r](t(`input`,{class:`hidden`+(i||``),...e.value}))}}function a(t){return e(()=>t.name||t.for)}export{n as i,i as n,a as r,r as t};
