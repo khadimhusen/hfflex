@@ -343,6 +343,9 @@ def me_payload(u):
     # above -- that role check IS the old app's actual access control for
     # this module, not something to leave behind a temporary lock.
     is_planning = get_planning_role(u) is not None
+    # Minutes of meeting: like Tasks, open to every logged-in user (what a user
+    # sees inside it is limited to meetings they created or attended; staff see all).
+    is_meetings = True
     # Ink store has no department gate of its own (the old views were
     # login_required only), so this is the same TEMPORARY staff-only
     # rollout gate as the modules above, matching IsInkStoreUser.
@@ -377,6 +380,7 @@ def me_payload(u):
             'dispatch': is_dispatch,
             'stock': is_stock,
             'planning': is_planning,
+            'meetings': is_meetings,
             'manpower': is_manpower,
             'bank': is_bank,
             'returnable': is_returnable,
