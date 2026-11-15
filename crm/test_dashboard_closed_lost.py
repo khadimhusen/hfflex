@@ -110,6 +110,29 @@ class DashboardClosedLostTests(TestCase):
         self.assertEqual(everyone['total_deals'], Deal.objects.count())
         self.assertGreaterEqual(everyone['total_deals'], 2)
 
+    # ---- open deals count (on the Open Expected Revenue card) ---------------
+    def test_the_open_count_is_the_owners_open_deals_only(self):
+        self.deal(self.open_stage, amount='1000', closed=None)
+        self.deal(self.open_stage, amount=None, closed=None)            # no amount: still an open deal
+        self.deal(self.won_stage, amount='7')
+        self.deal(self.lost_stage, amount='9')
+        self.deal(self.open_stage, owner=self.other, amount='5000', closed=None)
+        data = self.dashboard()
+        self.assertEqual(data['deal_breakdown']['open'], 2)
+        self.assertNotIn('open_deals', data)                            # no separate open-amount block
+
+    def test_the_open_count_ignores_the_date_range(self):
+        self.deal(self.open_stage, closed=None)
+        self.deal(self.open_stage, closed=None)
+        self.deal(self.won_stage, closed=datetime.date(2026, 6, 20))
+        plain = self.dashboard()
+        ranged = self.dashboard(closing_date_after='2026-06-01', closing_date_before='2026-06-30')
+        self.assertEqual(ranged['deal_breakdown']['open'], plain['deal_breakdown']['open'])
+        self.assertEqual(plain['deal_breakdown']['open'], 2)
+
+    def test_nothing_open_is_zero_not_missing(self):
+        self.assertEqual(self.dashboard()['deal_breakdown']['open'], 0)
+
     # ---- the date range -------------------------------------------------
     def test_the_closing_date_range_applies_to_lost_and_won_alike(self):
         early, late = datetime.date(2026, 5, 10), datetime.date(2026, 6, 20)
