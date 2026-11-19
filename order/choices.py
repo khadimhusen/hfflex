@@ -16,7 +16,7 @@ DIRECTION = [('ANY', 'ANY'), ('READABLE', 'READABLE'), ('UNREADABLE', 'UNREADABL
 
 processchoices = [("Pending", "Pending"), ("Completed", "Completed"), ("Incomplete", "Incomplete"),
                   ("Running", "Running")]
-cylinderchoices = [(None,"blank" ),('Available', 'Available'),
+cylinderchoices = [("", "blank"),('Available', 'Available'),
                    ('Not Applicable', 'Not Applicable'),
                    ('Sent For Repairing', 'Sent For Repairing'),
                    ('Returned To Customer', 'Returned To Customer'),

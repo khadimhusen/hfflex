@@ -1,4 +1,5 @@
 import django_filters
+from django.db.models import Q
 
 from itemmaster.models import Process
 from material.models import Material
@@ -54,6 +55,26 @@ class JobFilter(django_filters.FilterSet):
         fields = ['id', 'joborder', 'joborder__customer', 'jobstatus', 'supply_form']
 
 
+class BlankableMultipleChoiceFilter(django_filters.MultipleChoiceFilter):
+    """Checkboxes where the choice with the empty value ("blank") means "nothing set":
+    the column is NULL or empty. Ticking it alone, or with other choices, works.
+
+    (The plain filter could not do this: the browser sends the blank box as an
+    empty string, which it rejected as "not one of the available choices".)"""
+
+    def filter(self, qs, value):
+        if not value:
+            return qs
+        q = Q()
+        for choice in set(value):
+            if choice == '':
+                q |= Q(**{f'{self.field_name}__isnull': True}) | Q(**{self.field_name: ''})
+            else:
+                q |= Q(**self.get_filter_predicate(choice))
+        qs = qs.filter(q)
+        return qs.distinct() if self.distinct else qs
+
+
 class JobProcessFilter1(django_filters.FilterSet):
     created__gt = django_filters.DateFilter(label="From", field_name='created', lookup_expr='gte',
                                             input_formats=('%d/%m/%Y',))
@@ -64,9 +85,9 @@ class JobProcessFilter1(django_filters.FilterSet):
                                          lookup_expr='icontains')
     job__jobstatus = django_filters.MultipleChoiceFilter(choices=jobchoices, widget=forms.CheckboxSelectMultiple())
     status = django_filters.MultipleChoiceFilter(choices=processchoices, widget=forms.CheckboxSelectMultiple())
-    cylinder = django_filters.MultipleChoiceFilter(field_name='job__itemmaster__cylinder_status',
-                                                   widget=forms.CheckboxSelectMultiple(), label="cylinder",
-                                                   choices=cylinderchoices)
+    cylinder = BlankableMultipleChoiceFilter(field_name='job__itemmaster__cylinder_status',
+                                             widget=forms.CheckboxSelectMultiple(), label="cylinder",
+                                             choices=cylinderchoices)
 
     class Meta:
         model = JobProcess
@@ -83,9 +104,9 @@ class JobProcessFilter(django_filters.FilterSet):
                                          lookup_expr='icontains')
     job__jobstatus = django_filters.MultipleChoiceFilter(choices=jobchoices, widget=forms.CheckboxSelectMultiple())
     status = django_filters.MultipleChoiceFilter(choices=processchoices, widget=forms.CheckboxSelectMultiple())
-    cylinder = django_filters.MultipleChoiceFilter(field_name='job__itemmaster__cylinder_status',
-                                                   widget=forms.CheckboxSelectMultiple(), label="cylinder",
-                                                   choices=cylinderchoices)
+    cylinder = BlankableMultipleChoiceFilter(field_name='job__itemmaster__cylinder_status',
+                                             widget=forms.CheckboxSelectMultiple(), label="cylinder",
+                                             choices=cylinderchoices)
 
     # Cascade filter for process flow
     cascade_filter = django_filters.ChoiceFilter(
