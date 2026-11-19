@@ -2,20 +2,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 from employee.models import Worker
-from itemmaster.models import Problem
+from itemmaster.models import Machine, Problem
 from order.models import Job
 from django.db.models import Sum
 from .choices import SHIFTCHOICE, MAKEREADY
-
-
-class Machine(models.Model):
-    machinename = models.CharField(max_length=32)
-    est_date = models.DateField()
-    end_date = models.DateField(blank=True, null=True)
-    active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.machinename
 
 
 class TimeMaster(models.Model):

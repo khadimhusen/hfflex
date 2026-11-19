@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 from employee.models import Worker
-from itemmaster.models import Problem
-from .models import Machine, Shift, Activity, ShiftPerson, DowntimeReport
+from itemmaster.models import Machine, Problem
+from .models import Shift, Activity, ShiftPerson, DowntimeReport, TimeMaster
 
 
 class MachineLookupSerializer(serializers.ModelSerializer):
@@ -141,3 +141,11 @@ class ShiftSerializer(serializers.ModelSerializer):
         # get_or_create (mirroring newshift()) ever gets a chance to run.
         # Uniqueness is handled there instead.
         validators = []
+
+    def validate_machine(self, machine):
+        # A shift's time is worked out from the machine's make-ready times; a machine
+        # without them (most of the itemmaster machines) cannot run manpower shifts.
+        if not TimeMaster.objects.filter(machine=machine).exists():
+            raise serializers.ValidationError(
+                f'{machine.machinename} has no make-ready times set up, so it cannot be used for shifts.')
+        return machine

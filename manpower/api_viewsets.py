@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from employee.models import Worker
 from itemmaster.models import Problem
 from .filters import ShiftFilter, DowntimeFilter
-from .models import Machine, Shift, Activity, ShiftPerson, DowntimeReport
+from itemmaster.models import Machine
+from .models import Shift, Activity, ShiftPerson, DowntimeReport
 from .api_serializers import (
     MachineLookupSerializer, WorkerLookupSerializer, ProblemLookupSerializer,
     ShiftSerializer, ShiftListSerializer, ActivitySerializer, ShiftPersonSerializer, DowntimeReportSerializer,
@@ -17,7 +18,8 @@ from .querysets import can_approve_shift
 
 
 class MachineLookupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Machine.objects.filter(active=True).order_by('machinename')
+    # Only machines with make-ready times (manpower's time master) can run shifts.
+    queryset = Machine.objects.filter(active=True, timemaster__isnull=False).distinct().order_by('machinename')
     serializer_class = MachineLookupSerializer
     permission_classes = [IsManpowerUser]
 

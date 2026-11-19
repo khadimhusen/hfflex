@@ -3,7 +3,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.forms import inlineformset_factory, modelform_factory
 from django.shortcuts import render, redirect, get_object_or_404
-from manpower.models import Shift, Activity, Machine, ShiftPerson, DowntimeReport
+from itemmaster.models import Machine
+from manpower.models import Shift, Activity, ShiftPerson, DowntimeReport
 from myproject.access import accessview
 from .filters import ShiftFilter, DowntimeFilter, JobQcFilter, ActivityJobFilter
 from .forms import NewShiftForm, ActivityForm, ShiftPersonForm , DowntimeReportForm
@@ -47,7 +48,9 @@ def newshift(request):
         print(main_form)
 
         if main_form.is_valid():
-            machineinstance = Machine.objects.filter(machinename=user.username).first() or None
+            # The machine this login belongs to (itemmaster's Machine.user), if it can run shifts.
+            machineinstance = Machine.objects.filter(
+                user=user, active=True, timemaster__isnull=False).distinct().first()
             proddate = request.POST['production_date'].split("/")
             if machineinstance:
                 proddate = datetime.date(int(proddate[2]), int(proddate[1]), int(proddate[0]))
@@ -62,7 +65,7 @@ def newshift(request):
 
                 return redirect('manpower:shiftdetail', id=obj.id)
             else:
-                messages.success(request, "invalid user. User Must be from machine user")
+                messages.success(request, "invalid user. User must be a machine user whose machine has make-ready times.")
                 return render(request, 'shift/newshift.html', context)
         else:
             print(main_form.errors)

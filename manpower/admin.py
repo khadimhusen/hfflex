@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Shift, Activity, ShiftPerson, TimeMaster,Machine
+from .models import Shift, Activity, ShiftPerson, TimeMaster
 
 
 class ActivityTabular(admin.TabularInline):
@@ -19,4 +19,3 @@ class ShiftAdmin(admin.ModelAdmin):
 
 admin.site.register(Shift, ShiftAdmin)
 admin.site.register(TimeMaster)
-admin.site.register(Machine)
