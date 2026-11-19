@@ -436,6 +436,29 @@ class ListFilterTests(MeetingBase):
         self.assertEqual(self.titles(), set())
 
 
+class ListOrderingTests(MeetingBase):
+    def test_the_list_is_newest_first_and_pages_do_not_overlap(self):
+        for day in (3, 1, 5, 2, 4):
+            self.create(title=f'Order {day}', meeting_date=f'2001-03-0{day}')
+        titles = lambda **q: [m['title'] for m in self.api.get(MEETINGS, {'search': 'Order', **q}).json()['results']]
+        self.assertEqual(titles(), [f'Order {d}' for d in (5, 4, 3, 2, 1)])
+        self.assertEqual(titles(page_size=2, page=1) + titles(page_size=2, page=2) + titles(page_size=2, page=3),
+                         [f'Order {d}' for d in (5, 4, 3, 2, 1)])
+
+    def test_same_day_meetings_keep_a_stable_order_newest_created_first(self):
+        first = self.create(title='Same day A')['id']
+        second = self.create(title='Same day B')['id']
+        ids = [m['id'] for m in self.api.get(MEETINGS, {'search': 'Same day'}).json()['results']]
+        self.assertEqual(ids, [second, first])
+
+    def test_the_list_query_is_ordered(self):
+        from meetings.api_viewsets import MeetingViewSet
+        view = MeetingViewSet()
+        view.action = 'list'
+        view.request = type('R', (), {'user': self.staff})()
+        self.assertTrue(view.get_queryset().ordered)
+
+
 class PdfAndExcelTests(MeetingBase):
     def test_the_minutes_pdf(self):
         meeting = self.final(title='Review: "Printing" & lamination <urgent>')

@@ -46,7 +46,8 @@ class MeetingViewSet(viewsets.ModelViewSet):
                 external_count=Count('attendees', filter=Q(attendees__user__isnull=True), distinct=True),
                 total_items=Count('action_items', distinct=True),
                 open_items=Count('action_items', filter=open_filter, distinct=True),
-            )
+            # Counting makes Django drop the model's default ordering, so say it here: newest first.
+            ).order_by('-meeting_date', '-id')
         return qs.prefetch_related('attendees', 'action_items__owner', 'action_items__task')
 
     def get_serializer_class(self):
