@@ -2,6 +2,11 @@
 <div class="sidebar sidebar-dark bg-dark">
 
     <ul class="list-unstyled">
+        <!-- Task page: for everybody, above the CRM link -->
+        <li>
+            <a href="{% url 'task:tasklist' %}" id="sidebarTaskLink"><strong style="color:lightgreen">T</strong>ask</a>
+        </li>
+
          {% if user|user_in_department:"crm_user" %}
         <li>
             <a href="{% url 'crm-spa' %}"><strong style="color:lightgreen">C</strong>RM</a>
