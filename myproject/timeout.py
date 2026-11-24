@@ -26,6 +26,14 @@ class SessionIdleMiddleware:
                         )
             request.session['last_request'] = time.time()
 
+            # Tasks overdue past their limit lock the user out until the creator moves the date
+            # (task/lock.py). It lives here because this middleware is already on every request.
+            if request.user.is_authenticated:
+                from task.lock import lock_response
+                stopped = lock_response(request)
+                if stopped is not None:
+                    return stopped
+
         else:
             if 'last_request' in request.session:
                 del request.session['last_request']

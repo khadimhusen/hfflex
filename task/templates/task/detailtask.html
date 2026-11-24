@@ -40,6 +40,62 @@
         </a>
     </div>
 
+    {% if lock_info %}
+    <div class="alert alert-danger shadow-sm" id="lockBox">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="mr-3">
+                <i class="fas fa-lock mr-1"></i>
+                This task is <b>{{ lock_info.days }} days overdue</b>, more than the {{ lock_info.limit }} days allowed for
+                {{ task.priority }} priority.
+                {% if lock_info.own %}
+                <b>You cannot use the system until you give it a new target date (below).</b>
+                {% else %}
+                <b>You cannot use the system until
+                {{ task.createdby.get_full_name|default:task.createdby.username }} changes the target date.</b>
+                {% endif %}
+            </div>
+            {% if not lock_info.own %}
+            <form method="post" action="{% url 'task:askdate' task.id %}" class="mb-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning" id="askDateButton">Ask for a new date</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if can_change_date %}
+    <div class="card shadow-sm mb-3 {% if creator_sees_locked %}border-danger{% endif %}" id="changeDateBox">
+        {% if creator_sees_locked %}
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-lock mr-1"></i> {{ task.task_alloted_to.get_full_name|default:task.task_alloted_to.username }}
+            is locked out by this task until you give it a new target date.
+        </div>
+        {% endif %}
+        <div class="card-body py-2">
+            <form method="post" action="{% url 'task:changedate' task.id %}" class="form-inline">
+                {% csrf_token %}
+                <label class="mr-2 mb-0"><b>Target date</b></label>
+                <input type="datetime-local" name="target_date" value="{{ target_input }}" class="form-control form-control-sm mr-2" required>
+                <button type="submit" class="btn btn-success btn-sm" id="changeDateButton">Change target date</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if show_later %}
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap shadow-sm" id="laterBox">
+        <div class="mr-3">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            This task is <b>due</b>. Do it now, or click <b>Later</b> to move on to your other due tasks.
+        </div>
+        <form method="post" action="{% url 'task:later' task.id %}" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning btn-lg px-5" id="laterButton">Later</button>
+        </form>
+    </div>
+    {% endif %}
+
     <!-- Task Header Card -->
     <div class="card task-header-card shadow-sm mb-3">
         <div class="card-body">

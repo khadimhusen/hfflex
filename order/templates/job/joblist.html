@@ -281,18 +281,45 @@
     </div>
 </div>
 {% if pending_tasks_popup %}
+<style>
+    /* The pending-tasks popup shown after login: a big window, not a small box. */
+    #pendingTasksModal .modal-dialog { max-width: 94vw; width: 1400px; margin: 3vh auto; }
+    #pendingTasksModal .modal-content { min-height: 70vh; }
+    #pendingTasksModal .modal-title { font-size: 1.6rem; }
+    #pendingTasksModal .modal-body { max-height: 72vh; overflow-y: auto; }
+    #pendingTasksModal table { font-size: 1.15rem; }
+    #pendingTasksModal table th { font-size: 1rem; position: sticky; top: 0; background: #f8f9fa; }
+    #pendingTasksModal table td, #pendingTasksModal table th { padding: .85rem 1rem; vertical-align: middle; }
+    #pendingTasksModal .badge { font-size: 1rem; padding: .45em .8em; }
+    #pendingTasksModal .modal-footer .btn, #pendingTasksModal table .btn { font-size: 1.05rem; padding: .5rem 1.2rem; }
+    #pendingTasksModal tr.postponed td { opacity: .5; }
+    #pendingTasksModal tr.postponed td:last-child { opacity: 1; }
+    /* smaller screens: tighter, so Open and Later never fall off the right edge */
+    @media (max-width: 992px) {
+        #pendingTasksModal .modal-dialog { max-width: 98vw; margin: 1vh auto; }
+        #pendingTasksModal .modal-title { font-size: 1.25rem; }
+        #pendingTasksModal table { font-size: .95rem; }
+        #pendingTasksModal table th { font-size: .9rem; }
+        #pendingTasksModal table td, #pendingTasksModal table th { padding: .5rem .4rem; }
+        #pendingTasksModal .badge { font-size: .85rem; padding: .35em .55em; }
+        #pendingTasksModal table .btn { font-size: .9rem; padding: .35rem .6rem; }
+        #pendingTasksModal #pendingLaterHint { font-size: .95rem; }
+    }
+    #pendingTasksModal #pendingLaterHint { margin-right: auto; font-size: 1.05rem; color: #856404; font-weight: 600; }
+    #pendingTasksModal .due-label { display: block; font-size: .8em; font-weight: 700; line-height: 1.2; }
+</style>
 <div class="modal fade" id="pendingTasksModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header bg-warning">
                 <h5 class="modal-title">
                     <i class="fas fa-exclamation-triangle mr-2"></i>
                     You have {{ pending_tasks_popup|length }} pending task(s)
                 </h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="close pending-close d-none" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body p-0">
-                <table class="table table-sm table-striped mb-0">
+                <table class="table table-striped mb-0">
                     <thead><tr>
                         <th>Task</th>
                         <th>Assigned By</th>
@@ -301,11 +328,16 @@
                         <th></th>
                     </tr></thead>
                     <tbody>
+                    {% now "Y-m-d" as today_iso %}
                     {% for t in pending_tasks_popup %}
                     <tr>
                         <td>{{ t.taskname }}</td>
                         <td>{{ t.createdby }}</td>
-                        <td>{{ t.target_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {{ t.target_date|date:"d/m/Y" }}
+                            {% if t.target_date|date:"Y-m-d" < today_iso %}<span class="due-label text-danger">Overdue</span>
+                            {% elif t.target_date|date:"Y-m-d" == today_iso %}<span class="due-label text-warning">Due today</span>{% endif %}
+                        </td>
                         <td>
                             {% if t.priority == "HIGH" %}
                             <span class="badge badge-danger">HIGH</span>
@@ -315,8 +347,13 @@
                             <span class="badge badge-primary">LOW</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="text-right text-nowrap">
                             <a href="{% url 'task:taskdetail' t.id %}" class="btn btn-primary btn-sm">Open</a>
+                            {% if t.locks %}
+                            <span class="badge badge-danger p-2">Locked: needs a new date</span>
+                            {% elif t.target_date|date:"Y-m-d" <= today_iso %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm later-btn" data-task-id="{{ t.id }}">Later</button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -324,10 +361,11 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <a href="{% url 'task:tasklist' %}?tab=assigned" class="btn btn-primary btn-sm">
-                    View All My Tasks
-                </a>
-                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Dismiss</button>
+                <span id="pendingLaterHint" class="d-none">
+                    Click <b>Later</b> on every due task to close this window
+                    (<span id="pendingLaterLeft">0</span> left).
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm pending-close d-none" data-dismiss="modal">Dismiss</button>
             </div>
         </div>
     </div>
@@ -351,7 +389,47 @@
         $('#pendingTasksModal').modal('show');
     }
     $(document).ready(function () {
-        $('#pendingTasksModal').modal('show');  // still auto-shows after login
+        var $modal = $('#pendingTasksModal');
+        // Tasks due today or earlier have a "Later" button. While any of them is unclicked the
+        // window cannot be closed (no X, no Escape, no click outside); after the last one it
+        // closes by itself. With nothing due it is an ordinary pop-up.
+        var due = $modal.find('.later-btn').length;
+        if (due === 0) {
+            $modal.find('.pending-close').removeClass('d-none');
+            $modal.modal('show');
+            return;
+        }
+        $('#pendingLaterLeft').text(due);
+        $('#pendingLaterHint').removeClass('d-none');
+        function markDone($btn) {
+            $btn.addClass('done').text('Later ✓').closest('tr').addClass('postponed');
+            var left = $modal.find('.later-btn:not(.done)').length;
+            $('#pendingLaterLeft').text(left);
+            if (left === 0) {
+                $('#pendingLaterHint').addClass('d-none');
+                $modal.find('.pending-close').removeClass('d-none');
+                setTimeout(function () { $modal.modal('hide'); }, 400);
+            }
+        }
+        // "Later" is remembered on the server (so it holds when the user moves to another page),
+        // and only counts once that has been saved.
+        $modal.on('click', '.later-btn', function () {
+            var $btn = $(this);
+            if ($btn.prop('disabled')) { return; }
+            $btn.prop('disabled', true);
+            fetch("{% url 'task:later' 0 %}".replace('/0/', '/' + $btn.data('task-id') + '/'), {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest'}
+            }).then(function (response) {
+                if (!response.ok) { throw new Error('HTTP ' + response.status); }
+                markDone($btn);
+            }).catch(function () {
+                $btn.prop('disabled', false);
+                alert('Could not save "Later". Please try again.');
+            });
+        });
+        $modal.modal({backdrop: 'static', keyboard: false, show: true});  // auto-shows after login
     });
 </script>
 

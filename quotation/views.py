@@ -77,15 +77,10 @@ def quotationlist(request):
     except EmptyPage:
         quo = paginator.page(paginator.num_pages)
 
-    from task.models import Task
+    from task.popup import login_popup_tasks
 
     if request.session.pop('show_pending_tasks', False):
-        pending_tasks = Task.objects.filter(
-            task_alloted_to=request.user,
-            is_closed=False
-        ).select_related('createdby').order_by('target_date')[:10]
-
-        context['pending_tasks_popup'] = pending_tasks if pending_tasks.exists() else None
+        context['pending_tasks_popup'] = login_popup_tasks(request.user) or None
 
     context['quo'] = quo
     context['myFilter'] = myFilter

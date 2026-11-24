@@ -1,0 +1,121 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Tasks need a new date</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}"/>
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootadmin.net/css/fontawesome-all.min.css' %}">
+    <style>
+        body { background: #f4f6f9; }
+        .overdue-days { font-weight: 700; color: #c82333; }
+        table td, table th { vertical-align: middle !important; }
+    </style>
+</head>
+<body>
+<div class="container py-4" style="max-width: 1100px;">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0"><i class="fas fa-lock mr-2 text-danger"></i>{% if is_locked %}Tasks need a new date{% else %}Tasks waiting for you to change their date{% endif %}</h3>
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sign-out-alt"></i> Log out</a>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} py-2" id="flash">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if is_locked %}
+    <div class="alert alert-danger">
+        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-1"></i> You cannot continue until the target date is changed</h5>
+        These tasks are overdue for longer than their priority allows
+        (<b>High: 2 days</b>, <b>Normal: 3 days</b>, <b>Low: 6 days</b>).
+        The person who allotted a task has to give it a new target date. Ask them below, or open the task to message
+        them. If you allotted the task to yourself, give it a new date right here. If the work is finished, open the
+        task and ask to close it.
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0" id="lockedTable">
+                <thead>
+                <tr><th>Task</th><th>Priority</th><th>Target date</th><th>Overdue</th><th>Allotted by</th><th></th></tr>
+                </thead>
+                <tbody>
+                {% for row in locked %}
+                <tr>
+                    <td>{{ row.task.taskname }}</td>
+                    <td>
+                        {% if row.task.priority == "HIGH" %}<span class="badge badge-danger">HIGH</span>
+                        {% elif row.task.priority == "NORMAL" %}<span class="badge badge-warning">NORMAL</span>
+                        {% else %}<span class="badge badge-primary">LOW</span>{% endif %}
+                    </td>
+                    <td>{{ row.task.target_date|date:"d/m/Y" }}</td>
+                    <td><span class="overdue-days">{{ row.days }} days</span><br>
+                        <small class="text-muted">limit {{ row.limit }}</small></td>
+                    <td>{% if row.own %}<i>You (allotted to yourself)</i>{% else %}{{ row.task.createdby.get_full_name|default:row.task.createdby.username }}{% endif %}</td>
+                    <td class="text-right text-nowrap">
+                        <a href="{% url 'task:taskdetail' row.task.id %}" class="btn btn-primary btn-sm">Open</a>
+                        {% if row.own %}
+                        <form method="post" action="{% url 'task:changedate' row.task.id %}" class="d-inline-flex align-items-center ml-2 own-date-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <input type="datetime-local" name="target_date" class="form-control form-control-sm mr-2" style="width: 12rem" required>
+                            <button type="submit" class="btn btn-success btn-sm change-own-date">Set new date</button>
+                        </form>
+                        {% elif row.task.id in recent_asks %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Asked <i class="fas fa-check"></i></button>
+                        {% else %}
+                        <form method="post" action="{% url 'task:askdate' row.task.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <button type="submit" class="btn btn-warning btn-sm ask-date">Ask for a new date</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if to_fix %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <b>Tasks you allotted</b> that lock someone out. Give each a new target date to free them.
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0" id="fixTable">
+                <thead>
+                <tr><th>Task</th><th>Assigned to</th><th>Target date</th><th>Overdue</th><th>New target date</th></tr>
+                </thead>
+                <tbody>
+                {% for row in to_fix %}
+                <tr>
+                    <td><a href="{% url 'task:taskdetail' row.task.id %}">{{ row.task.taskname }}</a></td>
+                    <td>{{ row.task.task_alloted_to.get_full_name|default:row.task.task_alloted_to.username }}</td>
+                    <td>{{ row.task.target_date|date:"d/m/Y" }}</td>
+                    <td><span class="overdue-days">{{ row.days }} days</span> <small class="text-muted">(limit {{ row.limit }})</small></td>
+                    <td>
+                        <form method="post" action="{% url 'task:changedate' row.task.id %}" class="form-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <input type="datetime-local" name="target_date" class="form-control form-control-sm mr-2" required>
+                            <button type="submit" class="btn btn-success btn-sm change-date">Save</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>

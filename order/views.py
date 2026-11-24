@@ -20,6 +20,8 @@ from customer.models import Address, Customer
 from myproject.access import accessview, forceview
 from .filters import OrderFilter, JobFilter, JobProcessFilter, JobMaterialFilter
 from task.models import Task
+from task.lock import locked_tasks
+from task.popup import popup_for_request
 from django.db.models import Count, Prefetch
 
 from django.http import JsonResponse
@@ -58,13 +60,11 @@ def joblist_old(request):
     context['myFilter'] = myFilter
     context['kgsum'] = kgsum
 
-    if request.session.pop('show_pending_tasks', False):
-        pending_tasks = Task.objects.filter(
-            task_alloted_to=request.user,
-            is_closed=False
-        ).select_related('createdby').order_by('target_date')[:10]
-        print("pending tasks count:", pending_tasks.count())
-        context['pending_tasks_popup'] = pending_tasks
+    if locked_tasks(request.user).exists():          # a task past its limit: no popup, no Later, no job list
+        return HttpResponseRedirect(reverse('task:locked'))
+    popup_tasks = popup_for_request(request)
+    if popup_tasks:
+        context['pending_tasks_popup'] = popup_tasks
 
     return render(request, 'job/joblist.html', context)
 
@@ -130,12 +130,11 @@ def joblist(request):
     )
     context['status_counts'] = status_counts  # e.g. status_counts.get('Pending', 0)
 
-    if request.session.pop('show_pending_tasks', False):
-        pending_tasks = Task.objects.filter(
-            task_alloted_to=request.user,
-            is_closed=False
-        ).select_related('createdby').order_by('target_date')[:10]
-        context['pending_tasks_popup'] = pending_tasks  # dropped the debug print() + its .count() query
+    if locked_tasks(request.user).exists():          # a task past its limit: no popup, no Later, no job list
+        return HttpResponseRedirect(reverse('task:locked'))
+    popup_tasks = popup_for_request(request)
+    if popup_tasks:
+        context['pending_tasks_popup'] = popup_tasks
 
     return render(request, 'job/joblist.html', context)
 
