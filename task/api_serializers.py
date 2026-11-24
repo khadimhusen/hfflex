@@ -1,7 +1,26 @@
+from datetime import date
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from meetings.richtext import rich_html
 from .models import Task, TaskMsg, Notification, RecurringTask
+
+
+class RichDescriptionMixin:
+    """The description is written in a rich-text editor: keep only safe formatting when it comes in,
+    and give out safe HTML (text typed before the editor existed is turned into lines)."""
+
+    def validate_description(self, value):
+        html = rich_html(value)
+        if not html:
+            raise serializers.ValidationError('This field may not be blank.')
+        return html
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['description'] = rich_html(instance.description)
+        return data
 
 
 class UserLookupSerializer(serializers.ModelSerializer):
@@ -15,13 +34,20 @@ class UserLookupSerializer(serializers.ModelSerializer):
         return obj.get_full_name() or obj.username
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class TaskSerializer(RichDescriptionMixin, serializers.ModelSerializer):
     """Mirrors TaskForm -- is_closed/close_date/request_to_close/
     request_date are all set only through the close/request_close actions
     below (toclosetask/requesttoclosetask in the old app), never directly
     through a plain PATCH."""
     task_alloted_to_name = serializers.CharField(source='task_alloted_to.get_full_name', read_only=True, default=None)
     createdby_name = serializers.CharField(source='createdby.get_full_name', read_only=True, default=None)
+
+    def validate_target_date(self, value):
+        # A new task cannot start already late. (Changing the date of an existing task is separate: the
+        # creator does that from the task page, and there the same rule applies.)
+        if self.instance is None and value.date() < date.today():
+            raise serializers.ValidationError('The target date cannot be before today.')
+        return value
 
     class Meta:
         model = Task
@@ -66,7 +92,7 @@ class TaskMsgSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class RecurringTaskSerializer(serializers.ModelSerializer):
+class RecurringTaskSerializer(RichDescriptionMixin, serializers.ModelSerializer):
     task_alloted_to_name = serializers.CharField(
         source='task_alloted_to.get_full_name', read_only=True, default=None
     )

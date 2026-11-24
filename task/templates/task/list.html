@@ -1,6 +1,7 @@
 {% extends 'home.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load task_tags %}
 
 {% block customcss %}
 <style>
@@ -110,7 +111,7 @@
                         <tr>
                             <td>{{ task.id }}</td>
                             <td>{{ task.taskname }}</td>
-                            <td>{{ task.description|truncatechars:40 }}</td>
+                            <td>{{ task.description|description_text|truncatechars:40 }}</td>
                             <td>{{ task.target_date|date:"d/m/Y" }}</td>
                             <td>
                                 {% if task.priority == "HIGH" %}

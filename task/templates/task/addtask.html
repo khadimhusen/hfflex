@@ -3,8 +3,10 @@
 {% load crispy_forms_tags %}
 
 {% block customcss %}
+{{ task_form.media }}
 <style>
 .task-form-card { border-top: 4px solid #007bff; }
+.ck-editor__editable_inline { min-height: 160px; }
 </style>
 {% endblock %}
 
@@ -48,7 +50,7 @@
 <script src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
 <script>
 $(function(){
-    $("#id_target_date").datetimepicker({ format:'d/m/Y', value: new Date() });
+    $("#id_target_date").datetimepicker({ format:'d/m/Y', value: new Date(), minDate: 0 });
 });
 </script>
 {% endblock %}
