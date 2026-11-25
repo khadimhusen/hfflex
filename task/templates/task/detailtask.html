@@ -10,14 +10,23 @@
 .task-description ul, .task-description ol { margin: .25rem 0 .5rem 1.2rem; padding-left: .8rem; }
 .task-description blockquote { border-left: 3px solid #ced4da; padding-left: .8rem; margin: .35rem 0; }
 .status-badge { font-size: 0.85rem; padding: 5px 12px; border-radius: 20px; }
-.chat-box { height: 420px; overflow-y: scroll; background: #f8f9fa; border-radius: 6px; padding: 12px; }
+.chat-box { min-height: 120px; max-height: 420px; overflow-y: auto; background: #f8f9fa; border-radius: 6px; padding: 12px; }
 .msg-bubble { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
 .msg-bubble.mine { border-left: 3px solid #007bff; }
 .msg-bubble.others { border-left: 3px solid #6c757d; }
 .msg-meta { font-size: 11px; color: #888; margin-bottom: 4px; }
 .msg-text { font-size: 13px; }
-.chat-input-area { background: #fff; border-top: 1px solid #dee2e6; padding: 12px; }
-#ajax-msg-form .form-group { margin-bottom: 6px; }
+.top-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.top-date { flex-wrap: nowrap; margin: 0; }
+.top-date input { width: auto; }
+.chat-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.chat-title { flex: 0 0 auto; white-space: nowrap; }
+.header-compose { flex: 1 1 340px; min-width: 0; margin: 0; }
+.compose-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.compose-text { flex: 1 1 260px; min-width: 0; resize: vertical; }
+.compose-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.compose-actions .file-pick { max-width: 150px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.compose-actions .file-pick.has-file { background: #d1ecf1; border-color: #17a2b8; color: #0c5460; }
 
 {% if task.request_to_close %}
 
@@ -37,12 +46,45 @@
 {% block content %}
 <div class="container mt-3">
 
-    <!-- Back -->
-    <div class="mb-3">
+    <!-- Back, and the close buttons beside it -->
+    <div class="mb-3 top-actions">
         <a href="{% url 'task:tasklist' %}" class="btn btn-sm btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Task List
         </a>
+        {% if tocloseform %}
+        <form action="{% url 'task:toclosetask' task.id %}" method="post" class="mb-0">
+            <div hidden>{{ tocloseform }}</div>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-success  btn-pulse">
+                <i class="fas fa-check mr-1"></i> Approve & Close Task
+            </button>
+        </form>
+        {% endif %}
+        {% if requesttocloseform %}
+        <form action="{% url 'task:requesttoclosetask' task.id %}" method="post" class="mb-0">
+            <div hidden>{{ requesttocloseform }}</div>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-warning">
+                <i class="fas fa-paper-plane mr-1"></i> Request to Close
+            </button>
+        </form>
+        {% endif %}
+        {% if can_change_date %}
+        <form method="post" action="{% url 'task:changedate' task.id %}" class="form-inline top-date" id="changeDateBox">
+            {% csrf_token %}
+            <label class="mr-2 mb-0"><b>Target date</b></label>
+            <input type="datetime-local" name="target_date" value="{{ target_input }}" class="form-control form-control-sm mr-2" required>
+            <button type="submit" class="btn btn-success btn-sm" id="changeDateButton">Change target date</button>
+        </form>
+        {% endif %}
     </div>
+
+    {% if can_change_date and creator_sees_locked %}
+    <div class="alert alert-danger py-2 shadow-sm" id="lockedOutNotice">
+        <i class="fas fa-lock mr-1"></i> {{ task.task_alloted_to.get_full_name|default:task.task_alloted_to.username }}
+        is locked out by this task until you give it a new target date.
+    </div>
+    {% endif %}
 
     {% if lock_info %}
     <div class="alert alert-danger shadow-sm" id="lockBox">
@@ -52,7 +94,7 @@
                 This task is <b>{{ lock_info.days }} days overdue</b>, more than the {{ lock_info.limit }} days allowed for
                 {{ task.priority }} priority.
                 {% if lock_info.own %}
-                <b>You cannot use the system until you give it a new target date (below).</b>
+                <b>You cannot use the system until you give it a new target date (at the top of this page).</b>
                 {% else %}
                 <b>You cannot use the system until
                 {{ task.createdby.get_full_name|default:task.createdby.username }} changes the target date.</b>
@@ -64,25 +106,6 @@
                 <button type="submit" class="btn btn-warning" id="askDateButton">Ask for a new date</button>
             </form>
             {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
-    {% if can_change_date %}
-    <div class="card shadow-sm mb-3 {% if creator_sees_locked %}border-danger{% endif %}" id="changeDateBox">
-        {% if creator_sees_locked %}
-        <div class="card-header bg-danger text-white">
-            <i class="fas fa-lock mr-1"></i> {{ task.task_alloted_to.get_full_name|default:task.task_alloted_to.username }}
-            is locked out by this task until you give it a new target date.
-        </div>
-        {% endif %}
-        <div class="card-body py-2">
-            <form method="post" action="{% url 'task:changedate' task.id %}" class="form-inline">
-                {% csrf_token %}
-                <label class="mr-2 mb-0"><b>Target date</b></label>
-                <input type="datetime-local" name="target_date" value="{{ target_input }}" class="form-control form-control-sm mr-2" required>
-                <button type="submit" class="btn btn-success btn-sm" id="changeDateButton">Change target date</button>
-            </form>
         </div>
     </div>
     {% endif %}
@@ -150,40 +173,40 @@
                     {% endif %}
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            {% if tocloseform or requesttocloseform %}
-            <hr class="my-2">
-            <div class="d-flex gap-2">
-                {% if tocloseform %}
-                <form action="{% url 'task:toclosetask' task.id %}" method="post" class="d-inline">
-                    <div hidden>{{ tocloseform }}</div>
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-success  btn-pulse">
-                        <i class="fas fa-check mr-1"></i> Approve & Close Task
-                    </button>
-                </form>
-                {% endif %}
-                {% if requesttocloseform %}
-                <form action="{% url 'task:requesttoclosetask' task.id %}" method="post" class="d-inline">
-                    <div hidden>{{ requesttocloseform }}</div>
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-warning">
-                        <i class="fas fa-paper-plane mr-1"></i> Request to Close
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-            {% endif %}
         </div>
     </div>
 
     <!-- Chat Section -->
     <div class="card shadow-sm">
-        <div class="card-header">
-            <i class="fas fa-comments mr-1 text-primary"></i>
-            <strong>Messages</strong>
-            <span class="badge badge-secondary ml-1" id="msg-count">{{ task.taskmsg.count }}</span>
+        <div class="card-header chat-header">
+            <div class="chat-title">
+                <i class="fas fa-comments mr-1 text-primary"></i>
+                <strong>Messages</strong>
+                <span class="badge badge-secondary ml-1" id="msg-count">{{ task.taskmsg.count }}</span>
+            </div>
+            {% if taskmsgform %}
+        <form id="ajax-msg-form" class="header-compose" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="compose-row">
+                <textarea class="form-control form-control-sm compose-text" id="id_msg_text"
+                          name="msg_text" rows="1" placeholder="Type a message..."></textarea>
+                <div class="compose-actions">
+                    <input type="file" class="custom-file-input d-none" id="id_msg_image" name="msg_image" accept="image/*">
+                    <label class="btn btn-outline-secondary btn-sm mb-0 file-pick" for="id_msg_image" title="Attach an image">
+                        <i class="fas fa-image"></i> <span class="file-name">Image</span>
+                    </label>
+                    <input type="file" class="custom-file-input d-none" id="id_msg_file" name="msg_file">
+                    <label class="btn btn-outline-secondary btn-sm mb-0 file-pick" for="id_msg_file" title="Attach a file">
+                        <i class="fas fa-paperclip"></i> <span class="file-name">File</span>
+                    </label>
+                    <button type="submit" class="btn btn-primary btn-sm" id="send-btn">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+            </div>
+            <small class="text-danger d-none" id="msg-error">Please enter a message, image, or file.</small>
+        </form>
+            {% endif %}
         </div>
 
         <!-- Chat Messages -->
@@ -219,39 +242,6 @@
             </div>
             {% endfor %}
         </div>
-
-        <!-- AJAX Message Input -->
-        {% if taskmsgform %}
-        <div class="chat-input-area">
-            <form id="ajax-msg-form" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="form-group">
-                    <textarea class="form-control form-control-sm" id="id_msg_text"
-                              name="msg_text" rows="2" placeholder="Type a message..."></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="col">
-                        <div class="custom-file form-control-sm">
-                            <input type="file" class="custom-file-input" id="id_msg_image" name="msg_image" accept="image/*">
-                            <label class="custom-file-label" for="id_msg_image">Image</label>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="custom-file form-control-sm">
-                            <input type="file" class="custom-file-input" id="id_msg_file" name="msg_file">
-                            <label class="custom-file-label" for="id_msg_file">File</label>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary btn-sm" id="send-btn">
-                            <i class="fas fa-paper-plane"></i> Send
-                        </button>
-                    </div>
-                </div>
-                <small class="text-danger d-none" id="msg-error">Please enter a message, image, or file.</small>
-            </form>
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -264,16 +254,23 @@ if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 
 const ajaxForm = document.getElementById('ajax-msg-form');
 if(ajaxForm){
-    // Custom file label update
+    // The file buttons show the chosen file's name (and are highlighted) until the message is sent
+    const filePlaceholder = id => (id === 'id_msg_image' ? 'Image' : 'File');
     document.querySelectorAll('.custom-file-input').forEach(input => {
         input.addEventListener('change', function(){
-            const label = this.nextElementSibling;
-            label.textContent = this.files[0] ? this.files[0].name : (this.id === 'id_msg_image' ? 'Image' : 'File');
+            const button = this.nextElementSibling;
+            const name = button.querySelector('.file-name');
+            name.textContent = this.files[0] ? this.files[0].name : filePlaceholder(this.id);
+            button.classList.toggle('has-file', !!this.files[0]);
+            button.title = this.files[0] ? this.files[0].name : (this.id === 'id_msg_image' ? 'Attach an image' : 'Attach a file');
         });
     });
 
     ajaxForm.addEventListener('submit', function(e){
         e.preventDefault();
+        // This form sends by AJAX and manages its own Send button, so keep the site-wide "Submitting..."
+        // guard (templates/home.html) away from it: it would restore the button with a blank label.
+        e.stopImmediatePropagation();
         const msgText = document.getElementById('id_msg_text').value.trim();
         const msgImage = document.getElementById('id_msg_image').files[0];
         const msgFile = document.getElementById('id_msg_file').files[0];
@@ -329,8 +326,9 @@ if(ajaxForm){
 
                 // Reset form
                 ajaxForm.reset();
-                document.querySelectorAll('.custom-file-label').forEach((l,i) => {
-                    l.textContent = i===0 ? 'Image' : 'File';
+                document.querySelectorAll('.file-pick').forEach((button, i) => {
+                    button.querySelector('.file-name').textContent = i === 0 ? 'Image' : 'File';
+                    button.classList.remove('has-file');
                 });
             } else {
                 alert('Error: ' + JSON.stringify(data.errors || data.error));
