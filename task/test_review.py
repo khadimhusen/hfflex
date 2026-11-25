@@ -1,5 +1,6 @@
 """Going through the due tasks: the review that starts with the login pop-up."""
 import datetime
+import itertools
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
@@ -17,7 +18,13 @@ def at(days, hour=12):
 
 
 class FakeSession(dict):
+    """Stands in for a login's session: only its key matters to the review."""
     modified = False
+    counter = itertools.count(1)
+
+    def __init__(self):
+        super().__init__()
+        self.session_key = f'fakesessionkey{next(self.counter):08d}'
 
 
 class ReviewBase(TestCase):
@@ -84,7 +91,7 @@ class SessionLogicTests(ReviewBase):
         popup.postpone(self.user, session, self.a)
         popup.postpone(self.user, session, self.b)
         self.assertEqual(popup.postpone(self.user, session, self.c), 0)
-        self.assertNotIn(popup.REVIEW_KEY, session)
+        self.assertIsNone(popup._review(session))                                  # nothing is kept any more
         self.assertFalse(popup.review_in_progress(self.user, session))
 
     def test_a_task_not_due_yet_cannot_be_put_off(self):
@@ -111,7 +118,7 @@ class SessionLogicTests(ReviewBase):
         session = FakeSession()
         popup.start_review(session, today=TODAY - datetime.timedelta(days=1))
         self.assertFalse(popup.review_in_progress(self.user, session, today=TODAY))
-        self.assertNotIn(popup.REVIEW_KEY, session)
+        self.assertIsNone(popup._review(session, today=TODAY))
 
 
 class TheWholeFlowTests(ReviewBase):

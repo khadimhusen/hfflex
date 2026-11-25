@@ -35,7 +35,7 @@ ALLOWED_PATHS = [re.compile(pattern) for pattern in (
     r'^/task/requesttoclose/\d+/$', r'^/task/toclosetask/\d+/$',
     r'^/task/changedate/\d+/$', r'^/task/askdate/\d+/$',
     r'^/task/notifications/read/$', r'^/task/pending-json/$',
-    r'^/api/task/', r'^/api/crm/me/$',
+    r'^/api/task/', r'^/api/crm/me/$', r'^/api/crm/(login|logout)/$',
 )]
 
 

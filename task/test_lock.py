@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from task import lock, popup
 from task.models import Notification, Task, TaskMsg
+from task.test_review import FakeSession
 
 TODAY = datetime.date.today()
 LOCKED_URL = '/task/locked/'
@@ -390,7 +391,7 @@ class LaterIsNotForLockingTasksTests(LockBase):
 
     def test_even_past_the_gate_it_is_not_recorded(self):
         task = self.make('HIGH', overdue=5)
-        session = {}
+        session = FakeSession()
         popup.start_review(session)
         self.assertFalse(popup.can_postpone(self.worker, session, task))
         popup.postpone(self.worker, session, task)
@@ -398,7 +399,7 @@ class LaterIsNotForLockingTasksTests(LockBase):
 
     def test_within_the_limit_later_still_works(self):
         task = self.make('HIGH', overdue=2)
-        session = {}
+        session = FakeSession()
         popup.start_review(session)
         self.assertTrue(popup.can_postpone(self.worker, session, task))
 
@@ -454,7 +455,7 @@ class NoLaterForATaskThatLocksTests(LockBase):
     def test_later_cannot_be_recorded_for_it_by_any_route(self):
         client = self.client_for(self.worker)
         self.assertEqual(client.post(f'/task/later/{self.locking.pk}/', HTTP_X_REQUESTED_WITH='XMLHttpRequest').status_code, 403)
-        session = {}
+        session = FakeSession()
         popup.start_review(session)
         popup.postpone(self.worker, session, self.locking)
         self.assertNotIn(self.locking.pk, popup.postponed_ids(session))

@@ -11,9 +11,9 @@ from .models import Task, TaskMsg, Notification
 from django.contrib.auth.decorators import login_required
 from myproject.access import accessview
 from .filters import TaskFilter
-from . import lock, popup
-from datetime import date as date_type, datetime, timedelta
-from django.utils.dateparse import parse_date, parse_datetime
+from . import date_change, lock, popup
+from .date_change import ASK_TEXT
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
@@ -142,30 +142,10 @@ def task_later(request, id):
     return HttpResponseRedirect(reverse('order:joblist'))
 
 
-ASK_TEXT = 'Please change the target date of this task.'
-
-
-def _person(user):
-    return (user.get_full_name().strip() or user.username) if user else ''
-
-
 def _safe_next(request, fallback):
     """Where to go back to: only the lock page or a task page, never an outside address."""
     target = request.POST.get('next', '')
     return target if target == reverse('task:locked') or target.startswith('/task/detail/') else fallback
-
-
-def _parse_target(text, current):
-    """A new target date from the form: date and time, or just a date (keeping the old time)."""
-    text = (text or '').strip().replace(' ', 'T')
-    try:
-        when = parse_datetime(text) if 'T' in text else None
-        if when is None:
-            day = parse_date(text)
-            when = datetime.combine(day, current.time()) if day else None
-    except ValueError:                       # well-formed but impossible, like 2030-13-45
-        return None
-    return when.replace(tzinfo=None, second=0, microsecond=0) if when else None
 
 
 @login_required(login_url='/login/')
@@ -188,58 +168,26 @@ def task_locked(request):
 @login_required(login_url='/login/')
 @require_POST
 def change_target_date(request, id):
-    """The person who created (allotted) a task can give it a new target date, whoever it is
-    assigned to: it also frees the assignee if the task had locked them. It is noted in the task
-    chat and the assignee is told (unless the creator gave the task to themselves)."""
+    """The person who created (allotted) a task can give it a new target date (the rules are in
+    date_change.py): it also frees the assignee if the task had locked them."""
     task = get_object_or_404(Task, id=id)
     back = _safe_next(request, reverse('task:taskdetail', kwargs={'id': id}))
-    if request.user != task.createdby:
-        messages.error(request, 'Only the person who allotted this task can change its target date.')
+    outcome = date_change.change_date(task, request.user, request.POST.get('target_date'))
+    getattr(messages, outcome.level)(request, outcome.text)
+    if outcome.code == 'forbidden':
         return HttpResponseRedirect(reverse('task:taskdetail', kwargs={'id': id}))
-    if task.is_closed:
-        messages.error(request, 'This task is closed.')
-        return HttpResponseRedirect(back)
-    new = _parse_target(request.POST.get('target_date'), task.target_date)
-    if new is None:
-        messages.error(request, 'Give a valid target date.')
-        return HttpResponseRedirect(back)
-    if new.date() < date_type.today():
-        messages.error(request, 'The new target date cannot be in the past.')
-        return HttpResponseRedirect(back)
-    old = task.target_date
-    task.target_date = new
-    task.editedby = request.user
-    task.save()
-    note = f'Target date changed from {old:%d/%m/%Y %H:%M} to {new:%d/%m/%Y %H:%M} by {_person(request.user)}.'
-    TaskMsg.objects.create(task=task, msg_text=note, createdby=request.user)
-    if task.task_alloted_to_id != request.user.pk:
-        create_notification(task.task_alloted_to, task,
-                            f'{_person(request.user)} changed the target date of "{task.taskname}" to {new:%d/%m/%Y}.')
-    messages.success(request, f'Target date changed to {new:%d/%m/%Y %H:%M}.')
     return HttpResponseRedirect(back)
 
 
 @login_required(login_url='/login/')
 @require_POST
 def ask_date_change(request, id):
-    """The assignee of an overdue task asks whoever allotted it for a new target date: a message
-    in the task chat plus a notification. Once an hour per task is plenty."""
+    """The assignee of an overdue task asks whoever allotted it for a new target date (the rules are
+    in date_change.py): a message in the task chat plus a notification."""
     task = get_object_or_404(Task, id=id, task_alloted_to=request.user, is_closed=False)
     back = _safe_next(request, reverse('task:taskdetail', kwargs={'id': id}))
-    creator = task.createdby
-    if creator is None or creator == request.user:
-        messages.error(request, 'There is nobody else to ask: you allotted this task yourself.')
-        return HttpResponseRedirect(back)
-    if TaskMsg.objects.filter(task=task, createdby=request.user, msg_text__startswith=ASK_TEXT,
-                              created__gte=datetime.now() - timedelta(hours=1)).exists():
-        messages.info(request, f'You already asked {_person(creator)}. Please wait for the new date.')
-        return HttpResponseRedirect(back)
-    days = max(lock.days_overdue(task), 0)
-    TaskMsg.objects.create(task=task, createdby=request.user,
-                           msg_text=f'{ASK_TEXT} It is {days} day(s) overdue and I cannot continue until it changes.')
-    create_notification(creator, task, f'{_person(request.user)} asks you to change the target date of '
-                                       f'"{task.taskname}" ({days} day(s) overdue).')
-    messages.success(request, f'{_person(creator)} has been asked to change the target date.')
+    outcome = date_change.ask_for_date(task, request.user)
+    getattr(messages, outcome.level)(request, outcome.text)
     return HttpResponseRedirect(back)
 
 

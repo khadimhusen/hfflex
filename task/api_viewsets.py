@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
+from . import date_change, lock, popup
 from .api_serializers import (
     NotificationSerializer, RecurringTaskSerializer, TaskMsgSerializer, TaskSerializer, UserLookupSerializer,
 )
@@ -100,6 +101,46 @@ class TaskViewSet(viewsets.ModelViewSet):
             message=f'{request.user} requested to close task "{task.taskname}".',
         )
         return Response(self.get_serializer(task).data)
+
+    @action(detail=True, methods=['get'], url_path='lock-state')
+    def lock_state(self, request, pk=None):
+        """What this task's page should offer the user: Later (during the due-task review), the
+        lock notice (the task locks its assignee), and the new-date form (for its creator)."""
+        task = self.get_object()
+        user = request.user
+        locking = lock.is_locking(task)
+        can_change = user == task.createdby and not task.is_closed
+        info = lock.describe(task) if user == task.task_alloted_to and locking else None
+        return Response({
+            'show_later': popup.can_postpone(user, request.session, task),
+            'lock': {'days': info['days'], 'limit': info['limit'], 'own': info['own']} if info else None,
+            'can_change_date': can_change,
+            'creator_sees_locked': can_change and locking and task.createdby_id != task.task_alloted_to_id,
+            'asked_recently': date_change.asked_recently(user, task),
+            'creator_name': date_change.person(task.createdby),
+            'assignee_name': date_change.person(task.task_alloted_to),
+        })
+
+    @action(detail=True, methods=['post'], url_path='change-date')
+    def change_date(self, request, pk=None):
+        """The task's creator gives it a new target date (also frees an assignee it had locked)."""
+        task = self.get_object()
+        outcome = date_change.change_date(task, request.user, request.data.get('target_date'))
+        if not outcome.ok:
+            code = 403 if outcome.code == 'forbidden' else 400
+            return Response({'detail': outcome.text, 'code': outcome.code}, status=code)
+        return Response(self.get_serializer(task).data)
+
+    @action(detail=True, methods=['post'], url_path='ask-date')
+    def ask_date(self, request, pk=None):
+        """The assignee asks the creator for a new target date (once an hour per task)."""
+        task = self.get_object()
+        if task.task_alloted_to_id != request.user.id or task.is_closed:
+            return Response({'detail': 'Only the person this open task is assigned to can ask for a new date.'},
+                            status=403)
+        outcome = date_change.ask_for_date(task, request.user)
+        return Response({'ok': outcome.ok, 'level': outcome.level, 'detail': outcome.text, 'code': outcome.code},
+                        status=200 if outcome.ok or outcome.level == 'info' else 400)
 
     @action(detail=False, methods=['get'], url_path='nav-summary')
     def nav_summary(self, request):

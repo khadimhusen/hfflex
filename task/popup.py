@@ -2,19 +2,30 @@
 
 At login a pop-up lists the user's pending tasks. Tasks due today or earlier have to be
 gone through: each is either done, or put off with "Later" -- from the pop-up itself, or
-from the task's own page after "Open". Which ones were put off is remembered in the
-session (`task_review`), so the review survives moving between pages. While a due task
-is still not put off, the job list shows the pop-up again. When the last one is put off
-(or closed) the review is over.
+from the task's own page after "Open". Which ones were put off is remembered for the login
+(the session key), so the review survives moving between pages. While a due task is still
+not put off, the pop-up shows again. When the last one is put off (or closed) the review
+is over.
 
-Nothing here touches the database except reading Task."""
-from datetime import date as date_type, datetime, time
+Where it is remembered: NOT inside the session data itself. Every request saves the whole
+session (the idle-timeout middleware touches it each time), so with several requests in
+flight at once -- which the frontend does all the time -- one that started before the
+review was written would save its old copy over it, and the review would silently
+disappear. It gets a row of its own in the sessions table instead, which only this module
+writes (it expires with the session, and `clearsessions` removes it). No migration."""
+import hashlib
+from datetime import date as date_type, datetime, time, timedelta
+
+from django.contrib.sessions.backends.db import SessionStore
+from django.contrib.sessions.models import Session
+from django.db import transaction
+from django.utils import timezone
 
 from . import lock
 from .models import Task
 
 UPCOMING_SHOWN = 10          # tasks not due yet that are listed for information
-REVIEW_KEY = 'task_review'   # session: {'day': 'YYYY-MM-DD', 'postponed': [task ids]}
+REVIEW_DAYS = 2              # a review row outlives its day a little, then is ignored and cleaned up
 
 
 def _today(today=None):
@@ -35,22 +46,51 @@ def _open_tasks(user):
             .select_related('createdby').order_by('target_date', 'id'))
 
 
-# ---- the review in the session ------------------------------------------------------
+# ---- the review: {'day': 'YYYY-MM-DD', 'postponed': [task ids]} in a row of its own --------------
+
+def _row_key(session):
+    """The row's key for this login, or None when the session has none yet."""
+    session_key = getattr(session, 'session_key', None)
+    if not session_key:
+        return None
+    return 'tr' + hashlib.sha256(session_key.encode()).hexdigest()[:32]
+
+
+def _load(key):
+    row = Session.objects.filter(session_key=key, expire_date__gt=timezone.now()).first()
+    return SessionStore().decode(row.session_data) if row else None
+
+
+def _save(key, review):
+    Session.objects.update_or_create(session_key=key, defaults={
+        'session_data': SessionStore().encode(review),
+        'expire_date': timezone.now() + timedelta(days=REVIEW_DAYS),
+    })
+
 
 def _review(session, today=None):
     """The review in progress, or None. A review belongs to the day it started: the next
     day it is over, so tasks that become due overnight do not trap a long-lived session."""
-    review = session.get(REVIEW_KEY)
+    key = _row_key(session)
+    review = _load(key) if key else None
     if not review:
         return None
     if review.get('day') != _today(today).isoformat():
-        session.pop(REVIEW_KEY, None)
+        end_review(session)
         return None
     return review
 
 
 def start_review(session, today=None):
-    session[REVIEW_KEY] = {'day': _today(today).isoformat(), 'postponed': []}
+    key = _row_key(session)
+    if key:
+        _save(key, {'day': _today(today).isoformat(), 'postponed': []})
+
+
+def end_review(session):
+    key = _row_key(session)
+    if key:
+        Session.objects.filter(session_key=key).delete()
 
 
 def postponed_ids(session, today=None):
@@ -72,7 +112,7 @@ def review_in_progress(user, session, today=None):
         return False
     if due_remaining(user, session, today):
         return True
-    session.pop(REVIEW_KEY, None)
+    end_review(session)
     return False
 
 
@@ -86,16 +126,21 @@ def can_postpone(user, session, task, today=None):
 
 def postpone(user, session, task, today=None):
     """Put a due task off. Returns how many due tasks are still left (0 ends the review)."""
-    review = _review(session, today)
-    if (review is None or not is_due(task, today) or lock.is_locking(task, today)
+    if (_review(session, today) is None or not is_due(task, today) or lock.is_locking(task, today)
             or lock.locked_tasks(user, today).exists()):          # a locked user puts nothing off
         return len(due_remaining(user, session, today))
-    if task.id not in review['postponed']:
-        review['postponed'].append(task.id)
-        session.modified = True
+    key = _row_key(session)
+    with transaction.atomic():                  # two Later clicks at once must both be kept
+        row = Session.objects.select_for_update().filter(session_key=key).first()
+        if row is not None:
+            review = SessionStore().decode(row.session_data)
+            if task.id not in review['postponed']:
+                review['postponed'].append(task.id)
+                row.session_data = SessionStore().encode(review)
+                row.save(update_fields=['session_data'])
     remaining = len(due_remaining(user, session, today))
     if remaining == 0:
-        session.pop(REVIEW_KEY, None)
+        end_review(session)
     return remaining
 
 
