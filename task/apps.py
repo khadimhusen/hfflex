@@ -18,6 +18,10 @@ class TaskConfig(AppConfig):
     def ready(self):
         import task.signals
         from django.conf import settings
+        # A server's settings.py may have no CKEDITOR_5_CONFIGS at all (the widget then shows an error and a
+        # two-button toolbar), so create it when it is missing, and add ours without touching other entries.
         configs = getattr(settings, 'CKEDITOR_5_CONFIGS', None)
-        if configs is not None:
-            configs.setdefault('task_description', TASK_EDITOR_CONFIG)
+        if configs is None:
+            configs = {}
+            settings.CKEDITOR_5_CONFIGS = configs
+        configs.setdefault('task_description', TASK_EDITOR_CONFIG)

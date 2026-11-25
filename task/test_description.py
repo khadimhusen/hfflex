@@ -160,3 +160,45 @@ class ApiTests(DescriptionBase):
         serializer = RecurringTaskSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(serializer.validated_data['description'], '<p>x</p>')
+
+
+class ServerWithoutEditorSettingsTests(DescriptionBase):
+    """Contabo's settings.py has no CKEDITOR_5_CONFIGS at all: the editor must still get its toolbar."""
+
+    def run_ready(self):
+        from django.apps import apps
+        apps.get_app_config('task').ready()
+
+    def test_the_setting_is_created_when_the_server_has_none(self):
+        from django_ckeditor_5.widgets import CKEditor5Widget
+        with self.settings():
+            del settings.CKEDITOR_5_CONFIGS                                   # as on the server
+            self.assertFalse(hasattr(settings, 'CKEDITOR_5_CONFIGS'))
+            self.run_ready()
+            widget = CKEditor5Widget(config_name='task_description')
+            self.assertEqual(widget._config_errors, [])                       # no "Check the correct settings" error
+            items = widget.config['toolbar']['items']
+            for wanted in ('bold', 'italic', 'underline', 'bulletedList', 'numberedList', 'link', 'undo'):
+                self.assertIn(wanted, items)
+
+    def test_a_form_built_on_such_a_server_has_the_full_toolbar_and_no_error(self):
+        with self.settings():
+            del settings.CKEDITOR_5_CONFIGS
+            self.run_ready()
+            form = TaskForm()
+            self.assertEqual(form.fields['description'].widget._config_errors, [])
+            html = str(form['description'])
+            self.assertNotIn('Check the correct settings', html)
+            self.assertIn('bulletedList', html)
+
+    def test_entries_a_server_already_has_are_kept(self):
+        with self.settings(CKEDITOR_5_CONFIGS={'default': {'toolbar': ['bold']}, 'task_description': {'toolbar': ['link']}}):
+            self.run_ready()
+            self.assertEqual(settings.CKEDITOR_5_CONFIGS['default'], {'toolbar': ['bold']})
+            self.assertEqual(settings.CKEDITOR_5_CONFIGS['task_description'], {'toolbar': ['link']})   # theirs wins
+
+    def test_other_entries_are_not_invented(self):
+        with self.settings():
+            del settings.CKEDITOR_5_CONFIGS
+            self.run_ready()
+            self.assertEqual(list(settings.CKEDITOR_5_CONFIGS), ['task_description'])
