@@ -57,6 +57,7 @@ urlpatterns = [
                   path('api/inkstore/', include('inkstore.api_urls')),
                   path('api/task/', include('task.api_urls')),
                   path('api/meetings/', include('meetings.api_urls')),
+                  path('api/recruitment/', include('recruitment.api_urls')),
                   path('crm/', views.serve_crm_spa, name='crm-spa'),
                   path('crm/<path:path>', views.serve_crm_spa, name='crm-spa-assets'),
 

@@ -346,6 +346,11 @@ def me_payload(u):
     # Minutes of meeting: like Tasks, open to every logged-in user (what a user
     # sees inside it is limited to meetings they created or attended; staff see all).
     is_meetings = True
+    # Recruitment: HR (staff) runs openings, candidates and interviews. Anyone put on an
+    # interview panel gets "My Interviews" to read the resume and submit their scorecard.
+    from recruitment.models import InterviewFeedback
+    is_recruitment = is_staff
+    is_interviews = is_staff or InterviewFeedback.objects.filter(interviewer=u).exists()
     # Ink store has no department gate of its own (the old views were
     # login_required only), so this is the same TEMPORARY staff-only
     # rollout gate as the modules above, matching IsInkStoreUser.
@@ -381,6 +386,8 @@ def me_payload(u):
             'stock': is_stock,
             'planning': is_planning,
             'meetings': is_meetings,
+            'recruitment': is_recruitment,
+            'interviews': is_interviews,
             'manpower': is_manpower,
             'bank': is_bank,
             'returnable': is_returnable,
