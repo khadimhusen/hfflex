@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
 
+from attendance.shifts import CHOICES as SHIFT_CHOICES
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     designation = models.CharField(max_length=64, null=False, blank=True)
@@ -77,6 +79,8 @@ class Worker(models.Model):
     date_of_join = models.DateField()
     date_of_releave = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    # The shift this person normally works; attendance uses it for the day's shift and overtime.
+    default_shift = models.CharField(max_length=10, choices=SHIFT_CHOICES, blank=True)
 
     def __str__(self):
         return str(self.worker_name+ " - " + (self.emp_code or "No-id"))

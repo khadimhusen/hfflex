@@ -12,13 +12,13 @@ from rest_framework.response import Response
 
 from employee.models import Worker
 
-from . import services
+from . import services, shifts
 from .api_serializers import (
     AttendanceDaySerializer, DayWriteSerializer, PunchCreateSerializer, PunchLogSerializer, hours_text,
 )
 from .exports import excel_filename, generate_month_xlsx
 from .filters import DayFilter, PunchFilter
-from .models import AttendanceDay, PunchLog
+from .models import AttendanceDay, PunchLog, ShiftAssignment
 from .permissions import IsAttendanceUser
 
 XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -221,8 +221,98 @@ class AttendanceDayViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mix
         """Who can be looked up person by person: everyone active, and anyone who has days on record
         (so a worker who has left can still be opened for a past month)."""
         workers = Worker.objects.filter(Q(is_active=True) | Q(attendance_days__isnull=False)).distinct()             .order_by('worker_name')
-        return Response([{'id': w.pk, 'name': w.worker_name, 'emp_code': w.emp_code or '', 'is_active': w.is_active}
-                         for w in workers])
+        return Response([{'id': w.pk, 'name': w.worker_name, 'emp_code': w.emp_code or '', 'is_active': w.is_active,
+                          'default_shift': w.default_shift} for w in workers])
+
+    @action(detail=False, methods=['get'], url_path='shifts-on')
+    def shifts_on(self, request):
+        """The shift of everyone employed on a day: ?date=YYYY-MM-DD, and why (see services.shifts_on)."""
+        day = _date_param(request)
+        rows = []
+        for r in services.shifts_on(day):
+            entry = r['entry']
+            rows.append({'worker': r['worker'].pk, 'worker_name': r['worker'].worker_name,
+                         'emp_code': r['worker'].emp_code or '', 'shift': r['shift'], 'source': r['source'],
+                         'usual': r['usual'],
+                         'entry': {'id': entry.pk, 'from_date': entry.from_date.isoformat(),
+                                   'to_date': entry.to_date.isoformat()} if entry else None})
+        return Response({'date': day.isoformat(), 'rows': rows})
+
+    @action(detail=False, methods=['get'], url_path='shift-ranges')
+    def shift_ranges(self, request):
+        """The date ranges shifts were given for, newest first: optionally ?worker=<id>."""
+        entries = ShiftAssignment.objects.select_related('worker')
+        if request.query_params.get('worker'):
+            entries = entries.filter(worker_id=request.query_params['worker'])
+        return Response([{'id': e.pk, 'worker': e.worker_id, 'worker_name': e.worker.worker_name,
+                          'emp_code': e.worker.emp_code or '', 'from_date': e.from_date.isoformat(),
+                          'to_date': e.to_date.isoformat(), 'shift': e.shift} for e in entries[:500]])
+
+    @staticmethod
+    def _assign_workers(request):
+        ids = request.data.get('workers')
+        if not isinstance(ids, list) or not ids:
+            raise ValidationError({'workers': 'Choose at least one worker.'})
+        try:
+            workers = list(Worker.objects.filter(pk__in=[int(i) for i in ids]))
+        except (TypeError, ValueError):
+            raise ValidationError({'workers': 'Choose workers from the list.'})
+        if len(workers) != len({int(i) for i in ids}):
+            raise ValidationError({'workers': 'One of those workers does not exist.'})
+        return workers
+
+    @action(detail=False, methods=['post'], url_path='shift-overlaps')
+    def shift_overlaps(self, request):
+        """Before giving a shift: which entries of those workers it would replace or cut back
+        ({workers, from_date, to_date}), and what each would keep."""
+        workers = self._assign_workers(request)
+        try:
+            found = services.shift_conflicts(workers, _date_param(request, 'from_date'), _date_param(request, 'to_date'))
+        except services.AttendanceError as error:
+            raise ValidationError({'detail': str(error)})
+        return Response({'overlaps': [{
+            'id': c['entry'].pk, 'worker': c['entry'].worker_id, 'worker_name': c['entry'].worker.worker_name,
+            'emp_code': c['entry'].worker.emp_code or '', 'from_date': c['entry'].from_date.isoformat(),
+            'to_date': c['entry'].to_date.isoformat(), 'shift': c['entry'].shift,
+            'kept': [{'from_date': a.isoformat(), 'to_date': b.isoformat()} for a, b in c['kept']],
+        } for c in found]})
+
+    @action(detail=False, methods=['post'], url_path='assign-shift')
+    def assign_shift(self, request):
+        """Give workers a shift from one date to another: {workers: [ids], from_date, to_date, shift}."""
+        workers = self._assign_workers(request)
+        try:
+            changed = services.assign_shift(workers, _date_param(request, 'from_date'), _date_param(request, 'to_date'),
+                                            request.data.get('shift') or '', request.user)
+        except services.AttendanceError as error:
+            raise ValidationError({'detail': str(error)})
+        return Response({'assigned': len(workers), 'rows_changed': changed})
+
+    @action(detail=False, methods=['post'], url_path='remove-shift-range')
+    def remove_shift_range(self, request):
+        """Take one entry away: {id}. Its days fall back to the entry before them."""
+        try:
+            entry = ShiftAssignment.objects.select_related('worker').get(pk=int(request.data.get('id', '')))
+        except (ValueError, TypeError, ShiftAssignment.DoesNotExist):
+            raise ValidationError({'id': 'That entry does not exist.'})
+        return Response({'rows_changed': services.remove_assignment(entry)})
+
+    @action(detail=False, methods=['post'], url_path='set-shift')
+    def set_shift(self, request):
+        """Set the shift a worker normally works (blank clears it) and work this month's days out again
+        with it. Days of earlier months, and days corrected by hand, are left as they are."""
+        try:
+            worker = Worker.objects.get(pk=int(request.data.get('worker', '')))
+        except (ValueError, TypeError, Worker.DoesNotExist):
+            raise ValidationError({'worker': 'Choose a worker.'})
+        shift = request.data.get('shift') or ''
+        if shift and shift not in shifts.BY_KEY:
+            raise ValidationError({'shift': 'Choose one of the shifts.'})
+        worker.default_shift = shift
+        worker.save(update_fields=['default_shift'])
+        today = date_type.today()
+        changed = services.rebuild_days(worker, today.replace(day=1), today)
+        return Response({'worker': worker.pk, 'default_shift': worker.default_shift, 'rows_changed': changed})
 
     @action(detail=False, methods=['get'])
     def person(self, request):
@@ -235,7 +325,7 @@ class AttendanceDayViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mix
         data = services.person_month(worker, year, month)
         return Response({
             'worker': {'id': worker.pk, 'name': worker.worker_name, 'emp_code': worker.emp_code or '',
-                       'is_active': worker.is_active},
+                       'is_active': worker.is_active, 'default_shift': worker.default_shift},
             'month': f'{year}-{month:02d}',
             'counts': data['counts'], 'not_marked': data['not_marked'], 'paid_days': data['paid_days'],
             'worked_text': hours_text(data['worked_minutes']), 'overtime_text': hours_text(data['overtime_minutes']),

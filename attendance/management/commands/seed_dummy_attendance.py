@@ -15,12 +15,21 @@ from datetime import date, datetime, time, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from attendance import rules, services
-from attendance.models import AttendanceDay, PunchLog
+from attendance import rules, services, shifts
+from attendance.models import AttendanceDay, PunchLog, ShiftAssignment
 from employee.models import Worker
 
 DEVICE = 'DEMO'
 REMARK = 'Demo:'
+def monday_of(day):
+    return day - timedelta(days=day.weekday())
+
+
+def rotation_shift(who, monday):
+    """The shift a rotating worker is given for the week starting on this Monday."""
+    return ['1st', '2nd', '3rd'][(monday.toordinal() // 7 + who['rotation']) % 3]
+
+
 DEMO_HOLIDAYS = {date(2026, 11, 8): 'Diwali'}
 UNKNOWN_CODES = {'9901': 6, '9902': 3}        # punches from cards nobody has been given a worker for
 
@@ -88,6 +97,21 @@ class Command(BaseCommand):
             raise CommandError('There are no active workers with an employee code to make attendance for.')
 
         people = {w.pk: self.personality(rng) for w in workers}
+        for worker in workers:                    # a worker's own shift wins; the rest are given one (left in place by --clear)
+            who = people[worker.pk]
+            if who['shift'] != 'rotating':
+                if worker.default_shift:
+                    who['shift'] = worker.default_shift
+                else:
+                    worker.default_shift = who['shift']
+                    worker.save(update_fields=['default_shift'])
+            else:                                 # a new shift each week, 1st -> 2nd -> 3rd (it wins over the usual one)
+                monday = monday_of(first_day)
+                while monday <= today:
+                    ShiftAssignment.objects.update_or_create(
+                        worker=worker, from_date=monday,
+                        defaults={'to_date': monday + timedelta(days=6), 'shift': rotation_shift(who, monday)})
+                    monday += timedelta(days=7)
         per_day, manual = {}, []
         for worker in workers:
             who = people[worker.pk]
@@ -174,22 +198,28 @@ class Command(BaseCommand):
     def personality(rng):
         """How one worker behaves: which shift, which weekly off day, how often late or away."""
         return {
-            'shift': rng.choices(['day', 'night', 'rotating'], [60, 20, 20])[0],
+            'shift': rng.choices(['General', '1st', '2nd', '3rd', 'Day', 'Night', 'rotating'],
+                                 [25, 20, 15, 10, 10, 10, 10])[0],
             'weekly_off': rng.randrange(7),
             'late': rng.uniform(0.02, 0.18),
             'absent': rng.uniform(0.01, 0.07),
             'leave': rng.uniform(0.0, 0.03),
             'zero_padded': rng.random() < 0.1,    # this reader sends the code as 01003, not 1003
+            'rotation': rng.randrange(3),         # where in the 1st, 2nd, 3rd turn a rotating worker starts
         }
 
     @staticmethod
     def punches_for(worker, day, who, rng, now):
-        night = who['shift'] == 'night' or (who['shift'] == 'rotating' and day.isocalendar()[1] % 2 == 0)
-        start = time(20, 0) if night else time(8, 0)
-        came = datetime.combine(day, start) + timedelta(minutes=int(rng.gauss(0, 7)))
+        key = who['shift']
+        if key == 'rotating':                     # the shift given for that week
+            key = rotation_shift(who, monday_of(day))
+        scheduled = shifts.BY_KEY[key]
+        length = timedelta(minutes=scheduled.minutes)
+        came = datetime.combine(day, time(scheduled.start_hour, scheduled.start_minute)) \
+            + timedelta(minutes=int(rng.gauss(0, 7)))
         if rng.random() < who['late']:
             came += timedelta(minutes=rng.randrange(20, 90))
-        stay = timedelta(hours=9, minutes=int(rng.gauss(0, 12)))
+        stay = length + timedelta(minutes=45 + int(rng.gauss(0, 12)))         # the shift plus the break
         roll = rng.random()
         if roll < 0.05:
             stay = timedelta(hours=4, minutes=rng.randrange(20, 60))          # half day

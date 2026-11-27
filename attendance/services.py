@@ -1,5 +1,6 @@
 """Attendance logic: raw punches in, one row per worker per day out."""
 import calendar
+from bisect import bisect_right
 from collections import defaultdict
 from datetime import date as date_type, datetime, time, timedelta
 
@@ -9,8 +10,8 @@ from django.utils.dateparse import parse_datetime
 
 from employee.models import Worker
 
-from . import rules
-from .models import AttendanceDay, PunchLog
+from . import rules, shifts
+from .models import AttendanceDay, PunchLog, ShiftAssignment
 
 NO_TIME_STATUSES = (AttendanceDay.ABSENT, AttendanceDay.LEAVE, AttendanceDay.WEEKLY_OFF, AttendanceDay.HOLIDAY)
 PUNCH_STATUSES = (AttendanceDay.PRESENT, AttendanceDay.HALF, AttendanceDay.REVIEW)
@@ -113,7 +114,7 @@ def record_punches(rows, source='manual', user=None):
     with transaction.atomic():
         PunchLog.objects.bulk_create(new_logs, batch_size=1000, ignore_conflicts=True)
         for worker_id, days in touched.items():
-            rebuild_days(Worker.objects.get(pk=worker_id), min(days), max(days))
+            rebuild_days(Worker.objects.get(pk=worker_id), min(days), max(days) + timedelta(days=1))
     result['created'] = len(new_logs)
     return result
 
@@ -131,7 +132,7 @@ def relink_punches():
             touched[worker.pk].append(punch.punched_at.date())
             attached += 1
     for worker_id, days in touched.items():
-        rebuild_days(Worker.objects.get(pk=worker_id), min(days), max(days))
+        rebuild_days(Worker.objects.get(pk=worker_id), min(days), max(days) + timedelta(days=1))
     return {'attached': attached, 'still_unmatched': PunchLog.objects.filter(worker__isnull=True).count()}
 
 
@@ -158,15 +159,146 @@ def _sessions(times):
     return sessions
 
 
+# ---- shifts given for a range of dates ---------------------------------------------
+# A worker's ShiftAssignment rows are date ranges (from_date to to_date, both days included) that
+# never overlap. The shift on a day is the one of the range the day falls in; a day outside every
+# range takes the shift of the last entry before it; before the first entry (or with none at all)
+# it is the worker's usual shift, and with that unset the shift is guessed from the punches.
+
+def shift_lookup(worker, date_from, date_to):
+    """A function date -> the shift this worker is on that day. (A rebuild reads punches up to two
+    days past its range, so entries starting up to then are loaded.)"""
+    spans = list(ShiftAssignment.objects.filter(worker=worker, from_date__lte=date_to + timedelta(days=2))
+                 .order_by('from_date').values_list('from_date', 'shift'))
+    starts = [start for start, _ in spans]
+    usual = worker.default_shift
+
+    def shift_on(day):
+        i = bisect_right(starts, day) - 1               # the last entry that began on or before the day
+        return spans[i][1] if i >= 0 else usual
+    return shift_on
+
+
+def shifts_on(day):
+    """Everyone employed on a day with the shift they have then, and why: 'range' (the day is in an
+    entry), 'carried' (the last entry before it), 'usual' (their usual shift) or '' (none)."""
+    workers = list(Worker.objects.filter(is_active=True, date_of_join__lte=day)
+                   .filter(Q(date_of_releave__isnull=True) | Q(date_of_releave__gte=day)).order_by('worker_name'))
+    last = {}
+    for entry in ShiftAssignment.objects.filter(worker__in=workers, from_date__lte=day).order_by('from_date'):
+        last[entry.worker_id] = entry
+    rows = []
+    for worker in workers:
+        entry = last.get(worker.pk)
+        if entry:
+            source, shift = ('range' if entry.to_date >= day else 'carried'), entry.shift
+        else:
+            source, shift = ('usual' if worker.default_shift else ''), worker.default_shift
+        rows.append({'worker': worker, 'shift': shift, 'source': source, 'entry': entry, 'usual': worker.default_shift})
+    return rows
+
+
+def _rebuild_since(worker, start):
+    """Work a worker's days out again from a date to today (the days after an entry took the shift of
+    the last one before them, so a change reaches forward). A day earlier, for a 3rd-shift punch the
+    evening before. Nothing is read past today: there are no punches yet."""
+    today = date_type.today()
+    return rebuild_days(worker, start - timedelta(days=1), max(today, start)) if start <= today else 0
+
+
+def _kept(old, from_date, to_date):
+    """What is left of an entry when a new one is given over from_date..to_date: the part before it
+    and the part after it (none, one or two date ranges)."""
+    one_day = timedelta(days=1)
+    parts = []
+    if old.from_date < from_date:
+        parts.append((old.from_date, from_date - one_day))
+    if old.to_date > to_date:
+        parts.append((to_date + one_day, old.to_date))
+    return parts
+
+
+def _overlapping(worker, from_date, to_date):
+    return ShiftAssignment.objects.filter(worker=worker, from_date__lte=to_date, to_date__gte=from_date)
+
+
+def shift_conflicts(workers, from_date, to_date):
+    """The entries that giving these workers a shift over from_date..to_date would replace or cut
+    back, and what would be left of each -- so a person can be asked before it happens."""
+    if to_date < from_date:
+        raise AttendanceError('The to date must not be before the from date.')
+    found = []
+    for worker in workers:
+        for old in _overlapping(worker, from_date, to_date).select_related('worker').order_by('from_date'):
+            found.append({'entry': old, 'kept': _kept(old, from_date, to_date)})
+    found.sort(key=lambda c: (c['entry'].worker.worker_name.lower(), c['entry'].from_date))
+    return found
+
+
+@transaction.atomic
+def assign_shift(workers, from_date, to_date, shift, user=None):
+    """Give workers a shift from one date to another, both included. Entries it overlaps are cut
+    back, split or removed so the new one stands (shift_conflicts says which). Days corrected by
+    hand are left alone. Returns how many day rows changed."""
+    if shift not in shifts.BY_KEY:
+        raise AttendanceError('Choose one of the shifts.')
+    if to_date < from_date:
+        raise AttendanceError('The to date must not be before the from date.')
+    changed = 0
+    for worker in workers:
+        earliest = from_date
+        for old in list(_overlapping(worker, from_date, to_date)):
+            earliest = min(earliest, old.from_date)
+            parts = _kept(old, from_date, to_date)
+            if not parts:
+                old.delete()
+                continue
+            if len(parts) == 2:                           # the new entry sits inside it: keep both ends
+                ShiftAssignment.objects.create(worker=worker, from_date=parts[1][0], to_date=parts[1][1],
+                                               shift=old.shift, edited_by=old.edited_by)
+            old.from_date, old.to_date = parts[0]
+            old.save()
+        ShiftAssignment.objects.create(worker=worker, from_date=from_date, to_date=to_date, shift=shift, edited_by=user)
+        changed += _rebuild_since(worker, earliest)
+    return changed
+
+
+@transaction.atomic
+def remove_assignment(entry):
+    """Take an entry away; its days fall back to the entry before them. Returns how many day rows changed."""
+    worker, start = entry.worker, entry.from_date
+    entry.delete()
+    return _rebuild_since(worker, start)
+
+
+def session_day(first, shift_on):
+    """The working day a session belongs to: the day it started, except that someone on the 3rd
+    shift (0:00 to 8:00) who punches in shortly before midnight is working the day that follows."""
+    if first.hour >= 20:
+        tomorrow = first.date() + timedelta(days=1)
+        third = shifts.BY_KEY.get(shift_on(tomorrow))
+        if third and third.start_hour == 0:
+            return tomorrow
+    return first.date()
+
+
 def shift_for(started):
+    """A guess for a worker with no default shift: Day or Night, from when they came in."""
     return 'Day' if rules.DAY_SHIFT_FROM_HOUR <= started.hour < rules.DAY_SHIFT_UNTIL_HOUR else 'Night'
 
 
-def summarise(session):
-    """One session of punch times -> the fields of the day row."""
+def standard_minutes(shift):
+    """Time beyond this counts as overtime: the shift's own length, or the plain
+    standard day when the shift is only a guess (shift is '' then)."""
+    return shifts.scheduled_minutes(shift) or rules.STANDARD_DAY_MINUTES
+
+
+def summarise(session, shift=''):
+    """One session of punch times -> the fields of the day row.
+    shift is the worker's own shift, when they have one; without it the shift is guessed."""
     first, last = session[0], session[-1]
     gross = int((last - first).total_seconds() // 60)
-    fields = {'shift': shift_for(first), 'in_time': first, 'out_time': last if len(session) > 1 else None,
+    fields = {'shift': shift or shift_for(first), 'in_time': first, 'out_time': last if len(session) > 1 else None,
               'worked_minutes': gross, 'overtime_minutes': 0, 'remarks': '',
               'break_start': None, 'break_end': None, 'break_minutes': 0}
     pause = 0
@@ -183,7 +315,7 @@ def summarise(session):
     elif pause > rules.LONG_BREAK_MINUTES:
         fields.update(status=AttendanceDay.REVIEW, remarks=f'Break of {pause // 60}:{pause % 60:02d}: check the punches')
     elif worked >= rules.FULL_DAY_MINUTES:
-        fields.update(status=AttendanceDay.PRESENT, overtime_minutes=max(0, worked - rules.STANDARD_DAY_MINUTES))
+        fields.update(status=AttendanceDay.PRESENT, overtime_minutes=max(0, worked - standard_minutes(shift)))
     elif worked >= rules.HALF_DAY_MINUTES:
         fields['status'] = AttendanceDay.HALF
     else:
@@ -198,9 +330,10 @@ def rebuild_days(worker, date_from, date_to):
     window_end = datetime.combine(date_to + timedelta(days=2), time.min)
     times = list(PunchLog.objects.filter(worker=worker, punched_at__gte=window_start, punched_at__lt=window_end)
                  .order_by('punched_at').values_list('punched_at', flat=True))
+    shift_on = shift_lookup(worker, date_from, date_to)
     by_date = defaultdict(list)
     for session in _sessions(times):
-        day = session[0].date()
+        day = session_day(session[0], shift_on)
         if date_from <= day <= date_to:
             by_date[day].extend(session)
     existing = {row.date: row for row in AttendanceDay.objects.filter(worker=worker, date__gte=date_from,
@@ -210,7 +343,7 @@ def rebuild_days(worker, date_from, date_to):
         row = existing.get(day)
         if row is not None and row.is_manual:
             continue
-        fields = summarise(sorted(punches))
+        fields = summarise(sorted(punches), shift_on(day))
         if row is None:
             AttendanceDay.objects.create(worker=worker, date=day, **fields)
         else:
@@ -245,7 +378,8 @@ def set_day(worker, day, status, user, in_time=None, out_time=None, shift='', re
     if in_time and out_time and out_time <= in_time:
         raise AttendanceError('The out time must be after the in time.')
     worked = int((out_time - in_time).total_seconds() // 60) if in_time and out_time else 0
-    overtime = max(0, worked - rules.STANDARD_DAY_MINUTES) if status == AttendanceDay.PRESENT else 0
+    shift = shift or shift_lookup(worker, day, day)(day)       # the day's own choice, else the worker's shift that week
+    overtime = max(0, worked - standard_minutes(shift)) if status == AttendanceDay.PRESENT else 0
     if not shift and in_time:
         shift = shift_for(in_time)
     row, _ = AttendanceDay.objects.update_or_create(worker=worker, date=day, defaults={
@@ -317,12 +451,14 @@ def punches_by_session_day(worker, date_from, date_to):
     punches = list(PunchLog.objects.filter(worker=worker, punched_at__gte=window_start, punched_at__lt=window_end)
                    .order_by('punched_at', 'id'))
     starts = [session[0] for session in _sessions([p.punched_at for p in punches])]
+    shift_on = shift_lookup(worker, date_from, date_to)
     by_day, current = defaultdict(list), -1
     for punch in punches:
         while current + 1 < len(starts) and starts[current + 1] <= punch.punched_at:
             current += 1
-        if current >= 0 and date_from <= starts[current].date() <= date_to:
-            by_day[starts[current].date()].append(punch)
+        day = session_day(starts[current], shift_on) if current >= 0 else None
+        if day and date_from <= day <= date_to:
+            by_day[day].append(punch)
     return by_day
 
 

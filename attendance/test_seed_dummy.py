@@ -56,7 +56,7 @@ class SeedDummyAttendanceTests(TestCase):
 
     def test_clear_removes_only_the_demo_data(self):
         today = datetime.date.today()
-        keep_day = today - datetime.timedelta(days=3)
+        keep_day = today - datetime.timedelta(days=20)               # outside the 14 days the demo fills
         services.set_day(self.worker, keep_day, AttendanceDay.PRESENT, None, remarks='a real decision')
         real = PunchLog.objects.create(worker=self.worker, emp_code='7771', source='manual',
                                        punched_at=datetime.datetime.combine(today - datetime.timedelta(days=40),
@@ -121,11 +121,11 @@ class ReviewSampleTests(TestCase):
         self.assertIn(('08:00', '13:10', '16:30'), shapes)
 
     def test_a_night_shift_sample_is_not_spoiled_by_the_next_morning(self):
-        night = [times for times in self.sample_days().values() if times[0].hour == 20]
+        night = {worker_id: times for worker_id, times in self.sample_days().items() if times[0].hour == 20}
         self.assertTrue(night)
-        for times in night:
+        for worker_id, times in night.items():
             self.assertEqual([t.strftime('%H:%M') for t in times], ['20:00', '00:45', '05:00'])
-            row = AttendanceDay.objects.get(worker=PunchLog.objects.get(punched_at=times[0]).worker, date=times[0].date())
+            row = AttendanceDay.objects.get(worker_id=worker_id, date=times[0].date())
             self.assertEqual(row.status, AttendanceDay.REVIEW)
             self.assertIn('Three punches', row.remarks)       # not a "break of 4:15" made from a fourth punch
 

@@ -1,6 +1,25 @@
 from django.contrib import admin
 
-from .models import AttendanceDay, PunchLog
+from .models import AttendanceDay, PunchLog, ShiftAssignment
+
+
+@admin.register(ShiftAssignment)
+class ShiftAssignmentAdmin(admin.ModelAdmin):
+    """View only: shifts are given on the Shift Roster page, which keeps a worker's entries from
+    overlapping and works the days out again."""
+    list_display = ('worker', 'from_date', 'to_date', 'shift')
+    list_filter = ('shift',)
+    search_fields = ('worker__worker_name', 'worker__emp_code')
+    date_hierarchy = 'from_date'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PunchLog)

@@ -16,9 +16,9 @@ class SalaryAdmin(admin.TabularInline):
 
 
 class WorkerAdmin(admin.ModelAdmin):
-    list_display  = ('worker_name', 'emp_code', 'is_active', 'date_of_join', 'date_of_releave')
+    list_display  = ('worker_name', 'emp_code', 'default_shift', 'is_active', 'date_of_join', 'date_of_releave')
     search_fields = ['worker_name', 'emp_code', 'is_active']
-    list_filter   = ['date_of_join', 'date_of_releave']
+    list_filter   = ['default_shift', 'date_of_join', 'date_of_releave']
     inlines       = [SalaryAdmin]
 
 

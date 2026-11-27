@@ -3,6 +3,8 @@ from django.db import models
 
 from employee.models import Worker
 
+from . import shifts
+
 
 class PunchLog(models.Model):
     """One raw punch: somebody's card or finger on a reader (or a hand-entered one).
@@ -28,6 +30,27 @@ class PunchLog(models.Model):
         return f'{self.emp_code} {self.punched_at:%d/%m/%Y %H:%M}'
 
 
+class ShiftAssignment(models.Model):
+    """The shift one worker works from one date to another (both days included). A worker's
+    entries never overlap (services.assign_shift sees to that). A day outside every entry takes
+    the shift of the last entry before it; before the first one it is Worker.default_shift."""
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, related_name='shift_assignments')
+    from_date = models.DateField()
+    to_date = models.DateField()
+    shift = models.CharField(max_length=10, choices=shifts.CHOICES)
+    edited = models.DateTimeField(auto_now=True)
+    edited_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+
+    class Meta:
+        ordering = ['-from_date', 'worker__worker_name']
+        constraints = [models.CheckConstraint(check=models.Q(to_date__gte=models.F('from_date')),
+                                              name='shift_to_date_not_before_from_date')]
+        indexes = [models.Index(fields=['worker', 'from_date'])]
+
+    def __str__(self):
+        return f'{self.worker} {self.from_date} to {self.to_date} {self.shift}'
+
+
 class AttendanceDay(models.Model):
     """One worker, one working day: when they came and left, and what it counts as.
     Rows come from the punches; a row somebody corrected by hand (is_manual) is
@@ -38,12 +61,12 @@ class AttendanceDay(models.Model):
         (PRESENT, 'Present'), (HALF, 'Half Day'), (ABSENT, 'Absent'), (LEAVE, 'Paid Leave'),
         (WEEKLY_OFF, 'Weekly Off'), (HOLIDAY, 'Holiday'), (REVIEW, 'Needs Review'),
     ]
-    SHIFTS = [('Day', 'Day'), ('Night', 'Night')]
+    SHIFTS = shifts.CHOICES
 
     worker = models.ForeignKey(Worker, on_delete=models.PROTECT, related_name='attendance_days')
     date = models.DateField()
     status = models.CharField(max_length=12, choices=STATUSES)
-    shift = models.CharField(max_length=5, choices=SHIFTS, blank=True)
+    shift = models.CharField(max_length=10, choices=SHIFTS, blank=True)
     in_time = models.DateTimeField(null=True, blank=True)
     out_time = models.DateTimeField(null=True, blank=True)       # the next day for a night shift
     worked_minutes = models.PositiveIntegerField(default=0)       # first to last punch, less the break
