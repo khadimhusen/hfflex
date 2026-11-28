@@ -1,9 +1,11 @@
 from rest_framework.permissions import BasePermission
 
+from crm.querysets import is_hr as crm_is_hr
+
 
 def is_hr(user):
-    """Staff and superusers run recruitment: openings, candidates, salaries."""
-    return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+    """Staff, superusers and the 'hr' department run recruitment: openings, candidates, salaries."""
+    return crm_is_hr(user)
 
 
 class IsHR(BasePermission):

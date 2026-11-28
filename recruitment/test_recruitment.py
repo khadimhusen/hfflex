@@ -369,3 +369,57 @@ class InterviewTests(Base):
         self.assertEqual(summary['open_openings'], 1)
         self.assertEqual(summary['active_candidates'], 1)
         self.assertEqual(summary['stage_counts'], {'applied': 1})
+
+
+class HrDepartmentTests(Base):
+    """Users in the 'hr' department get HR access without Staff status."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from employee.models import Department
+        cls.hr_dept = Department.objects.create(department_name='HR')
+        cls.hr_member = User.objects.create_user('rchrdept', 'rchrdept@example.com', 'x')
+        cls.hr_dept.user.add(cls.hr_member)
+
+    def test_department_member_runs_recruitment_without_staff_status(self):
+        self.assertFalse(self.hr_member.is_staff)
+        self.as_user(self.hr_member)
+        opening = self.make_opening(title='By HR dept')
+        candidate = self.make_candidate(opening)
+        self.schedule(candidate)
+        self.assertEqual(self.api.get(OPENINGS).status_code, 200)
+        self.assertEqual(len(self.api.get(INTERVIEWS).json()['results']), 1)
+        self.assertIn('open_openings', self.api.get(SUMMARY).json())
+
+    def test_department_name_is_case_insensitive(self):
+        self.hr_dept.department_name = 'hr'
+        self.hr_dept.save()
+        self.as_user(self.hr_member)
+        self.assertEqual(self.api.get(OPENINGS).status_code, 200)
+
+    def test_inactive_member_and_other_departments_get_nothing(self):
+        from employee.models import Department
+        other = Department.objects.create(department_name='sidebank')
+        other.user.add(self.stranger)
+        self.as_user(self.stranger)
+        self.assertEqual(self.api.get(OPENINGS).status_code, 404)
+        self.hr_member.is_active = False
+        self.hr_member.save()
+        self.as_user(User.objects.get(pk=self.hr_member.pk))
+        from crm.querysets import is_hr
+        self.assertFalse(is_hr(User.objects.get(pk=self.hr_member.pk)))
+
+    def test_attendance_and_holiday_rules_follow_the_same_check(self):
+        from attendance.permissions import IsAttendanceUser
+        from holidaylist.permissions import can_edit_holidays
+
+        class Req:
+            def __init__(self, user):
+                self.user = user
+
+        self.assertTrue(IsAttendanceUser().has_permission(Req(self.hr_member), None))
+        self.assertTrue(can_edit_holidays(self.hr_member))
+        self.assertFalse(IsAttendanceUser().has_permission(Req(self.stranger), None))
+        self.assertFalse(can_edit_holidays(self.stranger))
+        self.assertTrue(can_edit_holidays(self.hr))                 # staff still work

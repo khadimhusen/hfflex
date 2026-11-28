@@ -1,8 +1,10 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+from crm.querysets import is_hr
+
 
 def can_edit_holidays(user):
-    return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+    return is_hr(user)
 
 
 class HolidayPermission(BasePermission):

@@ -13,7 +13,7 @@ from django.db.models import (OuterRef, Subquery, F, Q, ExpressionWrapper, DateT
 from django.db.models.functions import Coalesce, TruncMonth
 from datetime import date
 
-from .querysets import crm_users
+from .querysets import crm_users, is_hr
 
 
 def _add_months(d, offset):
@@ -346,15 +346,17 @@ def me_payload(u):
     # Minutes of meeting: like Tasks, open to every logged-in user (what a user
     # sees inside it is limited to meetings they created or attended; staff see all).
     is_meetings = True
-    # Worker attendance: staff only for now (matches attendance.permissions.IsAttendanceUser).
-    is_attendance = is_staff
-    # The holiday list: everybody reads it; only staff change it (holidaylist.permissions).
+    # HR = staff, superusers and the 'hr' department (crm.querysets.is_hr).
+    is_hr_user = is_hr(u)
+    # Worker attendance: HR only (matches attendance.permissions.IsAttendanceUser).
+    is_attendance = is_hr_user
+    # The holiday list: everybody reads it; only HR change it (holidaylist.permissions).
     is_holidays = True
-    # Recruitment: HR (staff) runs openings, candidates and interviews. Anyone put on an
+    # Recruitment: HR runs openings, candidates and interviews. Anyone put on an
     # interview panel gets "My Interviews" to read the resume and submit their scorecard.
     from recruitment.models import InterviewFeedback
-    is_recruitment = is_staff
-    is_interviews = is_staff or InterviewFeedback.objects.filter(interviewer=u).exists()
+    is_recruitment = is_hr_user
+    is_interviews = is_hr_user or InterviewFeedback.objects.filter(interviewer=u).exists()
     # Ink store has no department gate of its own (the old views were
     # login_required only), so this is the same TEMPORARY staff-only
     # rollout gate as the modules above, matching IsInkStoreUser.
@@ -367,6 +369,7 @@ def me_payload(u):
         'id': u.id,
         'name': f'{u.first_name} {u.last_name}'.strip() or u.username,
         'is_staff': is_staff,
+        'is_hr': is_hr_user,
         'is_crm_user': is_crm,  # kept for existing CRM-only checks
         # Not nested under 'modules' -- that's page/nav visibility, this is
         # a capability check the quotation detail page uses (alongside the

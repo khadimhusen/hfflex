@@ -26,3 +26,18 @@ def can_see_all_leads(user):
     if user.is_staff or user.is_superuser:
         return True
     return all_lead_access_users().filter(id=user.id).exists()
+
+
+def hr_department_users():
+    """Users in the 'hr' department. They run recruitment, worker attendance and the
+    holiday list without needing Staff status (which opens every other staff-only module)."""
+    return User.objects.filter(department__department_name__iexact='hr', is_active=True)
+
+
+def is_hr(user):
+    """HR access: staff and superusers, plus anybody in the 'hr' department."""
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_staff or user.is_superuser:
+        return True
+    return hr_department_users().filter(id=user.id).exists()
