@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Candidate, Interview, InterviewFeedback, JobOpening, OpeningCriterion
+from .models import Candidate, Interview, InterviewFeedback, InterviewLog, JobOpening, OpeningCriterion
 
 
 class CriterionInline(admin.TabularInline):
@@ -22,6 +22,13 @@ class FeedbackInline(admin.TabularInline):
     extra = 0
 
 
+class LogInline(admin.TabularInline):
+    model = InterviewLog
+    extra = 0
+    can_delete = False
+    readonly_fields = ('action', 'old_time', 'new_time', 'reason', 'changed_by', 'changed_at')
+
+
 @admin.register(Candidate)
 class CandidateAdmin(admin.ModelAdmin):
     list_display = ('name', 'opening', 'stage', 'mobile', 'current_company')
@@ -33,4 +40,4 @@ class CandidateAdmin(admin.ModelAdmin):
 class InterviewAdmin(admin.ModelAdmin):
     list_display = ('candidate', 'round_no', 'round_type', 'scheduled_at', 'status')
     list_filter = ('status', 'round_type')
-    inlines = [FeedbackInline]
+    inlines = [FeedbackInline, LogInline]

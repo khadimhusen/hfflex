@@ -2,7 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from .models import FeedbackRating, StageLog
+from .models import FeedbackRating, InterviewLog, StageLog
 
 # Ready-made scorecards HR can load into a new opening and then edit.
 CRITERIA_TEMPLATES = {
@@ -89,6 +89,55 @@ def on_interview_scheduled(candidate, user):
     """Scheduling an interview moves a fresh candidate into the Interview stage."""
     if candidate.stage in ('applied', 'shortlisted'):
         move_stage(candidate, 'interview', user, note='Interview scheduled')
+
+
+def _guard_open_interview(interview, what):
+    if interview.status == 'completed':
+        raise ValidationError(f'A completed interview cannot be {what}.')
+    if interview.feedbacks.filter(submitted_at__isnull=False).exists():
+        raise ValidationError(
+            f'An interviewer has already given feedback, so it cannot be {what}. '
+            'Mark it completed instead.')
+
+
+@transaction.atomic
+def reschedule_interview(interview, new_time, user, reason='', location=None, mode=None, duration_minutes=None):
+    """Move an interview to another time. A cancelled or no-show interview that is
+    given a new time is scheduled again."""
+    _guard_open_interview(interview, 'rescheduled')
+    old_time = interview.scheduled_at
+    if new_time == old_time and interview.status == 'scheduled':
+        raise ValidationError({'scheduled_at': 'That is the time it already has.'})
+    interview.scheduled_at = new_time
+    interview.status = 'scheduled'
+    interview.cancel_reason = ''
+    if location is not None:
+        interview.location = location
+    if mode:
+        interview.mode = mode
+    if duration_minutes:
+        interview.duration_minutes = duration_minutes
+    interview.save()
+    InterviewLog.objects.create(interview=interview, action='rescheduled', old_time=old_time,
+                                new_time=new_time, reason=reason, changed_by=user)
+    return interview
+
+
+@transaction.atomic
+def cancel_interview(interview, user, reason):
+    """Cancel a scheduled interview. A reason is required so the panel knows why."""
+    reason = (reason or '').strip()
+    if not reason:
+        raise ValidationError({'reason': 'Say why the interview is being cancelled.'})
+    if interview.status != 'scheduled':
+        raise ValidationError('Only a scheduled interview can be cancelled.')
+    _guard_open_interview(interview, 'cancelled')
+    interview.status = 'cancelled'
+    interview.cancel_reason = reason
+    interview.save()
+    InterviewLog.objects.create(interview=interview, action='cancelled', old_time=interview.scheduled_at,
+                                reason=reason, changed_by=user)
+    return interview
 
 
 # ---------------------------------------------------------------- scoring

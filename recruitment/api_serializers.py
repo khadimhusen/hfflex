@@ -7,8 +7,8 @@ from rest_framework import serializers
 
 from . import services
 from .models import (
-    ACTIVE_STAGES, RECOMMENDATIONS, STAGES, Candidate, FeedbackRating, Interview, InterviewFeedback, JobOpening,
-    OpeningCriterion, StageLog,
+    ACTIVE_STAGES, INTERVIEW_MODES, RECOMMENDATIONS, STAGES, Candidate, FeedbackRating, Interview, InterviewFeedback,
+    InterviewLog, JobOpening, OpeningCriterion, StageLog,
 )
 from .permissions import is_hr
 
@@ -271,6 +271,8 @@ class InterviewSerializer(serializers.ModelSerializer):
     score = serializers.SerializerMethodField()
     my_feedback = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
+    reschedule_count = serializers.SerializerMethodField()
+    history = serializers.SerializerMethodField()
 
     class Meta:
         model = Interview
@@ -279,7 +281,10 @@ class InterviewSerializer(serializers.ModelSerializer):
             'candidate_experience', 'has_resume', 'opening', 'opening_number', 'opening_title', 'round_no',
             'round_type', 'scheduled_at', 'duration_minutes', 'mode', 'location', 'status', 'summary',
             'panel_ids', 'panel', 'feedbacks', 'criteria', 'score', 'my_feedback', 'created_by_name',
+            'cancel_reason', 'reschedule_count', 'history',
         ]
+        # Status changes go through the cancel / reschedule / set-status actions.
+        read_only_fields = ['status', 'cancel_reason']
 
     # --- read side
     def get_has_resume(self, obj):
@@ -312,6 +317,17 @@ class InterviewSerializer(serializers.ModelSerializer):
 
     def get_created_by_name(self, obj):
         return full_name(obj.created_by)
+
+    def get_reschedule_count(self, obj):
+        return sum(1 for log in obj.logs.all() if log.action == 'rescheduled')
+
+    def get_history(self, obj):
+        """Who moved or cancelled it, when and why. HR only."""
+        if not is_hr(self.context['request'].user):
+            return []
+        return [{'action': log.action, 'old_time': log.old_time, 'new_time': log.new_time,
+                 'reason': log.reason, 'changed_by_name': full_name(log.changed_by),
+                 'changed_at': log.changed_at} for log in obj.logs.all()]
 
     # --- write side
     def validate_panel_ids(self, ids):
@@ -358,12 +374,29 @@ class InterviewSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         users = validated_data.pop('panel_ids', None)
         validated_data.pop('candidate', None)
+        old_time = instance.scheduled_at
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()
+        if instance.scheduled_at != old_time:                      # moved by editing: keep the history whole
+            InterviewLog.objects.create(interview=instance, action='rescheduled', old_time=old_time,
+                                        new_time=instance.scheduled_at,
+                                        changed_by=self.context['request'].user)
         if users is not None:
             self._set_panel(instance, users)
         return instance
+
+
+class RescheduleSerializer(serializers.Serializer):
+    scheduled_at = serializers.DateTimeField()
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=500, default='')
+    location = serializers.CharField(required=False, allow_blank=True, max_length=300)
+    mode = serializers.ChoiceField(choices=INTERVIEW_MODES, required=False)
+    duration_minutes = serializers.IntegerField(required=False, min_value=5, max_value=600)
+
+
+class CancelSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=500)
 
 
 class RatingInputSerializer(serializers.Serializer):

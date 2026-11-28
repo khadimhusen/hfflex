@@ -321,7 +321,7 @@ class InterviewTests(Base):
 
     def test_cancelled_interview_takes_no_feedback_and_does_not_count(self):
         interview = self.schedule(self.candidate, panel=[self.panel1])
-        self.api.post(f'{INTERVIEWS}{interview["id"]}/set-status/', {'status': 'cancelled'}, format='json')
+        self.api.post(f'{INTERVIEWS}{interview["id"]}/cancel/', {'reason': 'Panel unavailable'}, format='json')
         self.as_user(self.panel1)
         response = self.api.post(f'{INTERVIEWS}{interview["id"]}/feedback/', {
             'recommendation': 'yes', 'ratings': self.ratings(self.opening, 4, 4)}, format='json')
@@ -369,6 +369,97 @@ class InterviewTests(Base):
         self.assertEqual(summary['open_openings'], 1)
         self.assertEqual(summary['active_candidates'], 1)
         self.assertEqual(summary['stage_counts'], {'applied': 1})
+
+
+class CancelRescheduleTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.opening = self.make_opening()
+        self.candidate = self.make_candidate(self.opening)
+        self.interview = self.schedule(self.candidate)
+        self.url = f'{INTERVIEWS}{self.interview["id"]}/'
+
+    def test_reschedule_moves_the_time_and_keeps_the_history(self):
+        response = self.api.post(self.url + 'reschedule/', {
+            'scheduled_at': '2026-12-05T15:30:00', 'reason': 'Candidate had a train delay',
+            'location': 'Conference room'}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertEqual(body['scheduled_at'][:16], '2026-12-05T15:30')
+        self.assertEqual(body['location'], 'Conference room')
+        self.assertEqual(body['status'], 'scheduled')
+        self.assertEqual(body['reschedule_count'], 1)
+        entry = body['history'][0]
+        self.assertEqual(entry['action'], 'rescheduled')
+        self.assertEqual(entry['old_time'][:16], '2026-12-01T11:00')
+        self.assertEqual(entry['reason'], 'Candidate had a train delay')
+
+    def test_rescheduling_to_the_same_time_is_refused(self):
+        response = self.api.post(self.url + 'reschedule/', {'scheduled_at': '2026-12-01T11:00:00'}, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_cancel_needs_a_reason_and_records_it(self):
+        self.assertEqual(self.api.post(self.url + 'cancel/', {}, format='json').status_code, 400)
+        self.assertEqual(self.api.post(self.url + 'cancel/', {'reason': '  '}, format='json').status_code, 400)
+        response = self.api.post(self.url + 'cancel/', {'reason': 'Position on hold'}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertEqual(body['status'], 'cancelled')
+        self.assertEqual(body['cancel_reason'], 'Position on hold')
+        self.assertEqual(body['history'][0]['action'], 'cancelled')
+
+    def test_a_cancelled_interview_can_be_rescheduled_and_is_scheduled_again(self):
+        self.api.post(self.url + 'cancel/', {'reason': 'Sick'}, format='json')
+        response = self.api.post(self.url + 'reschedule/', {'scheduled_at': '2026-12-08T10:00:00'}, format='json')
+        body = response.json()
+        self.assertEqual(body['status'], 'scheduled')
+        self.assertEqual(body['cancel_reason'], '')
+        self.assertEqual([h['action'] for h in body['history']], ['rescheduled', 'cancelled'])
+
+    def test_cancelling_twice_or_a_completed_interview_is_refused(self):
+        self.api.post(self.url + 'cancel/', {'reason': 'Sick'}, format='json')
+        self.assertEqual(self.api.post(self.url + 'cancel/', {'reason': 'Again'}, format='json').status_code, 400)
+        self.api.post(self.url + 'set-status/', {'status': 'completed'}, format='json')
+        self.assertEqual(self.api.post(
+            self.url + 'reschedule/', {'scheduled_at': '2026-12-09T10:00:00'}, format='json').status_code, 400)
+
+    def test_nothing_can_move_once_feedback_is_in(self):
+        self.as_user(self.panel1)
+        self.api.post(self.url + 'feedback/', {
+            'recommendation': 'yes', 'ratings': self.ratings(self.opening, 4, 4)}, format='json')
+        self.as_user(self.hr)
+        self.assertEqual(self.api.post(self.url + 'cancel/', {'reason': 'x'}, format='json').status_code, 400)
+        self.assertEqual(self.api.post(
+            self.url + 'reschedule/', {'scheduled_at': '2026-12-09T10:00:00'}, format='json').status_code, 400)
+
+    def test_set_status_will_not_cancel_and_status_cannot_be_patched(self):
+        self.assertEqual(self.api.post(self.url + 'set-status/', {'status': 'cancelled'}, format='json').status_code, 400)
+        self.api.patch(self.url, {'status': 'cancelled'}, format='json')
+        self.assertEqual(self.api.get(self.url).json()['status'], 'scheduled')
+
+    def test_editing_the_time_in_the_edit_dialog_is_logged_too(self):
+        self.api.patch(self.url, {'scheduled_at': '2026-12-02T09:00:00'}, format='json')
+        body = self.api.get(self.url).json()
+        self.assertEqual(body['reschedule_count'], 1)
+        self.assertEqual(body['history'][0]['new_time'][:16], '2026-12-02T09:00')
+
+    def test_only_hr_can_cancel_or_reschedule_and_panel_sees_no_history(self):
+        self.api.post(self.url + 'reschedule/', {'scheduled_at': '2026-12-05T15:30:00', 'reason': 'private'},
+                      format='json')
+        self.as_user(self.panel1)
+        self.assertEqual(self.api.post(self.url + 'cancel/', {'reason': 'x'}, format='json').status_code, 404)
+        self.assertEqual(self.api.post(
+            self.url + 'reschedule/', {'scheduled_at': '2026-12-06T10:00:00'}, format='json').status_code, 404)
+        body = self.api.get(self.url).json()
+        self.assertEqual(body['history'], [])
+        self.assertEqual(body['reschedule_count'], 1)                # the panel can see it moved, not why
+
+    def test_cancelled_interview_shows_its_reason_to_the_panel(self):
+        self.api.post(self.url + 'cancel/', {'reason': 'Position on hold'}, format='json')
+        self.as_user(self.panel1)
+        body = self.api.get(self.url).json()
+        self.assertEqual(body['status'], 'cancelled')
+        self.assertEqual(body['cancel_reason'], 'Position on hold')
 
 
 class HrDepartmentTests(Base):

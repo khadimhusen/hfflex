@@ -10,8 +10,8 @@ from rest_framework.response import Response
 
 from . import services
 from .api_serializers import (
-    CandidateSerializer, FeedbackReadSerializer, FeedbackSubmitSerializer, InterviewSerializer,
-    JobOpeningSerializer, MoveSerializer,
+    CancelSerializer, CandidateSerializer, FeedbackReadSerializer, FeedbackSubmitSerializer, InterviewSerializer,
+    JobOpeningSerializer, MoveSerializer, RescheduleSerializer,
 )
 from .exports import excel_filename, generate_candidates_xlsx
 from .filters import CandidateFilter, InterviewFilter, OpeningFilter
@@ -115,7 +115,8 @@ class InterviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Interview.objects.select_related(
             'candidate', 'candidate__opening', 'created_by').prefetch_related(
-            'feedbacks__interviewer', 'feedbacks__ratings__criterion', 'candidate__opening__criteria')
+            'feedbacks__interviewer', 'feedbacks__ratings__criterion', 'candidate__opening__criteria',
+            'logs__changed_by')
         return visible_interviews(self.request.user, qs).order_by('-scheduled_at', '-id')
 
     @action(detail=True, methods=['post'])
@@ -136,14 +137,40 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='set-status')
     def set_status(self, request, pk=None):
-        """HR: mark an interview completed, cancelled or no-show (or put it back to scheduled)."""
+        """HR: mark an interview completed or no-show (or put it back to scheduled).
+        Cancelling has its own action because it needs a reason."""
         interview = self.get_object()
         status = request.data.get('status')
         if status not in dict(Interview._meta.get_field('status').choices):
             raise ValidationError({'status': 'Unknown status.'})
+        if status == 'cancelled':
+            raise ValidationError({'status': 'Use Cancel interview: it needs a reason.'})
         interview.status = status
-        interview.save(update_fields=['status', 'updated_at'])
+        interview.cancel_reason = ''
+        interview.save(update_fields=['status', 'cancel_reason', 'updated_at'])
         return Response(self.get_serializer(interview).data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """HR: cancel a scheduled interview: {reason}."""
+        interview = self.get_object()
+        data = CancelSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        services.cancel_interview(interview, request.user, data.validated_data['reason'])
+        return Response(self.get_serializer(self.get_queryset().get(pk=interview.pk)).data)
+
+    @action(detail=True, methods=['post'])
+    def reschedule(self, request, pk=None):
+        """HR: move an interview to another time: {scheduled_at, reason?, location?, mode?, duration_minutes?}.
+        A cancelled or no-show interview becomes scheduled again."""
+        interview = self.get_object()
+        data = RescheduleSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        v = data.validated_data
+        services.reschedule_interview(
+            interview, v['scheduled_at'], request.user, reason=v['reason'], location=v.get('location'),
+            mode=v.get('mode'), duration_minutes=v.get('duration_minutes'))
+        return Response(self.get_serializer(self.get_queryset().get(pk=interview.pk)).data)
 
     @action(detail=True, methods=['get'])
     def resume(self, request, pk=None):

@@ -188,6 +188,7 @@ class Interview(models.Model):
     location = models.CharField(max_length=300, blank=True)                 # room, address or meeting link
     status = models.CharField(max_length=10, choices=INTERVIEW_STATUS, default='scheduled')
     summary = models.TextField(blank=True)                                  # HR's overall remarks
+    cancel_reason = models.TextField(blank=True)                            # why it was cancelled
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='interviews_created')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -197,6 +198,21 @@ class Interview(models.Model):
 
     def __str__(self):
         return f'{self.candidate.name} round {self.round_no}'
+
+
+class InterviewLog(models.Model):
+    """History of an interview being moved to another time or cancelled."""
+    ACTIONS = [('rescheduled', 'Rescheduled'), ('cancelled', 'Cancelled')]
+    interview = models.ForeignKey(Interview, on_delete=models.CASCADE, related_name='logs')
+    action = models.CharField(max_length=12, choices=ACTIONS)
+    old_time = models.DateTimeField(null=True, blank=True)
+    new_time = models.DateTimeField(null=True, blank=True)
+    reason = models.TextField(blank=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-changed_at', '-id']
 
 
 class InterviewFeedback(models.Model):
